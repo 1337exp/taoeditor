@@ -127,6 +127,32 @@
     margin-block-start: 0;
 }
 
+/* Alignment of paragraphs and headings and the size of a run of text (classes, not inline styles). Two classes, to win over `tao-prose`. */
+.tao-content .tao-align-center,
+.tao-editor .tao-align-center {
+    text-align: center;
+}
+.tao-content .tao-align-right,
+.tao-editor .tao-align-right {
+    text-align: right;
+}
+.tao-content .tao-align-justify,
+.tao-editor .tao-align-justify {
+    text-align: justify;
+}
+.tao-content .tao-text-small,
+.tao-editor .tao-text-small {
+    font-size: var(--te-size-small, 0.8em);
+}
+.tao-content .tao-text-large,
+.tao-editor .tao-text-large {
+    font-size: var(--te-size-large, 1.4em);
+}
+.tao-content .tao-text-huge,
+.tao-editor .tao-text-huge {
+    font-size: var(--te-size-huge, 2em);
+}
+
 /* A mention: a chip with the name; it is a button in the viewer when the app listens to it. */
 .tao-mention {
     border-radius: var(--te-radius, 0.35em);

@@ -296,8 +296,8 @@
  [
   "emoji list: Escape in the text does not close it",
   "src/vue/taoui/TaoEditor.ts",
-  "if (event.key === 'Escape') {",
-  "if (event.key === 'Escape' && false) {"
+  "if (event.key === 'Escape') closeMenus();",
+  ""
  ],
  [
   "underline: a link does not win over it",
@@ -350,8 +350,8 @@
  [
   "indent: any number is a level",
   "src/core/schema.ts",
-  "indent: { default: 0, check: intIn(0, 8) } } },\n    heading",
-  "indent: { default: 0, check: (v) => (typeof v === 'number' ? v : undefined) } } },\n    heading"
+  "indent: { default: 0, check: intIn(0, 8), feature: 'indent' },",
+  "indent: { default: 0, check: (v: unknown) => (typeof v === 'number' ? v : undefined), feature: 'indent' },"
  ],
  [
   "indent: the level is not capped when changed",
@@ -404,14 +404,14 @@
  [
   "spacing: the viewer is compact for articles too",
   "src/vue/TaoEditorView.ts",
-  "=== 'article')",
-  "=== 'nothing')"
+  "props.spaced ?? resolveProfile(props.profile).spaced ?? false",
+  "props.spaced ?? false"
  ],
  [
   "spacing: the editor ignores `spaced`",
   "src/vue/taoui/TaoEditor.ts",
-  "class: (props.spaced ?? props.profile === 'article')",
-  "class: (props.profile === 'article')"
+  "class: (props.spaced ?? resolveProfile(props.profile).spaced ?? false)",
+  "class: (resolveProfile(props.profile).spaced ?? false)"
  ],
  [
   "emoji list: a press into the text does not close it",
@@ -452,8 +452,8 @@
  [
   "colour: setColor accepts a bad colour as removal",
   "src/editor/editor.ts",
-  "if (!type || (value !== null && hex === null)) return false;",
-  "if (!type) return false;"
+  "if (value !== null && hex === null) return false;",
+  ""
  ],
  [
   "colour panel: a press in the custom popup closes it",
@@ -488,7 +488,79 @@
  [
   "colour panel: the floating box closes with the panel open",
   "src/vue/taoui/TaoEditor.ts",
-  "|| linkOpen.value || colorsOpen.value);",
-  "|| linkOpen.value);"
+  "|| linkOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value);",
+  "|| linkOpen.value || alignOpen.value || sizeOpen.value);"
+ ],
+ [
+  "features: an attribute of a missing feature stays",
+  "src/core/normalize.ts",
+  "if (spec.feature && !ctx.profile.features?.includes(spec.feature)) continue;",
+  ""
+ ],
+ [
+  "profile: lists keep listItem when none is left",
+  "src/core/profile.ts",
+  "if (!kept.includes('bulletList') && !kept.includes('orderedList')) kept = kept.filter((n) => n !== 'listItem');",
+  ""
+ ],
+ [
+  "profile: a typo in a mark passes",
+  "src/core/profile.ts",
+  "known('mark', marks, isMark);",
+  ""
+ ],
+ [
+  "profile: paragraph can be removed",
+  "src/core/profile.ts",
+  "if (name === 'paragraph' || name === 'text') throw",
+  "if (name === 'nothing') throw"
+ ],
+ [
+  "engine: marks that exclude an absent mark",
+  "src/editor/schema.ts",
+  "MARKS[name].excludes?.filter((other) => profile.marks.includes(other))",
+  "MARKS[name].excludes"
+ ],
+ [
+  "engine: an attribute of a missing feature is in the schema",
+  "src/editor/schema.ts",
+  "|| profile.features?.includes(core.attrs[key].feature!)",
+  "|| true"
+ ],
+ [
+  "align: aligns where the profile has no alignment",
+  "src/editor/blocks.ts",
+  "node.type.spec.attrs?.align === undefined || ",
+  ""
+ ],
+ [
+  "paste: `end` is not right",
+  "src/editor/indent.ts",
+  "if (value === 'right' || value === 'end') return 'right';",
+  "if (value === 'right') return 'right';"
+ ],
+ [
+  "menus: opening one does not close the others",
+  "src/vue/taoui/TaoEditor.ts",
+  "closeMenus();\n            open.value = !was;",
+  "open.value = !was;"
+ ],
+ [
+  "toolbar: Align shows without the feature",
+  "src/vue/taoui/TaoEditor.ts",
+  "...(features.includes('align')",
+  "...(true"
+ ],
+ [
+  "toolbar: Text size shows without the mark",
+  "src/vue/taoui/TaoEditor.ts",
+  "...(marks.includes('size')",
+  "...(true"
+ ],
+ [
+  "toolbar: Clear formatting shows with nothing to clear",
+  "src/vue/taoui/TaoEditor.ts",
+  "marks.some((m) => m !== 'link') ?",
+  "true ?"
  ]
 ]

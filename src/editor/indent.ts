@@ -16,3 +16,12 @@ export function indentOf(dom: HTMLElement): number {
     const px = Number(parts[1]) * (unit === 'pt' ? 4 / 3 : unit === 'px' ? 1 : 16);
     return Math.max(0, Math.min(MAX_INDENT, Math.round(px / 40)));
 }
+
+/** The alignment of a pasted paragraph: our class, the `text-align` style or the `align` attribute (Docs, Word, Gmail). */
+export function alignOf(dom: HTMLElement): 'left' | 'center' | 'right' | 'justify' {
+    const byClass = /(?:^|\s)tao-align-(center|right|justify)(?:\s|$)/.exec(dom.getAttribute('class') ?? '');
+    const value = byClass ? byClass[1] : (dom.style.textAlign || dom.getAttribute('align') || '').trim().toLowerCase();
+    if (value === 'center' || value === 'justify') return value;
+    if (value === 'right' || value === 'end') return 'right';
+    return 'left';
+}

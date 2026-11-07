@@ -3,10 +3,10 @@ import { redo, redoDepth, undo, undoDepth } from 'prosemirror-history';
 import type { MarkType, Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { PROFILES, emptyDoc, isEmptyDoc, normalizeDoc, parseColor, safeUrl, type Doc, type Issue, type Profile, type ProfileName } from '../core';
+import { ALIGNS, SIZES, emptyDoc, isEmptyDoc, normalizeDoc, parseColor, resolveProfile, safeUrl, type Doc, type Issue, type Profile, type ProfileName } from '../core';
 import { docToNode, nodeToDoc } from './convert';
 import type { MentionHooks, MentionTrigger } from './mentions';
-import { clearFormatting, indent, isBlockActive, outdent, toggleList, toggleQuote } from './blocks';
+import { alignAt, clearFormatting, indent, isBlockActive, outdent, setAlign, toggleList, toggleQuote, type Align } from './blocks';
 import { createPlugins, type SubmitMode } from './plugins';
 import { createSchema } from './schema';
 
@@ -70,6 +70,12 @@ export interface EditorHandle {
     setColor(kind: 'color' | 'background', value: string | null): boolean;
     /** The colour at the selection (`#rrggbb`) or null. */
     colorOf(kind: 'color' | 'background'): string | null;
+    /** Sets the size of the selection (`small`, `large`, `huge`); `null` is the normal size. False for another value. */
+    setSize(value: 'small' | 'large' | 'huge' | null): boolean;
+    sizeOf(): 'small' | 'large' | 'huge' | null;
+    /** Aligns every paragraph and heading in the selection. False when the profile has no alignment. */
+    setAlign(value: Align): boolean;
+    alignOf(): Align;
     /** Sets a link on the selection; `null` removes it. Unsafe URLs are refused (returns false). */
     setLink(href: string | null): boolean;
     undo(): boolean;
@@ -86,8 +92,35 @@ function markActive(state: EditorState, type: MarkType): boolean {
     return state.doc.rangeHasMark(from, to, type);
 }
 
+/** Sets (or, with null, takes off) a mark that carries one value over the selection, or over what is typed next. */
+function setValueMark(view: EditorView, type: MarkType | undefined, value: string | null): boolean {
+    if (!type) return false;
+    const { from, to, empty } = view.state.selection;
+    let tr = view.state.tr;
+    if (empty) tr = value ? tr.addStoredMark(type.create({ value })) : tr.removeStoredMark(type);
+    else {
+        tr = tr.removeMark(from, to, type);
+        if (value) tr = tr.addMark(from, to, type.create({ value }));
+    }
+    view.dispatch(tr);
+    return true;
+}
+
+/** The value of such a mark at the selection (the first one found in a range), or null. */
+function valueOfMark(view: EditorView, type: MarkType | undefined): string | null {
+    if (!type) return null;
+    const { from, to, empty, $from } = view.state.selection;
+    if (empty) return (type.isInSet(view.state.storedMarks ?? $from.marks())?.attrs.value as string | undefined) ?? null;
+    let found: string | null = null;
+    view.state.doc.nodesBetween(from, to, (node) => {
+        const mark = found === null ? type.isInSet(node.marks) : undefined;
+        if (mark) found = mark.attrs.value as string;
+    });
+    return found;
+}
+
 export function createEditor(parent: HTMLElement, options: EditorOptions = {}): EditorHandle {
-    const profile: Profile = typeof options.profile === 'object' ? options.profile : PROFILES[options.profile ?? 'comment'];
+    const profile: Profile = resolveProfile(options.profile ?? 'comment');
     const schema = createSchema(profile);
     const getDoc = (): Doc => nodeToDoc(view.state.doc, profile).doc;
 
@@ -163,31 +196,18 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
         isBlockActive: (name) => isBlockActive(view.state, name),
         clearFormatting: () => clearFormatting(schema)(view.state, view.dispatch, view),
         setColor(kind, value) {
-            const type = schema.marks[kind];
             const hex = value === null ? null : (parseColor(value) ?? null);
-            if (!type || (value !== null && hex === null)) return false;
-            const { from, to, empty } = view.state.selection;
-            let tr = view.state.tr;
-            if (empty) tr = hex ? tr.addStoredMark(type.create({ value: hex })) : tr.removeStoredMark(type);
-            else {
-                tr = tr.removeMark(from, to, type);
-                if (hex) tr = tr.addMark(from, to, type.create({ value: hex }));
-            }
-            view.dispatch(tr);
-            return true;
+            if (value !== null && hex === null) return false;
+            return setValueMark(view, schema.marks[kind], hex);
         },
-        colorOf(kind) {
-            const type = schema.marks[kind];
-            if (!type) return null;
-            const { from, to, empty, $from } = view.state.selection;
-            if (empty) return (type.isInSet(view.state.storedMarks ?? $from.marks())?.attrs.value as string | undefined) ?? null;
-            let found: string | null = null;
-            view.state.doc.nodesBetween(from, to, (node) => {
-                const mark = found === null ? type.isInSet(node.marks) : undefined;
-                if (mark) found = mark.attrs.value as string;
-            });
-            return found;
+        colorOf: (kind) => valueOfMark(view, schema.marks[kind]),
+        setSize(value) {
+            if (value !== null && !(SIZES as readonly string[]).includes(value)) return false;
+            return setValueMark(view, schema.marks.size, value);
         },
+        sizeOf: () => valueOfMark(view, schema.marks.size) as 'small' | 'large' | 'huge' | null,
+        setAlign: (value) => (ALIGNS as readonly string[]).includes(value) && setAlign(value)(view.state, view.dispatch, view),
+        alignOf: () => alignAt(view.state),
         undo: () => undo(view.state, view.dispatch, view),
         redo: () => redo(view.state, view.dispatch, view),
         canUndo: () => undoDepth(view.state) > 0,

@@ -10,7 +10,7 @@
  * под TaoUI добавьте классу `tao-prose` (`<TaoEditorView class="tao-prose">`).
  */
 import { computed, defineComponent, getCurrentInstance, h, shallowRef, type PropType, type VNode } from 'vue';
-import { PROFILES, VOID_TAGS, toRenderTree, type Doc, type Profile, type ProfileName, type RenderNode } from '../core';
+import { VOID_TAGS, resolveProfile, toRenderTree, type Doc, type Profile, type ProfileName, type RenderNode } from '../core';
 
 export const TaoEditorView = defineComponent({
     name: 'TaoEditorView',
@@ -39,8 +39,7 @@ export const TaoEditorView = defineComponent({
         const isOpen = (key: string): boolean => opened.value.doc === props.doc && opened.value.keys.has(key);
 
         const tree = computed(() => {
-            const profile = typeof props.profile === 'string' ? PROFILES[props.profile] : props.profile;
-            return toRenderTree(props.doc, profile);
+            return toRenderTree(props.doc, resolveProfile(props.profile));
         });
 
         const toggle = (key: string): void => {
@@ -79,7 +78,7 @@ export const TaoEditorView = defineComponent({
             return VOID_TAGS.has(item.tag) ? h(item.tag, attrs) : h(item.tag, attrs, item.children.map(node));
         };
 
-        const compact = (): boolean => !(props.spaced ?? (typeof props.profile === 'string' ? props.profile : props.profile.name) === 'article');
+        const compact = (): boolean => !(props.spaced ?? resolveProfile(props.profile).spaced ?? false);
         return () => h('div', { class: compact() ? 'tao-content tao-compact' : 'tao-content' }, tree.value.map(node));
     },
 });

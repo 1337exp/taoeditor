@@ -70,6 +70,8 @@ function cleanAttrs(
     const source = isObj(raw) ? raw : {};
     const out: Attrs = {};
     for (const [name, spec] of Object.entries(specs)) {
+        // a feature the profile does not use: the attribute is simply not there (a richer document in a poorer profile)
+        if (spec.feature && !ctx.profile.features?.includes(spec.feature)) continue;
         const value = spec.check(source[name]);
         if (value === undefined) {
             if (spec.required) {

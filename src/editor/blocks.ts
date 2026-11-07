@@ -111,3 +111,28 @@ export function clearFormatting(schema: Schema): Command {
         return true;
     };
 }
+
+export type Align = 'left' | 'center' | 'right' | 'justify';
+
+/** The alignment of every paragraph and heading in the selection. False when the profile has no `align` or nothing changes. */
+export function setAlign(value: Align): Command {
+    return (state, dispatch) => {
+        const { from, to } = state.selection;
+        const tr = state.tr;
+        let changed = false;
+        state.doc.nodesBetween(from, to, (node, pos) => {
+            if (!node.isTextblock || node.type.spec.attrs?.align === undefined || node.attrs.align === value) return;
+            tr.setNodeMarkup(pos, undefined, { ...node.attrs, align: value });
+            changed = true;
+        });
+        if (changed && dispatch) dispatch(tr);
+        return changed;
+    };
+}
+
+/** The alignment where the selection starts (`left` when there is none or the profile has no `align`). */
+export function alignAt(state: EditorState): Align {
+    const { $from } = state.selection;
+    const block = $from.parent;
+    return block.isTextblock && block.type.spec.attrs?.align !== undefined ? (block.attrs.align as Align) : 'left';
+}

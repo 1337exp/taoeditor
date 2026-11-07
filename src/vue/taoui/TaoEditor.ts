@@ -23,7 +23,7 @@ import {
     type TaoSize,
 } from '@1337exp/taoui';
 import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, ref, shallowRef, watch, type PropType, type VNode } from 'vue';
-import { PROFILES, emptyDoc, type Doc, type ProfileName } from '../../core';
+import { SIZES, emptyDoc, resolveProfile, type Doc, type Profile, type ProfileName } from '../../core';
 import { createEditor, type EditorHandle, type MentionTrigger, type SubmitMode } from '../../editor';
 import { DEFAULT_EMOJI } from './emoji';
 import { PALETTE } from './palette';
@@ -43,6 +43,8 @@ registerTaoIcons({
     'te-outdent': { body: '<path d="M4 6.5h16M12 12h8M4 17.5h16"/><path d="M7 9.5L4 12l3 2.5"/>' },
     'te-quote': { body: '<path d="M9.5 8.5C7 9 5.5 10.7 5.5 13v3.5H10V13H7.5M18.5 8.5c-2.5.5-4 2.2-4 4.5v3.5H19V13h-2.5"/>' },
     'te-clear': { body: '<path d="M5 5.5h10M10 5.5l-2 13M8 18.5h3"/><path d="M14.5 14l5.5 5.5M20 14l-5.5 5.5"/>' },
+    'te-size': { body: '<path d="M3 8V6h10v2M8 6v11M6 17h4M14 11v-1.5h7V11M17.5 9.5V17M16 17h3"/>' },
+    'te-align-justify': { body: '<path d="M4 6.5h16M4 12h16M4 17.5h16"/>', grid: true },
     'te-color': { body: '<path d="M6.5 15.5L12 4.5l5.5 11M8.4 11.5h7.2"/><path d="M5 20h14"/>' },
     'te-code': { body: '<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>' },
     'te-spoiler': {
@@ -75,6 +77,16 @@ export interface TaoEditorLabels {
     outdent: string;
     quote: string;
     clear: string;
+    size: string;
+    sizeSmall: string;
+    sizeNormal: string;
+    sizeLarge: string;
+    sizeHuge: string;
+    align: string;
+    alignLeft: string;
+    alignCenter: string;
+    alignRight: string;
+    alignJustify: string;
     colors: string;
     colorText: string;
     colorBackground: string;
@@ -116,6 +128,16 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     outdent: 'Decrease indent',
     quote: 'Quote',
     clear: 'Clear formatting',
+    size: 'Text size',
+    sizeSmall: 'Small',
+    sizeNormal: 'Normal',
+    sizeLarge: 'Large',
+    sizeHuge: 'Huge',
+    align: 'Align',
+    alignLeft: 'Align left',
+    alignCenter: 'Align center',
+    alignRight: 'Align right',
+    alignJustify: 'Justify',
     colors: 'Text and background color',
     colorText: 'Text color',
     colorBackground: 'Background color',
@@ -144,7 +166,8 @@ export const TaoEditor = defineComponent({
         /** The document (`v-model`). `null` is an empty one. / Документ (`v-model`). */
         modelValue: { type: Object as PropType<Doc | null>, default: null },
         /** What the document may contain. / Что может содержать документ. */
-        profile: { type: String as PropType<ProfileName>, default: 'comment' },
+        /** A ready profile (`chat`, `comment`, `article`) or your own (`withoutFeatures`, `defineProfile`): what the project uses. */
+        profile: { type: [String, Object] as PropType<ProfileName | Profile>, default: 'comment' },
         /** What sends: `enter` (chat), `mod-enter` (comment), `none`. / Что отправляет. */
         submit: { type: String as PropType<SubmitMode>, default: 'none' },
         placeholder: { type: String, default: '' },
@@ -200,6 +223,25 @@ export const TaoEditor = defineComponent({
         const emojiOpen = ref(false);
         const colorsOpen = ref(false);
         const colorsPos = ref<{ left: number; top: number } | null>(null); // where the popup is, measured after it is drawn
+        const alignOpen = ref(false);
+        const alignPos = ref<{ left: number; top: number } | null>(null);
+        const sizeOpen = ref(false);
+        const sizePos = ref<{ left: number; top: number } | null>(null);
+        // One popup at a time: opening one closes the others.
+        const closeMenus = (): void => {
+            emojiOpen.value = false;
+            colorsOpen.value = false;
+            alignOpen.value = false;
+            sizeOpen.value = false;
+        };
+        const toggleMenu = (which: 'colors' | 'align' | 'size'): void => {
+            const open = { colors: colorsOpen, align: alignOpen, size: sizeOpen }[which];
+            const was = open.value;
+            closeMenus();
+            open.value = !was;
+            const pos = { colors: colorsPos, align: alignPos, size: sizePos }[which];
+            pos.value = null; // measured again after it is drawn
+        };
 
         // The floating panel: where the selection is (relative to this component), and how big the panel is.
         const root = ref<HTMLElement | null>(null);
@@ -281,7 +323,7 @@ export const TaoEditor = defineComponent({
                 mentions: props.mentions ? { onTrigger, onKey: onMentionKey } : undefined,
                 placeholder: props.placeholder,
                 label: props.label,
-                class: (props.spaced ?? props.profile === 'article') ? 'tao-prose' : 'tao-prose tao-compact',
+                class: (props.spaced ?? resolveProfile(props.profile).spaced ?? false) ? 'tao-prose' : 'tao-prose tao-compact',
                 readOnly: props.readonly || props.disabled,
                 onChange: (next) => {
                     emit('update:modelValue', next);
@@ -295,10 +337,7 @@ export const TaoEditor = defineComponent({
             });
             handle.view.dom.addEventListener('focus', () => emit('focus'));
             handle.view.dom.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape') {
-                    emojiOpen.value = false;
-                    colorsOpen.value = false;
-                }
+                if (event.key === 'Escape') closeMenus();
             });
             handle.view.dom.addEventListener('blur', () => emit('blur'));
             editor.value = handle;
@@ -306,21 +345,31 @@ export const TaoEditor = defineComponent({
         };
 
         onMounted(() => build(props.modelValue));
+        // The popups (colours, alignment, size) are overlays: each is placed under its button, or above it when there is no room
+        // below, and kept inside the component. Measured after drawing; shown only once measured.
+        const menus = [
+            { open: () => colorsOpen.value, button: '.tao-editor-colors-button', popup: '.tao-editor-colors', pos: colorsPos },
+            { open: () => alignOpen.value, button: '.tao-editor-align-button', popup: '.tao-editor-align', pos: alignPos },
+            { open: () => sizeOpen.value, button: '.tao-editor-size-button', popup: '.tao-editor-size', pos: sizePos },
+        ];
         onUpdated(() => {
             const box = root.value;
-            if (!colorsOpen.value || !box) return;
-            const button = box.querySelector<HTMLElement>('.tao-editor-colors-button');
-            const popup = box.querySelector<HTMLElement>('.tao-editor-colors');
-            if (!button || !popup) return;
-            const area = box.getBoundingClientRect();
-            const at = button.getBoundingClientRect();
-            const roomBelow = window.innerHeight - at.bottom;
-            const above = roomBelow < popup.offsetHeight + 8 && at.top > roomBelow;
-            const left = Math.max(0, Math.min(at.left - area.left, area.width - popup.offsetWidth));
-            const top = above ? at.top - area.top - popup.offsetHeight - 4 : at.bottom - area.top + 4;
-            const now = colorsPos.value;
-            // only when it moved: setting the same place again would draw again for ever
-            if (!now || Math.abs(now.left - left) > 0.5 || Math.abs(now.top - top) > 0.5) colorsPos.value = { left, top };
+            if (!box) return;
+            for (const menu of menus) {
+                if (!menu.open()) continue;
+                const button = box.querySelector<HTMLElement>(menu.button);
+                const popup = box.querySelector<HTMLElement>(menu.popup);
+                if (!button || !popup) continue;
+                const area = box.getBoundingClientRect();
+                const at = button.getBoundingClientRect();
+                const roomBelow = window.innerHeight - at.bottom;
+                const above = roomBelow < popup.offsetHeight + 8 && at.top > roomBelow;
+                const left = Math.max(0, Math.min(at.left - area.left, area.width - popup.offsetWidth));
+                const top = above ? at.top - area.top - popup.offsetHeight - 4 : at.bottom - area.top + 4;
+                const now = menu.pos.value;
+                // only when it moved: setting the same place again would draw again for ever
+                if (!now || Math.abs(now.left - left) > 0.5 || Math.abs(now.top - top) > 0.5) menu.pos.value = { left, top };
+            }
         });
         onUpdated(() => {
             const el = floatEl.value;
@@ -335,8 +384,10 @@ export const TaoEditor = defineComponent({
             if (!target?.closest?.('.tao-editor-emoji, .tao-editor-emoji-button')) emojiOpen.value = false;
             // the custom colour field opens its own popup in <body>: a press in it is not outside
             if (!target?.closest?.('.tao-editor-colors, .tao-editor-colors-button, .tao-popover__panel')) colorsOpen.value = false;
+            if (!target?.closest?.('.tao-editor-align, .tao-editor-align-button')) alignOpen.value = false;
+            if (!target?.closest?.('.tao-editor-size, .tao-editor-size-button')) sizeOpen.value = false;
         };
-        watch(() => emojiOpen.value || colorsOpen.value, (open) => {
+        watch(() => emojiOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value, (open) => {
             if (open) document.addEventListener('pointerdown', closeOnOutside, true);
             else document.removeEventListener('pointerdown', closeOnOutside, true);
         });
@@ -409,7 +460,9 @@ export const TaoEditor = defineComponent({
             void tick.value; // the dependency: re-render after every editor update
             const handle = editor.value;
             const text: TaoEditorLabels = { ...DEFAULT_LABELS, ...props.labels };
-            const marks = PROFILES[props.profile].marks as readonly string[];
+            const profile = resolveProfile(props.profile);
+            const marks = profile.marks as readonly string[];
+            const features = (profile.features ?? []) as readonly string[];
             const locked = props.disabled || props.readonly;
             // Normal size by default (our decision, against the guide's small for tool panels: this field and its emoji are
             // the thing people use, not a side tool). The app can still choose through `size`.
@@ -440,13 +493,16 @@ export const TaoEditor = defineComponent({
                 });
             };
 
-            const nodes = PROFILES[props.profile].nodes as readonly string[];
+            const nodes = profile.nodes as readonly string[];
             // The order of Gmail's bar: undo and redo, the marks, the blocks, clear formatting.
             const history = [
                 tool(text.undo, 'tao-undo', () => handle?.undo(), { off: !(handle?.canUndo() ?? false) }),
                 tool(text.redo, 'tao-redo', () => handle?.redo(), { off: !(handle?.canRedo() ?? false) }),
             ];
             const markTools = [
+                ...(marks.includes('size')
+                    ? [tool(text.size, 'te-size', () => toggleMenu('size'), { pressed: sizeOpen.value, class: 'tao-editor-size-button' })]
+                    : []),
                 ...MARK_BUTTONS.filter((b) => marks.includes(b.mark)).map((b) =>
                     tool(text[b.mark], b.icon, () => handle?.toggleMark(b.mark), { shortcut: b.shortcut, pressed: handle?.isMarkActive(b.mark) ?? false }),
                 ),
@@ -458,19 +514,22 @@ export const TaoEditor = defineComponent({
                           }, { pressed: linkOpen.value || (handle?.isMarkActive('link') ?? false) }),
                       ]
                     : []),
-                ...(marks.includes('color')
+                ...(marks.includes('color') || marks.includes('background')
                     ? [
                           tool(text.colors, 'te-color', () => {
-                              colorsOpen.value = !colorsOpen.value;
-                              colorsPos.value = null;
+                              toggleMenu('colors');
                           }, { pressed: colorsOpen.value, class: 'tao-editor-colors-button' }),
                       ]
                     : []),
             ];
+            const alignIcon = { left: 'tao-align-left', center: 'tao-align-center', right: 'tao-align-right', justify: 'te-align-justify' }[handle?.alignOf() ?? 'left'];
             const blockTools = [
+                ...(features.includes('align')
+                    ? [tool(text.align, alignIcon, () => toggleMenu('align'), { pressed: alignOpen.value, class: 'tao-editor-align-button' })]
+                    : []),
                 ...(nodes.includes('orderedList') ? [tool(text.numbered, 'te-list-ordered', () => handle?.toggleList('orderedList'), { shortcut: key('7', true), pressed: handle?.isBlockActive('orderedList') ?? false })] : []),
                 ...(nodes.includes('bulletList') ? [tool(text.bulleted, 'te-list-bullet', () => handle?.toggleList('bulletList'), { shortcut: key('8', true), pressed: handle?.isBlockActive('bulletList') ?? false })] : []),
-                ...(nodes.includes('listItem')
+                ...(features.includes('indent') || nodes.includes('listItem')
                     ? [
                           tool(text.outdent, 'te-outdent', () => handle?.outdent(), { off: !(handle?.canOutdent() ?? false) }),
                           tool(text.indent, 'te-indent', () => handle?.indent(), { off: !(handle?.canIndent() ?? false) }),
@@ -478,7 +537,7 @@ export const TaoEditor = defineComponent({
                     : []),
                 ...(nodes.includes('blockquote') ? [tool(text.quote, 'te-quote', () => handle?.toggleQuote(), { shortcut: key('9', true), pressed: handle?.isBlockActive('blockquote') ?? false })] : []),
             ];
-            const clearTools = [tool(text.clear, 'te-clear', () => handle?.clearFormatting())];
+            const clearTools = marks.some((m) => m !== 'link') ? [tool(text.clear, 'te-clear', () => handle?.clearFormatting())] : [];
 
             const panel: VNode[] = [];
             if (props.toolbar) {
@@ -618,12 +677,12 @@ export const TaoEditor = defineComponent({
                                 handle?.focus();
                             },
                         },
-                        [section('color', text.colorText), section('background', text.colorBackground)],
+                        [...(marks.includes('color') ? [section('color', text.colorText)] : []), ...(marks.includes('background') ? [section('background', text.colorBackground)] : [])],
                     ),
                 );
             }
             const hasSelection = handle ? !handle.view.state.selection.empty : false;
-            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value || colorsOpen.value);
+            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value);
             const children: VNode[] = [];
             if (props.floating) {
                 if (showFloating) {
@@ -639,6 +698,86 @@ export const TaoEditor = defineComponent({
             }
             // The keys matter: the host holds the engine's DOM, and without them Vue would reuse it for whatever is
             // inserted before it (the link row, the floating panel).
+            const placed = (at: { left: number; top: number } | null): Record<string, string> =>
+                at ? { left: `${at.left}px`, top: `${at.top}px` } : { left: '0px', top: '0px', visibility: 'hidden' };
+            if (props.toolbar && alignOpen.value && features.includes('align')) {
+                const choices: [Parameters<NonNullable<typeof handle>['setAlign']>[0], keyof TaoEditorLabels, string][] = [
+                    ['left', 'alignLeft', 'tao-align-left'],
+                    ['center', 'alignCenter', 'tao-align-center'],
+                    ['right', 'alignRight', 'tao-align-right'],
+                    ['justify', 'alignJustify', 'te-align-justify'],
+                ];
+                overlays.push(
+                    h(
+                        'div',
+                        {
+                            key: 'align',
+                            class: 'tao-editor-menu tao-editor-align',
+                            role: 'group',
+                            'aria-label': text.align,
+                            style: placed(alignPos.value),
+                        },
+                        choices.map(([value, label, icon]) =>
+                            h(TaoButton, {
+                                key: value,
+                                icon,
+                                variant: 'ghost',
+                                tone: 'neutral',
+                                size: toolSize,
+                                pressed: handle?.alignOf() === value,
+                                'aria-label': text[label],
+                                title: text[label],
+                                onMousedown: keepFocus,
+                                'onUpdate:pressed': () => {
+                                    handle?.setAlign(value);
+                                    alignOpen.value = false;
+                                    handle?.focus();
+                                },
+                            }),
+                        ),
+                    ),
+                );
+            }
+            if (props.toolbar && sizeOpen.value && marks.includes('size')) {
+                const choices: [(typeof SIZES)[number] | null, keyof TaoEditorLabels, string][] = [
+                    ['small', 'sizeSmall', '0.8em'],
+                    [null, 'sizeNormal', '1em'],
+                    ['large', 'sizeLarge', '1.4em'],
+                    ['huge', 'sizeHuge', '2em'],
+                ];
+                overlays.push(
+                    h(
+                        'div',
+                        {
+                            key: 'size',
+                            class: 'tao-editor-menu tao-editor-size',
+                            role: 'group',
+                            'aria-label': text.size,
+                            style: placed(sizePos.value),
+                        },
+                        choices.map(([value, label, fontSize]) =>
+                            h(
+                                TaoButton,
+                                {
+                                    key: label,
+                                    variant: 'ghost',
+                                    tone: 'neutral',
+                                    size: toolSize,
+                                    pressed: (handle?.sizeOf() ?? null) === value,
+                                    style: { fontSize, justifyContent: 'flex-start' },
+                                    onMousedown: keepFocus,
+                                    'onUpdate:pressed': () => {
+                                        handle?.setSize(value);
+                                        sizeOpen.value = false;
+                                        handle?.focus();
+                                    },
+                                },
+                                () => text[label],
+                            ),
+                        ),
+                    ),
+                );
+            }
             children.push(...overlays);
             if (trigger.value && people.value.length > 0) {
                 const left = Math.max(0, Math.min(suggestAt.value.x, (root.value?.clientWidth ?? 0) - 220));
@@ -722,7 +861,9 @@ export const TaoEditor = defineComponent({
                         title: text.emoji,
                         onMousedown: keepFocus,
                         'onUpdate:pressed': () => {
-                            emojiOpen.value = !emojiOpen.value;
+                            const was = emojiOpen.value;
+                            closeMenus();
+                            emojiOpen.value = !was;
                             handle?.focus();
                         },
                     }),

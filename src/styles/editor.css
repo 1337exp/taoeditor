@@ -193,3 +193,21 @@
     outline: 2px solid var(--te-focus, light-dark(#2f6df6, #7aa5ff));
     outline-offset: 2px;
 }
+
+/* The small popups of the toolbar (alignment, size): a raised row or list under their button. */
+.tao-editor-menu {
+    position: absolute;
+    z-index: var(--te-z, 20);
+    box-sizing: border-box;
+    display: flex;
+    gap: 0.125em;
+    padding: 0.25em;
+    background: var(--te-panel-bg, light-dark(#fff, #23262d));
+    border: 1px solid var(--te-border, light-dark(#d5d9e0, #3a3f49));
+    border-radius: var(--te-panel-radius, 0.5em);
+    box-shadow: var(--te-panel-shadow, 0 4px 16px rgb(0 0 0 / 0.25));
+}
+.tao-editor-size {
+    flex-direction: column;
+    min-width: 9em;
+}

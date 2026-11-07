@@ -33,9 +33,13 @@ export const VOID_TAGS: ReadonlySet<string> = new Set(['br']);
 /** `rel` of every link we render. / `rel` каждой выводимой ссылки. */
 export const LINK_REL = 'noopener noreferrer nofollow ugc';
 
-/** An indented paragraph or heading says its level with a class (`tao-indent-2`), never with an inline style. */
-const indentClass = (node: DocNode): Record<string, string> | undefined =>
-    typeof node.attrs?.indent === 'number' && node.attrs.indent > 0 ? { class: `tao-indent-${node.attrs.indent}` } : undefined;
+/** Indent and alignment of a paragraph or heading are classes (`tao-indent-2`, `tao-align-center`), never inline styles. */
+const indentClass = (node: DocNode): Record<string, string> | undefined => {
+    const classes: string[] = [];
+    if (typeof node.attrs?.indent === 'number' && node.attrs.indent > 0) classes.push(`tao-indent-${node.attrs.indent}`);
+    if (typeof node.attrs?.align === 'string' && node.attrs.align !== 'left') classes.push(`tao-align-${node.attrs.align}`);
+    return classes.length > 0 ? { class: classes.join(' ') } : undefined;
+};
 
 const el = (tag: string, children: RenderNode[], attrs?: Record<string, string>): RenderElement =>
     attrs ? { tag, attrs, children } : { tag, children };
@@ -50,6 +54,8 @@ function wrapMark(mark: DocMark, child: RenderNode, path: string): RenderElement
             return el('em', [child]);
         case 'underline':
             return el('u', [child]);
+        case 'size':
+            return el('span', [child], { class: `tao-text-${mark.attrs?.value ?? ''}` });
         // the value is `#rrggbb`, checked by the normalizer: a style attribute that can carry nothing else
         case 'color':
             return el('span', [child], { style: `color:${mark.attrs?.value ?? ''}` });

@@ -9,7 +9,7 @@
  */
 import { Schema, type MarkSpec, type NodeSpec } from 'prosemirror-model';
 import { MARKS, MARK_ORDER, NODES, childrenOf, isPageInk, parseColor, safeUrl, type Profile } from '../core';
-import { indentOf } from './indent';
+import { alignOf, indentOf } from './indent';
 
 const expr = (names: readonly string[], required?: boolean): string | undefined => {
     if (names.length === 0) return undefined;
@@ -28,21 +28,32 @@ const pastedColor = (value: string): { value: string } | false => {
     return hex && !isPageInk(hex) ? { value: hex } : false;
 };
 
+const blockClass = (attrs: Record<string, unknown>): string =>
+    [typeof attrs.indent === 'number' && attrs.indent > 0 ? `tao-indent-${attrs.indent}` : '', typeof attrs.align === 'string' && attrs.align !== 'left' ? `tao-align-${attrs.align}` : '']
+        .filter(Boolean)
+        .join(' ');
+
 const NODE_DOM: Readonly<Record<string, NodeSpec>> = {
     paragraph: {
-        attrs: { indent: { default: 0 } },
-        parseDOM: [{ tag: 'p', getAttrs: (dom) => ({ indent: indentOf(dom) }) }],
-        toDOM: (node) => (node.attrs.indent > 0 ? ['p', { class: `tao-indent-${node.attrs.indent}` }, 0] : ['p', 0]),
+        attrs: { indent: { default: 0 }, align: { default: 'left' } },
+        parseDOM: [{ tag: 'p', getAttrs: (dom) => ({ indent: indentOf(dom), align: alignOf(dom) }) }],
+        toDOM: (node) => {
+            const cls = blockClass(node.attrs);
+            return cls ? ['p', { class: cls }, 0] : ['p', 0];
+        },
     },
     heading: {
-        attrs: { level: { default: 1 }, indent: { default: 0 } },
+        attrs: { level: { default: 1 }, indent: { default: 0 }, align: { default: 'left' } },
         defining: true,
         parseDOM: [
-            { tag: 'h1', getAttrs: (dom) => ({ level: 1, indent: indentOf(dom) }) },
-            { tag: 'h2', getAttrs: (dom) => ({ level: 2, indent: indentOf(dom) }) },
-            { tag: 'h3,h4,h5,h6', getAttrs: (dom) => ({ level: 3, indent: indentOf(dom) }) },
+            { tag: 'h1', getAttrs: (dom) => ({ level: 1, indent: indentOf(dom), align: alignOf(dom) }) },
+            { tag: 'h2', getAttrs: (dom) => ({ level: 2, indent: indentOf(dom), align: alignOf(dom) }) },
+            { tag: 'h3,h4,h5,h6', getAttrs: (dom) => ({ level: 3, indent: indentOf(dom), align: alignOf(dom) }) },
         ],
-        toDOM: (node) => [`h${node.attrs.level}`, node.attrs.indent > 0 ? { class: `tao-indent-${node.attrs.indent}` } : {}, 0],
+        toDOM: (node) => {
+            const cls = blockClass(node.attrs);
+            return [`h${node.attrs.level}`, cls ? { class: cls } : {}, 0];
+        },
     },
     blockquote: { defining: true, parseDOM: [{ tag: 'blockquote' }], toDOM: () => ['blockquote', 0] },
     codeBlock: {
@@ -134,6 +145,17 @@ const MARK_DOM: Readonly<Record<string, MarkSpec>> = {
         ],
         toDOM: () => ['u', 0],
     },
+    size: {
+        attrs: { value: {} },
+        parseDOM: [
+            { tag: 'span.tao-text-small', attrs: { value: 'small' } },
+            { tag: 'span.tao-text-large', attrs: { value: 'large' } },
+            { tag: 'span.tao-text-huge', attrs: { value: 'huge' } },
+            { tag: 'small', attrs: { value: 'small' } },
+            { tag: 'big', attrs: { value: 'large' } },
+        ],
+        toDOM: (mark) => ['span', { class: `tao-text-${mark.attrs.value}` }, 0],
+    },
     color: {
         attrs: { value: {} },
         parseDOM: [{ style: 'color', getAttrs: (value) => pastedColor(value) }],
@@ -170,15 +192,22 @@ export function createSchema(profile: Profile): Schema {
         if (name === 'text') continue;
         if (!Object.hasOwn(NODE_DOM, name)) throw new Error(`taoeditor: no DOM mapping for node "${name}"`);
         const core = NODES[name];
-        nodes[name] = { ...NODE_DOM[name], content: expr(childrenOf(name, profile), core.required) };
+        // an attribute of a feature this profile does not have is not in the schema at all
+        const base = NODE_DOM[name];
+        const attrs = base.attrs
+            ? Object.fromEntries(Object.entries(base.attrs).filter(([key]) => !core.attrs?.[key]?.feature || profile.features?.includes(core.attrs[key].feature!)))
+            : undefined;
+        nodes[name] = { ...base, attrs: attrs && Object.keys(attrs).length > 0 ? attrs : undefined, content: expr(childrenOf(name, profile), core.required) };
     }
     nodes.text = {};
 
     const marks: Record<string, MarkSpec> = {};
     for (const name of MARK_ORDER) {
         if (!profile.marks.includes(name)) continue;
-        const excludes = MARKS[name].excludes;
-        marks[name] = excludes ? { ...MARK_DOM[name], excludes: excludes.join(' ') } : MARK_DOM[name];
+        // only marks that this profile has: the engine throws on a name it does not know. An empty list is not written:
+        // it would mean "excludes nothing, not even itself", the default is what we want.
+        const excludes = MARKS[name].excludes?.filter((other) => profile.marks.includes(other));
+        marks[name] = excludes && excludes.length > 0 ? { ...MARK_DOM[name], excludes: excludes.join(' ') } : MARK_DOM[name];
     }
     return new Schema({ nodes, marks });
 }

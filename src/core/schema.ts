@@ -13,6 +13,8 @@ import { safeUrl } from './url';
 
 export interface AttrSpec {
     default: AttrValue;
+    /** The attribute exists only in profiles that list this feature (`indent`, `align`). / Атрибут есть только в профилях с этой возможностью. */
+    feature?: string;
     /** Without a valid value the node or mark is dropped. / Без верного значения узел или марка отбрасываются. */
     required?: boolean;
     /** Returns the cleaned value, or `undefined` when the value is not valid. */
@@ -53,6 +55,20 @@ const cleanLabel = (value: unknown): string | undefined => {
 };
 
 const INLINE = ['text', 'hardBreak', 'mention'] as const;
+const oneOf =
+    (...allowed: string[]) =>
+    (value: unknown): string | undefined =>
+        typeof value === 'string' && allowed.includes(value) ? value : undefined;
+
+/** `left` is the default (the start of the line, so it follows the text direction) and is not written. */
+export const ALIGNS = ['left', 'center', 'right', 'justify'] as const;
+export const SIZES = ['small', 'large', 'huge'] as const;
+
+const BLOCK_ATTRS = {
+    indent: { default: 0, check: intIn(0, 8), feature: 'indent' },
+    align: { default: 'left', check: oneOf(...ALIGNS), feature: 'align' },
+} as const;
+
 const BLOCKS_INSIDE = ['paragraph', 'codeBlock', 'bulletList', 'orderedList', 'blockquote'] as const;
 
 export const NODES: Readonly<Record<string, NodeSpec>> = {
@@ -61,12 +77,12 @@ export const NODES: Readonly<Record<string, NodeSpec>> = {
         children: ['paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList'],
         required: true,
     },
-    paragraph: { kind: 'block', children: INLINE, marks: true, attrs: { indent: { default: 0, check: intIn(0, 8) } } },
+    paragraph: { kind: 'block', children: INLINE, marks: true, attrs: BLOCK_ATTRS },
     heading: {
         kind: 'block',
         children: ['text'],
         marks: true,
-        attrs: { level: { default: 1, check: intIn(1, 3) }, indent: { default: 0, check: intIn(0, 8) } },
+        attrs: { level: { default: 1, check: intIn(1, 3) }, ...BLOCK_ATTRS },
     },
     blockquote: { kind: 'block', children: BLOCKS_INSIDE, required: true },
     codeBlock: {
@@ -108,6 +124,7 @@ export const MARKS: Readonly<Record<string, MarkSpec>> = {
     italic: {},
     underline: {},
     strike: {},
+    size: { attrs: { value: { default: '', required: true, check: oneOf(...SIZES) } } },
     color: { attrs: { value: { default: '', required: true, check: parseColor } } },
     background: { attrs: { value: { default: '', required: true, check: parseColor } } },
     spoiler: {},
@@ -121,6 +138,10 @@ export interface Profile {
     /** Allowed node types (`text` and `hardBreak` included). / Разрешённые узлы. */
     nodes: readonly string[];
     marks: readonly string[];
+    /** Block attributes in use: `indent`, `align`. Missing means none. */
+    features?: readonly string[];
+    /** A gap between paragraphs by default (an article), none otherwise (a chat, a mail). */
+    spaced?: boolean;
 }
 
 const CHAT_NODES = ['paragraph', 'text', 'hardBreak', 'mention', 'blockquote', 'codeBlock'] as const;
@@ -128,9 +149,9 @@ const COMMENT_NODES = [...CHAT_NODES, 'bulletList', 'orderedList', 'listItem'] a
 const ARTICLE_NODES = [...COMMENT_NODES, 'heading'] as const;
 
 export const PROFILES = {
-    chat: { name: 'chat', nodes: CHAT_NODES, marks: MARK_ORDER },
-    comment: { name: 'comment', nodes: COMMENT_NODES, marks: MARK_ORDER },
-    article: { name: 'article', nodes: ARTICLE_NODES, marks: MARK_ORDER },
+    chat: { name: 'chat', nodes: CHAT_NODES, marks: MARK_ORDER, features: [] },
+    comment: { name: 'comment', nodes: COMMENT_NODES, marks: MARK_ORDER, features: ['indent', 'align'] },
+    article: { name: 'article', nodes: ARTICLE_NODES, marks: MARK_ORDER, features: ['indent', 'align'], spaced: true },
 } as const satisfies Record<string, Profile>;
 
 export type ProfileName = keyof typeof PROFILES;

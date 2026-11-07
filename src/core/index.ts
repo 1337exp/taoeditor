@@ -1,6 +1,8 @@
 export { DOC_VERSION, emptyDoc } from './model';
 export type { AttrValue, Attrs, Doc, DocMark, DocNode } from './model';
-export { MARKS, MARK_ORDER, NODES, PROFILES, childrenOf } from './schema';
+export { ALIGNS, MARKS, MARK_ORDER, NODES, PROFILES, SIZES, childrenOf } from './schema';
+export { FEATURES, defineProfile, resolveProfile, withoutFeatures } from './profile';
+export type { ProfileSpec, Removal } from './profile';
 export type { AttrSpec, MarkSpec, NodeSpec, Profile, ProfileName } from './schema';
 export { MAX_DEPTH, normalizeDoc } from './normalize';
 export type { Issue, IssueCode, Normalized } from './normalize';
