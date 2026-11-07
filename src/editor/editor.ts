@@ -4,7 +4,7 @@ import type { MarkType, Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { ALIGNS, SIZES, emptyDoc, isEmptyDoc, normalizeDoc, parseColor, resolveProfile, safeUrl, type Doc, type Issue, type Profile, type ProfileName } from '../core';
-import { docToNode, nodeToDoc } from './convert';
+import { docToNode, nodeToDoc, withoutGuards } from './convert';
 import type { MentionHooks, MentionTrigger } from './mentions';
 import { alignAt, blockStyleAt, clearFormatting, setBlockStyle, indent, isBlockActive, outdent, setAlign, toggleList, toggleQuote, type Align, type BlockStyle } from './blocks';
 import { createPlugins, type SubmitMode } from './plugins';
@@ -133,7 +133,7 @@ function valueOfMark(view: EditorView, type: MarkType | undefined): string | nul
 export function createEditor(parent: HTMLElement, options: EditorOptions = {}): EditorHandle {
     const profile: Profile = resolveProfile(options.profile ?? 'comment');
     const schema = createSchema(profile);
-    const getDoc = (): Doc => nodeToDoc(view.state.doc, profile).doc;
+    const getDoc = (): Doc => withoutGuards(nodeToDoc(view.state.doc, profile).doc);
 
     const send = (): void => {
         const doc = getDoc();

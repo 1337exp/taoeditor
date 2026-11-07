@@ -40,8 +40,9 @@ describe('inserting a table', () => {
         const ed = mount({ profile: 'comment' });
         expect(ed.insertTable(2, 3)).toBe(true);
         expect(grid(ed)).toEqual([['', '', ''], ['', '', '']]);
-        const types = ed.getDoc().content.map((n) => n.type);
-        expect(types).toEqual(['paragraph', 'table', 'paragraph']); // a place for the caret before and after the table
+        // a place for the caret before and after the table in the editor; the document itself has only the table
+        expect([...Array(ed.view.state.doc.childCount).keys()].map((i) => ed.view.state.doc.child(i).type.name)).toEqual(['paragraph', 'table', 'paragraph']);
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['table']);
         expect(ed.inTable()).toBe(true);
         type(ed, 'x');
         expect(grid(ed)[0][0]).toBe('x');
@@ -53,7 +54,7 @@ describe('inserting a table', () => {
         type(ed, 'text');
         ed.toggleQuote();
         ed.insertTable(1, 1);
-        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['blockquote', 'table', 'paragraph']);
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['blockquote', 'table']); // the guard paragraph after it is not stored
     });
 
     it('is cut to the limits, and refuses a nonsense size and a place inside a table', () => {
@@ -100,17 +101,18 @@ describe('editing a table', () => {
         const ed = make();
         intoCell(ed, 0);
         ed.tableCommand('toggleHeaderRow');
-        expect(ed.getDoc().content[1].content![0].content!.map((c) => c.type)).toEqual(['tableHeader', 'tableHeader']);
-        expect(ed.getDoc().content[1].content![1].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
+        expect(ed.getDoc().content[0].content![0].content!.map((c) => c.type)).toEqual(['tableHeader', 'tableHeader']);
+        expect(ed.getDoc().content[0].content![1].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
         ed.tableCommand('toggleHeaderRow');
-        expect(ed.getDoc().content[1].content![0].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
+        expect(ed.getDoc().content[0].content![0].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
     });
 
     it('deletes the table; the paragraph after it stays', () => {
         const ed = make();
         intoCell(ed, 1);
         expect(ed.tableCommand('deleteTable')).toBe(true);
-        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'paragraph']);
+        expect(ed.view.state.doc.childCount).toBe(2);
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'paragraph']); // no table left, so both are ordinary lines
         expect(ed.inTable()).toBe(false);
     });
 
@@ -126,14 +128,25 @@ describe('editing a table', () => {
         const ed = mount({ profile: 'comment' });
         ed.setDoc({ v: 1, content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', content: [{ type: 'paragraph' }] }] }] }] });
         ed.view.dispatch(ed.view.state.tr.insertText('x', 3));
-        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'table', 'paragraph']);
+        expect(ed.view.state.doc.firstChild!.type.name).toBe('paragraph');
+        expect(ed.view.state.doc.lastChild!.type.name).toBe('paragraph');
+    });
+
+    it('the guard paragraphs are not in the document: only an empty one next to a table at the end is left out', () => {
+        const ed = mount({ profile: 'comment' });
+        ed.insertTable(1, 1);
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['table']);
+        ed.view.dispatch(ed.view.state.tr.insertText('before', 1));
+        ed.view.dispatch(ed.view.state.tr.insertText('after', ed.view.state.doc.content.size - 1));
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'table', 'paragraph']); // they have text: kept
+        expect(ed.isEmpty()).toBe(false);
     });
 
     it('a table is never the last thing: there is always a place for the caret after it', () => {
         const ed = make();
         intoCell(ed, 3);
         ed.tableCommand('addRowAfter');
-        expect(ed.getDoc().content.at(-1)!.type).toBe('paragraph');
+        expect(ed.view.state.doc.lastChild!.type.name).toBe('paragraph');
     });
 });
 
@@ -174,7 +187,7 @@ describe('what is typed into a table', () => {
         ed.toggleMark('bold');
         press(ed, 'Enter');
         expect(ed.issues()).toEqual([]);
-        expect(ed.getDoc().content[1].content![0].content![0].content).toHaveLength(2);
+        expect(ed.getDoc().content[0].content![0].content![0].content).toHaveLength(2);
     });
 
     it('a headings command does not break a cell (headings are not allowed in one)', () => {

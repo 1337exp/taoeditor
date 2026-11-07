@@ -64,7 +64,7 @@ describe('the table button', () => {
         expect(m.host.querySelectorAll('.tao-editor-grid-cell--on')).toHaveLength(6);
         target.click();
         await tick();
-        const table = m.engine().getDoc().content[1];
+        const table = m.engine().getDoc().content[0];
         expect(table.type).toBe('table');
         expect(table.content).toHaveLength(2);
         expect(table.content![0].content).toHaveLength(3);
@@ -87,7 +87,7 @@ describe('the table button', () => {
         ]);
         byLabel(m.host, 'Insert row below').click();
         await tick();
-        expect(m.engine().getDoc().content[1].content).toHaveLength(3);
+        expect(m.engine().getDoc().content[0].content).toHaveLength(3);
         button(m.host, 'Table').click();
         await tick();
         byLabel(m.host, 'Delete table').click();
@@ -108,7 +108,7 @@ describe('the table button', () => {
         expect(popupButtons(m.host).map((b) => b.getAttribute('aria-label') ?? b.textContent!.trim())).toContain('Delete table');
         byLabel(m.host, 'Insert column after').click();
         await tick();
-        expect(m.engine().getDoc().content[1].content![0].content).toHaveLength(3);
+        expect(m.engine().getDoc().content[0].content![0].content).toHaveLength(3);
         m.engine().tableCommand('deleteTable');
         await tick();
         expect(m.host.querySelector('.tao-editor-cell-button')).toBeNull(); // the caret left the table

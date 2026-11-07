@@ -694,5 +694,11 @@
   "src/vue/taoui/TaoEditor.ts",
   "if (!target?.closest?.('.tao-editor-table, .tao-editor-table-button')) tableOpen.value = false;",
   ""
+ ],
+ [
+  "tables: the guard paragraph is stored",
+  "src/editor/convert.ts",
+  "if (isEmptyParagraph(content[0]) && isTable(content[1])) content = content.slice(1);",
+  ""
  ]
 ]
