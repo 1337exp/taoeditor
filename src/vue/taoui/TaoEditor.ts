@@ -23,7 +23,8 @@ import {
 } from '@1337exp/taoui';
 import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, ref, shallowRef, watch, type PropType, type VNode } from 'vue';
 import { PROFILES, emptyDoc, type Doc, type ProfileName } from '../../core';
-import { createEditor, type EditorHandle, type SubmitMode } from '../../editor';
+import { createEditor, type EditorHandle, type MentionTrigger, type SubmitMode } from '../../editor';
+import { DEFAULT_EMOJI } from './emoji';
 
 // Icons in TaoUI's own style (24 grid, strokes). Names must not start with `tao-`.
 registerTaoIcons({
@@ -32,6 +33,7 @@ registerTaoIcons({
     'te-strike': {
         body: '<path d="M4.5 12h15"/><path d="M16.5 7.5C16 6.4 14.5 5.5 12 5.5c-2.6 0-4.3 1.1-4.3 2.9 0 1.2.9 2 2.6 2.6M8 16.5c.6 1.2 2 2 4.2 2 2.7 0 4.3-1.1 4.3-2.9 0-.6-.2-1.1-.7-1.6"/>',
     },
+    'te-emoji': { body: '<circle cx="12" cy="12" r="8.5"/><path d="M8.6 14.2c.8 1.3 2 2 3.4 2s2.6-.7 3.4-2"/><path d="M9.4 9.8h.01M14.6 9.8h.01"/>' },
     'te-code': { body: '<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>' },
     'te-spoiler': {
         body: '<path d="M4 4l16 16"/><path d="M10.2 6.2A9 9 0 0112 6c4.5 0 7.5 3.6 8.5 6a12.5 12.5 0 01-2.6 3.5M6.5 8C4.9 9.2 3.8 10.8 3.5 12c1 2.4 4 6 8.5 6 1.3 0 2.5-.3 3.5-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/>',
@@ -56,7 +58,20 @@ export interface TaoEditorLabels {
     linkApply: string;
     linkRemove: string;
     linkInvalid: string;
+    emoji: string;
+    emojiList: string;
+    mentionList: string;
 }
+
+/** One person in the list shown after `@`. `id` is what is stored, `label` what the text shows. */
+export interface MentionItem {
+    id: string;
+    label: string;
+    /** A second line: a login, a role. */
+    hint?: string;
+}
+
+let listCounter = 0;
 
 export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     toolbar: 'Formatting',
@@ -72,6 +87,9 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     linkApply: 'Apply',
     linkRemove: 'Remove link',
     linkInvalid: 'Only http and https links are allowed',
+    emoji: 'Emoji',
+    emojiList: 'Emoji',
+    mentionList: 'People',
 };
 
 const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
@@ -103,6 +121,17 @@ export const TaoEditor = defineComponent({
         toolbar: { type: Boolean, default: true },
         /** The toolbar floats over the selection instead of standing above the field. / Панель висит над выделением. */
         floating: { type: Boolean, default: false },
+        /**
+         * Looks people up for `@`: gets what was typed after it, returns people (now or as a promise). Without it `@` is
+         * just a character. The app decides who may be mentioned and must check the ids it receives.
+         * Ищет людей для `@`: получает набранное после неё, возвращает людей (сразу или промисом). Без неё `@` — обычный
+         * символ. Кого можно упомянуть, решает приложение; полученные id оно обязано проверять.
+         */
+        mentions: { type: Function as PropType<(query: string) => MentionItem[] | Promise<MentionItem[]>>, default: undefined },
+        /** A button in the corner of the field with a list of emoji (plain text). / Кнопка эмодзи в углу поля. */
+        emoji: { type: Boolean, default: false },
+        /** Own emoji for the picker. / Свои эмодзи для выбора. */
+        emojiList: { type: Array as PropType<readonly string[]>, default: undefined },
         readonly: { type: Boolean, default: false },
         disabled: { type: Boolean, default: false },
         /** Own texts (any subset). / Свои тексты (любая часть). */
@@ -123,6 +152,15 @@ export const TaoEditor = defineComponent({
         const linkOpen = ref(false);
         const linkHref = ref('');
         const linkError = ref(false);
+
+        // Mentions: the engine says where the caret is in `@query`, the list and its data are ours.
+        const listId = `tao-editor-people-${++listCounter}`;
+        const trigger = shallowRef<MentionTrigger | null>(null);
+        const people = shallowRef<readonly MentionItem[]>([]);
+        const chosen = ref(0);
+        const suggestAt = ref({ x: 0, y: 0 });
+        let lookup = 0; // only the latest answer counts
+        const emojiOpen = ref(false);
 
         // The floating panel: where the selection is (relative to this component), and how big the panel is.
         const root = ref<HTMLElement | null>(null);
@@ -147,12 +185,61 @@ export const TaoEditor = defineComponent({
             }
         };
 
+        const choose = (item: MentionItem): void => {
+            const at = trigger.value;
+            if (!at || !editor.value?.insertMention(at, { id: item.id, label: item.label })) return;
+            trigger.value = null;
+            people.value = [];
+            editor.value.focus();
+        };
+
+        const onTrigger = (at: MentionTrigger | null): void => {
+            trigger.value = at;
+            const my = ++lookup;
+            if (!at) {
+                people.value = [];
+                return;
+            }
+            const handle = editor.value;
+            const box = root.value;
+            if (handle && box) {
+                try {
+                    const c = handle.view.coordsAtPos(at.from);
+                    const r = box.getBoundingClientRect();
+                    suggestAt.value = { x: c.left - r.left, y: c.bottom - r.top };
+                } catch {
+                    // no layout: the list stays where it was
+                }
+            }
+            Promise.resolve(props.mentions?.(at.query) ?? [])
+                .then((list) => {
+                    if (my !== lookup) return;
+                    people.value = list.slice(0, 8);
+                    chosen.value = 0;
+                })
+                .catch(() => {
+                    if (my === lookup) people.value = [];
+                });
+        };
+
+        const onMentionKey = (event: KeyboardEvent): boolean => {
+            const list = people.value;
+            if (!trigger.value || list.length === 0) return false;
+            if (event.key === 'ArrowDown') chosen.value = (chosen.value + 1) % list.length;
+            else if (event.key === 'ArrowUp') chosen.value = (chosen.value + list.length - 1) % list.length;
+            else choose(list[chosen.value]); // Enter, Tab
+            return true;
+        };
+
         const build = (doc: Doc | null | undefined): void => {
             editor.value?.destroy();
+            trigger.value = null;
+            people.value = [];
             const handle = createEditor(host.value!, {
                 profile: props.profile,
                 doc: doc ?? undefined,
                 submit: props.submit,
+                mentions: props.mentions ? { onTrigger, onKey: onMentionKey } : undefined,
                 placeholder: props.placeholder,
                 label: props.label,
                 class: 'tao-prose',
@@ -198,7 +285,7 @@ export const TaoEditor = defineComponent({
         );
         // These are fixed when the engine is built: rebuild, keeping the document.
         watch(
-            () => [props.profile, props.submit, props.placeholder, props.label, props.readonly, props.disabled],
+            () => [props.profile, props.submit, !!props.mentions, props.placeholder, props.label, props.readonly, props.disabled],
             () => {
                 if (editor.value) build(editor.value.getDoc());
             },
@@ -210,6 +297,25 @@ export const TaoEditor = defineComponent({
             /** The engine handle, for tests and diagnostics. / Ручка движка для тестов и диагностики. */
             engine: () => editor.value,
         });
+
+        // The text box tells assistive technology that a list can open under it and which item is current.
+        watch(
+            [() => trigger.value !== null && people.value.length > 0, chosen, editor],
+            ([open, index, handle]) => {
+                const dom = handle?.view.dom;
+                if (!dom || !props.mentions) return;
+                dom.setAttribute('aria-haspopup', 'listbox');
+                dom.setAttribute('aria-autocomplete', 'list');
+                if (open) {
+                    dom.setAttribute('aria-controls', listId);
+                    dom.setAttribute('aria-activedescendant', `${listId}-${index}`);
+                } else {
+                    dom.removeAttribute('aria-controls');
+                    dom.removeAttribute('aria-activedescendant');
+                }
+            },
+            { flush: 'post' },
+        );
 
         const closeLink = (): void => {
             linkOpen.value = false;
@@ -358,6 +464,91 @@ export const TaoEditor = defineComponent({
             }
             // The keys matter: the host holds the engine's DOM, and without them Vue would reuse it for whatever is
             // inserted before it (the link row, the floating panel).
+            if (trigger.value && people.value.length > 0) {
+                const left = Math.max(0, Math.min(suggestAt.value.x, (root.value?.clientWidth ?? 0) - 220));
+                children.push(
+                    h(
+                        'div',
+                        {
+                            key: 'people',
+                            id: listId,
+                            class: 'tao-editor-suggest',
+                            role: 'listbox',
+                            'aria-label': text.mentionList,
+                            style: { left: `${left}px`, top: `${suggestAt.value.y + 4}px` },
+                            onMousedown: keepFocus,
+                        },
+                        people.value.map((item, i) =>
+                            h(
+                                'div',
+                                {
+                                    key: item.id,
+                                    id: `${listId}-${i}`,
+                                    role: 'option',
+                                    'aria-selected': String(i === chosen.value),
+                                    class: ['tao-editor-suggest-item', { 'tao-editor-suggest-item--active': i === chosen.value }],
+                                    onMouseenter: () => (chosen.value = i),
+                                    onClick: () => choose(item),
+                                },
+                                [h('span', { class: 'tao-editor-suggest-label' }, item.label), item.hint ? h('span', { class: 'tao-editor-suggest-hint' }, item.hint) : null],
+                            ),
+                        ),
+                    ),
+                );
+            }
+            if (props.emoji && !locked) {
+                if (emojiOpen.value) {
+                    children.push(
+                        h(
+                            'div',
+                            {
+                                key: 'emoji-panel',
+                                class: 'tao-editor-emoji',
+                                role: 'group',
+                                'aria-label': text.emojiList,
+                                onKeydown: (event: KeyboardEvent) => {
+                                    if (event.key === 'Escape') emojiOpen.value = false;
+                                },
+                            },
+                            (props.emojiList ?? DEFAULT_EMOJI).map((symbol) =>
+                                h(
+                                    TaoButton,
+                                    {
+                                        key: symbol,
+                                        variant: 'ghost',
+                                        tone: 'neutral',
+                                        size: toolSize,
+                                        'aria-label': symbol,
+                                        onMousedown: keepFocus,
+                                        onClick: () => handle?.insertText(symbol),
+                                    },
+                                    () => symbol,
+                                ),
+                            ),
+                        ),
+                    );
+                }
+                children.push(
+                    h(TaoButton, {
+                        key: 'emoji-button',
+                        class: 'tao-editor-emoji-button',
+                        // inline: TaoButton sets its own `position` and is loaded after our stylesheet, so a class would lose
+                        style: { position: 'absolute', right: '0.25em', bottom: '0.25em', zIndex: 1 },
+                        icon: 'te-emoji',
+                        variant: 'ghost',
+                        tone: 'neutral',
+                        size: toolSize,
+                        pressed: emojiOpen.value,
+                        'aria-label': text.emoji,
+                        title: text.emoji,
+                        onMousedown: keepFocus,
+                        'onUpdate:pressed': () => {
+                            emojiOpen.value = !emojiOpen.value;
+                            handle?.focus();
+                        },
+                    }),
+                );
+            }
             children.push(h('div', { key: 'host', class: 'tao-editor-host', ref: host }));
             return h(
                 'div',
@@ -366,7 +557,10 @@ export const TaoEditor = defineComponent({
                     class: ['tao-editor-root', { 'tao-editor-root--disabled': props.disabled }],
                     onFocusin: () => (focused.value = true),
                     onFocusout: (event: FocusEvent) => {
-                        if (!root.value?.contains(event.relatedTarget as Node | null)) focused.value = false;
+                        if (!root.value?.contains(event.relatedTarget as Node | null)) {
+                            focused.value = false;
+                            emojiOpen.value = false;
+                        }
                     },
                 },
                 children,

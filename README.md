@@ -30,6 +30,8 @@ npm run mutate     # break the code on a copy, one thing at a time, and check th
 - **Safe paste**: pasted HTML is read only through the schema's parse rules (Google Docs and Word bold/italic included); scripts, handlers, images, unsafe links cannot get in.
 - **Chat mode**: Enter sends, Shift+Enter breaks the line, an IME composition never sends.
 - **`TaoEditor`** (`@1337exp/taoeditor/vue/taoui`): the field built from TaoUI components with `v-model`, `change`, `send`; a toolbar (fixed, or `floating` over the selection) of toggle buttons (bold, italic, strike, code, spoiler, link, undo, redo) that follow the selection, a link form that refuses unsafe URLs, `size`, `readonly`, `disabled`, translatable `labels`.
+- **Mentions** (`@name`): a mention is one unit in the text (an inline atom with an `id` and the label shown at the time). The editor only notices `@query` and tells the app; the list of people is the app's (`mentions` prop: a function that gets the query and returns people, now or as a promise), it opens under the caret, works with the arrow keys, Enter, Tab and the mouse, and is announced to screen readers. Nothing is converted: if the list is ignored, `@ann` stays text. The viewer turns a mention into a button only when the app listens (`@mention`). **The `id` is a claim, the app must check it.**
+- **Emoji**: a button in the corner of the field (`emoji` prop) with a list; a pick is typed as plain Unicode text (`emojiList` for your own set).
 - **Showing a document**: `toHtml` / `toRenderTree` in the core (no DOM, safe by construction, runs on a server) and a Vue viewer `TaoEditorView` that never loads the editing engine; a spoiler opens on click, Enter or Space.
 - **Made for TaoUI, usable without it**: looks come from `--te-*` variables with neutral defaults; `taoui.css` points them at the TaoUI tokens, `class="tao-prose"` hands the text typography to TaoUI. Only files in `src/vue/taoui/` may import TaoUI (a test guards the layers).
 - **A lab** (`lab/`): the same editor on a page with the document JSON, the plain text, an engine⇄core agreement check, a log of composition, `beforeinput` and key events, and a corpus of pastes.
@@ -57,7 +59,7 @@ Decisions, what is proven and what is not: [docs/architecture.ru.md](docs/archit
 
 ## Not yet
 
-- Export to Markdown (`.md`) for taking notes out, when it is needed. Mentions, emoji, slash menu. The floating toolbar is checked in Chromium only (touch devices not yet).
+- Export to Markdown (`.md`) for taking notes out, when it is needed. Custom (picture) emoji, slash menu. The floating toolbar is checked in Chromium only (touch devices not yet).
 - Images, tables, embeds.
 - Checked only in Chromium by hand and in jsdom by tests: **IME on Android and iOS, Firefox, Safari are not checked yet**.
 

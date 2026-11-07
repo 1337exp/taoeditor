@@ -58,6 +58,26 @@ const NODE_DOM: Readonly<Record<string, NodeSpec>> = {
     },
     listItem: { defining: true, parseDOM: [{ tag: 'li' }], toDOM: () => ['li', 0] },
     hardBreak: { inline: true, selectable: false, parseDOM: [{ tag: 'br' }], toDOM: () => ['br'] },
+    // A mention is one unit: it is selected, deleted and moved over as a whole. Pasted markup only counts if its id and
+    // label pass the same checks as the stored document; the app must still verify that the person exists.
+    mention: {
+        inline: true,
+        atom: true,
+        selectable: true,
+        attrs: { id: { default: '' }, label: { default: '' } },
+        leafText: (node) => `@${node.attrs.label}`,
+        parseDOM: [
+            {
+                tag: 'span[data-mention]',
+                getAttrs: (dom) => {
+                    const id = NODES.mention.attrs!.id.check(dom.getAttribute('data-mention'));
+                    const label = NODES.mention.attrs!.label.check((dom.textContent ?? '').replace(/^@/, ''));
+                    return id !== undefined && label !== undefined ? { id, label } : false;
+                },
+            },
+        ],
+        toDOM: (node) => ['span', { class: 'tao-mention', 'data-mention': node.attrs.id }, `@${node.attrs.label}`],
+    },
 };
 
 // Word and Google Docs write bold as `<b style="font-weight:normal">` wrappers and `font-weight:700` spans:

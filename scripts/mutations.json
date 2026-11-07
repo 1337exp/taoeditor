@@ -214,5 +214,83 @@
   "src/vue/taoui/TaoEditor.ts",
   "(hasSelection && focused.value) || linkOpen.value",
   "hasSelection || linkOpen.value"
+ ],
+ [
+  "mention: any string is a valid id",
+  "src/core/schema.ts",
+  "id: { default: '', required: true, check: (value) => (typeof value === 'string' &&",
+  "id: { default: '', required: true, check: (value) => (typeof value === 'string' && true ||"
+ ],
+ [
+  "mention: an empty label is valid",
+  "src/core/schema.ts",
+  "label.length >= 1 && label.length <= 80",
+  "label.length >= 0 && label.length <= 80"
+ ],
+ [
+  "mention: a label of any length is valid",
+  "src/core/schema.ts",
+  "label.length >= 1 && label.length <= 80",
+  "label.length >= 1 && label.length <= 8000"
+ ],
+ [
+  "mention: marks of an atom are not cleaned",
+  "src/core/normalize.ts",
+  "const marks = spec.marks ? cleanMarks(raw.marks",
+  "const marks = false ? cleanMarks(raw.marks"
+ ],
+ [
+  "mention trigger: fires under the code mark",
+  "src/editor/mentions.ts",
+  "$head.marks().some((m) => m.type.name === 'code')",
+  "false"
+ ],
+ [
+  "mention trigger: Escape is not remembered",
+  "src/editor/mentions.ts",
+  "if (trigger && dismissed === trigger.from) trigger = null;",
+  ""
+ ],
+ [
+  "mention trigger: Escape does not dismiss",
+  "src/editor/mentions.ts",
+  "view.dispatch(view.state.tr.setMeta(key, { dismiss: trigger.from }));",
+  ""
+ ],
+ [
+  "insertMention: accepts anything",
+  "src/editor/editor.ts",
+  "if (!type || !attrs) return false;",
+  "if (!type) return false;"
+ ],
+ [
+  "component: a late answer for an old query wins",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (my !== lookup) return;",
+  ""
+ ],
+ [
+  "component: Enter takes the list even when it is empty",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (!trigger.value || list.length === 0) return false;",
+  "if (!trigger.value) return false;"
+ ],
+ [
+  "component: the emoji button shows when locked",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (props.emoji && !locked) {",
+  "if (props.emoji) {"
+ ],
+ [
+  "component: a picked emoji is not inserted",
+  "src/vue/taoui/TaoEditor.ts",
+  "onClick: () => handle?.insertText(symbol),",
+  "onClick: () => undefined,"
+ ],
+ [
+  "viewer: a mention is a button without a listener",
+  "src/vue/TaoEditorView.ts",
+  "instance?.vnode.props && 'onMention' in instance.vnode.props",
+  "instance?.vnode.props"
  ]
 ]

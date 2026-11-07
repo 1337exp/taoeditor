@@ -4,6 +4,7 @@ import { keymap } from 'prosemirror-keymap';
 import type { Schema } from 'prosemirror-model';
 import { Plugin, type Command } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
+import { mentionPlugin, type MentionHooks } from './mentions';
 
 export type SubmitMode = 'enter' | 'mod-enter' | 'none';
 
@@ -44,6 +45,7 @@ function sendKeys(submit: SubmitMode, send: () => void): Plugin {
 }
 
 export interface PluginOptions {
+    mentions?: MentionHooks;
     submit: SubmitMode;
     send: () => void;
     placeholder?: string;
@@ -63,6 +65,8 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
     };
 
     return [
+        // before the send keys: Enter chooses from the list while it is open
+        ...(options.mentions && schema.nodes.mention ? [mentionPlugin(options.mentions)] : []),
         sendKeys(options.submit, options.send),
         keymap({
             'Mod-b': markKey('bold'),

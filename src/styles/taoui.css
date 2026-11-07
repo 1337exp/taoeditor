@@ -33,6 +33,11 @@
     --te-spoiler-bg: var(--tao-color-border-strong);
     --te-spoiler-open-bg: var(--tao-color-surface-sunken);
 
+    /* a mention chip, and the current item of the list */
+    --te-mention-bg: var(--tao-color-accent-subtle);
+    --te-mention-text: var(--tao-color-accent-text);
+    --te-active-bg: var(--tao-color-surface-hover);
+
     /* the floating panel */
     --te-panel-bg: var(--tao-color-surface-raised);
     --te-panel-radius: var(--tao-radius-panel);

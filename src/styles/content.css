@@ -75,6 +75,22 @@
     font-size: inherit;
 }
 
+/* A mention: a chip with the name; it is a button in the viewer when the app listens to it. */
+.tao-mention {
+    border-radius: 0.35em;
+    padding: 0 0.25em;
+    background: var(--te-mention-bg, light-dark(#e3ecff, #25324f));
+    color: var(--te-mention-text, light-dark(#1f4fc7, #a9c4ff));
+    white-space: nowrap;
+}
+.tao-content .tao-mention[role="button"] {
+    cursor: pointer;
+}
+.tao-content .tao-mention:focus-visible {
+    outline: 2px solid var(--te-focus, light-dark(#2f6df6, #7aa5ff));
+    outline-offset: 1px;
+}
+
 /* Spoiler in the viewer: hidden until the reader clicks it or presses Enter / Space. */
 .tao-content .tao-spoiler {
     border-radius: 3px;

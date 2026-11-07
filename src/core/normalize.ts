@@ -186,8 +186,10 @@ function normalizeChildren(raw: unknown, parentType: string, path: string, depth
                 return;
             }
             if (spec.kind === 'inline') {
-                if (allowed.has(type)) out.push({ type });
-                else if (wrap) run.push({ type });
+                const atom = cleanNode(item, type, spec, here, d + 1, ctx);
+                if (!atom) return;
+                if (allowed.has(type)) out.push(atom);
+                else if (wrap) run.push(atom);
                 else ctx.issues.push({ code: 'disallowed-node', path: here });
                 return;
             }
@@ -219,7 +221,12 @@ function cleanNode(
     if (attrs === null) return null;
     const node: DocNode = { type };
     if (attrs) node.attrs = attrs;
-    if (spec.children.length === 0) return node;
+    if (spec.children.length === 0) {
+        // an inline atom (a mention) may carry marks, like text
+        const marks = spec.marks ? cleanMarks(raw.marks, `${path}/marks`, ctx) : undefined;
+        if (marks) node.marks = marks;
+        return node;
+    }
     const content = normalizeChildren(raw.content, type, `${path}/content`, depth, ctx);
     if (content.length === 0 && spec.required) return null;
     if (content.length > 0) node.content = content;

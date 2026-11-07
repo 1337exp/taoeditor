@@ -64,7 +64,10 @@ function inline(nodes: readonly DocNode[] | undefined, path: string): RenderNode
             out.push(el('br', []));
             return;
         }
-        let rendered: RenderNode = node.text ?? '';
+        let rendered: RenderNode =
+            node.type === 'mention'
+                ? el('span', [`@${node.attrs?.label ?? ''}`], { class: 'tao-mention', 'data-mention': String(node.attrs?.id ?? '') })
+                : (node.text ?? '');
         // marks are in canonical order, the first is the outermost: wrap from the last one
         const marks = node.marks ?? [];
         for (let m = marks.length - 1; m >= 0; m--) rendered = wrapMark(marks[m], rendered, `${path}.${i}.${m}`);

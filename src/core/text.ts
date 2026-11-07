@@ -22,6 +22,7 @@ const blocksText = (nodes: readonly DocNode[]): string => nodes.map(nodeText).jo
 function nodeText(node: DocNode): string {
     if (node.type === 'text') return node.text ?? '';
     if (node.type === 'hardBreak') return '\n';
+    if (node.type === 'mention') return `@${node.attrs?.label ?? ''}`;
     const kids = node.content ?? [];
     const first = kids[0];
     const blockChildren = first !== undefined && Object.hasOwn(NODES, first.type) && NODES[first.type].kind === 'block';

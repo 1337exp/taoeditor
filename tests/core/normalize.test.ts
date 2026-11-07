@@ -141,6 +141,52 @@ describe('marks', () => {
     });
 });
 
+describe('mentions', () => {
+    const mention = (attrs: unknown, marks?: unknown) => ({ type: 'mention', attrs, ...(marks ? { marks } : {}) });
+
+    it('a valid mention stays, with its marks in canonical order', () => {
+        const input = wrap(para(text('a '), mention({ id: 'u:1', label: 'Ann' }, [{ type: 'italic' }, { type: 'bold' }])));
+        const { doc, issues } = norm(input);
+        expect(issues).toEqual([]);
+        expect(doc).toEqual(wrap(para(text('a '), mention({ id: 'u:1', label: 'Ann' }, [{ type: 'bold' }, { type: 'italic' }]))));
+    });
+
+    it.each([
+        ['no id', { label: 'Ann' }],
+        ['an id with a space', { id: 'u 1', label: 'Ann' }],
+        ['an id that is a script', { id: '<script>', label: 'Ann' }],
+        ['a long id', { id: 'x'.repeat(65), label: 'Ann' }],
+        ['no label', { id: 'u1' }],
+        ['an empty label', { id: 'u1', label: '   ' }],
+        ['a long label', { id: 'u1', label: 'x'.repeat(81) }],
+        ['a number id', { id: 7, label: 'Ann' }],
+    ])('%s: the mention is dropped, the text around stays', (_name, attrs) => {
+        const { doc, issues } = norm(wrap(para(text('a'), mention(attrs), text('b'))));
+        expect(doc).toEqual(wrap(para(text('ab'))));
+        expect(issues.map((i) => i.code)).toContain('bad-attr');
+    });
+
+    it('the label is cleaned: control characters and runs of white space become one space', () => {
+        const LF = String.fromCharCode(10);
+        const NUL = String.fromCharCode(0);
+        const { doc } = norm(wrap(para(mention({ id: 'u1', label: ` Ann${LF}${NUL}  Lee ` }))));
+        expect(doc).toEqual(wrap(para(mention({ id: 'u1', label: 'Ann Lee' }))));
+    });
+
+    it('a mention is not allowed in a heading or a code block, and loose ones get a paragraph', () => {
+        const m = mention({ id: 'u1', label: 'Ann' });
+        expect(norm(wrap({ type: 'heading', content: [text('T'), m] }), PROFILES.article).doc).toEqual(wrap({ type: 'heading', content: [text('T')] }));
+        expect(norm(wrap({ type: 'codeBlock', content: [text('x'), m] })).doc).toEqual(wrap({ type: 'codeBlock', content: [text('x')] }));
+        expect(norm(wrap(m)).doc).toEqual(wrap(para(m)));
+    });
+
+    it('other keys on a mention are dropped', () => {
+        const { doc } = norm(wrap(para({ type: 'mention', attrs: { id: 'u1', label: 'Ann', href: 'javascript:x', onclick: '1' }, content: [text('x')] })));
+        expect(JSON.stringify(doc)).not.toMatch(/href|onclick|javascript/);
+        expect(doc.content[0].content).toEqual([mention({ id: 'u1', label: 'Ann' })]);
+    });
+});
+
 describe('text and attributes', () => {
     it('strips control characters and bidi-free zero bytes, keeps tab and newline rules', () => {
         const { doc } = norm(wrap(para(text('a\u0000b\u0007c\u009fd\te'))));
@@ -186,7 +232,7 @@ describe('fuzz: the normalizer is total and idempotent', () => {
         x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
         return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
     };
-    const TYPES = ['paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'listItem', 'hardBreak', 'text', 'script', 'constructor', 'doc', 42, null];
+    const TYPES = ['mention', 'paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'listItem', 'hardBreak', 'text', 'script', 'constructor', 'doc', 42, null];
     const MARK_TYPES = ['bold', 'italic', 'strike', 'code', 'spoiler', 'link', 'x', '__proto__'];
 
     function gen(rand: () => number, depth: number): unknown {
@@ -200,7 +246,7 @@ describe('fuzz: the normalizer is total and idempotent', () => {
                 attrs: rand() < 0.5 ? { href: pick(['https://a.com', 'javascript:1', 5, null]) } : undefined,
             }));
         }
-        if (rand() < 0.3) node.attrs = { level: pick([1, 2, 9, 'x']), start: pick([1, 5, -1]), lang: pick(['ts', '', 'a b']) };
+        if (rand() < 0.3) node.attrs = { level: pick([1, 2, 9, 'x']), start: pick([1, 5, -1]), lang: pick(['ts', '', 'a b']), id: pick(['u1', 'bad id', 5, null]), label: pick(['Ann', '', 7, ' x ']) };
         if (depth < 16 && rand() < 0.7) node.content = Array.from({ length: Math.floor(rand() * 4) }, () => gen(rand, depth + 1));
         return node;
     }

@@ -3,8 +3,9 @@ import { redo, redoDepth, undo, undoDepth } from 'prosemirror-history';
 import type { MarkType, Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { PROFILES, emptyDoc, isEmptyDoc, safeUrl, type Doc, type Issue, type Profile, type ProfileName } from '../core';
+import { PROFILES, emptyDoc, isEmptyDoc, normalizeDoc, safeUrl, type Doc, type Issue, type Profile, type ProfileName } from '../core';
 import { docToNode, nodeToDoc } from './convert';
+import type { MentionHooks, MentionTrigger } from './mentions';
 import { createPlugins, type SubmitMode } from './plugins';
 import { createSchema } from './schema';
 
@@ -15,6 +16,11 @@ export interface EditorOptions {
     doc?: Doc;
     /** What sends: `enter` (chat), `mod-enter` (comment), `none`. / Что отправляет. */
     submit?: SubmitMode;
+    /**
+     * Tell the host when the caret is inside `@query` (the host shows the list, see `insertMention`).
+     * Сообщать хосту, когда каретка внутри `@запрос` (список показывает хост, см. `insertMention`).
+     */
+    mentions?: MentionHooks;
     placeholder?: string;
     /** Extra classes for the editable element, e.g. `tao-prose` under TaoUI. / Доп. классы, например `tao-prose`. */
     class?: string;
@@ -43,6 +49,10 @@ export interface EditorHandle {
     issues(): Issue[];
     toggleMark(name: string): boolean;
     isMarkActive(name: string): boolean;
+    /** Replaces the `@query` of a trigger with a mention and a space. False when the mention is not valid. */
+    insertMention(trigger: MentionTrigger, item: { id: string; label: string }): boolean;
+    /** Types text at the selection (an emoji from a picker). / Вставляет текст на место выделения. */
+    insertText(text: string): boolean;
     /** Sets a link on the selection; `null` removes it. Unsafe URLs are refused (returns false). */
     setLink(href: string | null): boolean;
     undo(): boolean;
@@ -72,7 +82,7 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
     const state = EditorState.create({
         schema,
         doc: docToNode(schema, options.doc ?? emptyDoc(), profile),
-        plugins: createPlugins(schema, { submit: options.submit ?? 'none', send, placeholder: options.placeholder }),
+        plugins: createPlugins(schema, { mentions: options.mentions, submit: options.submit ?? 'none', send, placeholder: options.placeholder }),
     });
 
     const handle: EditorHandle = {
@@ -110,6 +120,21 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
             const safe = safeUrl(href);
             if (!safe) return false;
             view.dispatch(view.state.tr.addMark(from, to, type.create({ href: safe })));
+            return true;
+        },
+        insertMention(trigger, item) {
+            const type = schema.nodes.mention;
+            const clean = normalizeDoc({ v: 1, content: [{ type: 'paragraph', content: [{ type: 'mention', attrs: item }] }] }, profile).doc;
+            const attrs = clean.content[0].content?.[0]?.attrs;
+            if (!type || !attrs) return false;
+            const tr = view.state.tr.replaceWith(trigger.from, trigger.to, [type.create(attrs), schema.text(' ')]);
+            view.dispatch(tr.scrollIntoView());
+            return true;
+        },
+        insertText(text) {
+            if (text === '') return false;
+            const { from, to } = view.state.selection;
+            view.dispatch(view.state.tr.insertText(text, from, to).scrollIntoView());
             return true;
         },
         undo: () => undo(view.state, view.dispatch, view),

@@ -54,6 +54,17 @@ describe('structure', () => {
     });
 });
 
+describe('mentions', () => {
+    it('a mention is a span with its id, the label is escaped, marks wrap it', () => {
+        const m = { type: 'mention', attrs: { id: 'u1', label: '<b>Ann</b> & co' }, marks: [{ type: 'bold' }] };
+        expect(html(para(text('hi '), m))).toBe('<p>hi <strong><span class="tao-mention" data-mention="u1">@&lt;b&gt;Ann&lt;/b&gt; &amp; co</span></strong></p>');
+    });
+
+    it('a forged mention (a bad id) renders nothing', () => {
+        expect(html(para(text('a'), { type: 'mention', attrs: { id: 'x"><script>', label: 'Ann' } }))).toBe('<p>a</p>');
+    });
+});
+
 describe('the output is safe whatever the input is', () => {
     it('escapes text and quotes: no tag, no attribute can be injected', () => {
         const evil = `<img src=x onerror=alert(1)> & "q" 'a'`;

@@ -186,6 +186,20 @@ function mount(): void {
     editor.focus();
 }
 
+// People for the @ list: a fake directory that answers a little late, like a server would.
+const PEOPLE = [
+    { id: 'u1', label: 'Ann Lee', hint: 'ann' },
+    { id: 'u2', label: 'Andy Park', hint: 'andy' },
+    { id: 'u3', label: 'Bob Stone', hint: 'bob' },
+    { id: 'u4', label: 'Carla Diaz', hint: 'carla' },
+    { id: 'u5', label: 'Dmitri Volkov', hint: 'dima' },
+];
+const searchPeople = (query: string) =>
+    new Promise<typeof PEOPLE>((resolve) => {
+        const q = query.toLowerCase();
+        setTimeout(() => resolve(PEOPLE.filter((p) => p.label.toLowerCase().includes(q) || p.hint.includes(q))), 120);
+    });
+
 // The component under test: the same controls drive it (profile, send key), its document is shown by the viewer.
 const componentDoc = shallowRef<Doc | null>(null);
 const componentProfile = shallowRef<ProfileName>('comment');
@@ -201,6 +215,8 @@ function mountComponent(): void {
                 profile: componentProfile.value,
                 submit: componentSubmit.value,
                 floating: componentFloating.value,
+                mentions: searchPeople,
+                emoji: true,
                 placeholder: 'TaoEditor: type here',
                 label: 'TaoEditor component',
                 onSend: (doc: Doc) => {
@@ -210,7 +226,12 @@ function mountComponent(): void {
             }),
     }).mount($('component'));
     createApp({
-        render: () => h(TaoEditorView, { doc: componentDoc.value, profile: componentProfile.value, class: taouiOn() ? 'tao-prose' : undefined }),
+        render: () => h(TaoEditorView, {
+            doc: componentDoc.value,
+            profile: componentProfile.value,
+            class: taouiOn() ? 'tao-prose' : undefined,
+            onMention: (id: string) => log('mention clicked', id),
+        }),
     }).mount($('component-view'));
 }
 

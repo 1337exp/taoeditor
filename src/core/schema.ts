@@ -42,6 +42,16 @@ const intIn =
     (value: unknown): number | undefined =>
         typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max ? value : undefined;
 
+/** `@name`: the id is what is stored and checked by the app, the label is what was shown at the time. */
+const cleanLabel = (value: unknown): string | undefined => {
+    if (typeof value !== 'string') return undefined;
+    // control characters (by code, not by a regex of them) become spaces, runs of white space become one
+    const spaced = [...value].map((c) => (c.charCodeAt(0) < 32 || (c.charCodeAt(0) >= 127 && c.charCodeAt(0) < 160) ? ' ' : c)).join('');
+    const label = spaced.replace(/\s+/g, ' ').trim();
+    return label.length >= 1 && label.length <= 80 ? label : undefined;
+};
+
+const INLINE = ['text', 'hardBreak', 'mention'] as const;
 const BLOCKS_INSIDE = ['paragraph', 'codeBlock', 'bulletList', 'orderedList', 'blockquote'] as const;
 
 export const NODES: Readonly<Record<string, NodeSpec>> = {
@@ -50,7 +60,7 @@ export const NODES: Readonly<Record<string, NodeSpec>> = {
         children: ['paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList'],
         required: true,
     },
-    paragraph: { kind: 'block', children: ['text', 'hardBreak'], marks: true },
+    paragraph: { kind: 'block', children: INLINE, marks: true },
     heading: {
         kind: 'block',
         children: ['text'],
@@ -78,6 +88,15 @@ export const NODES: Readonly<Record<string, NodeSpec>> = {
     },
     listItem: { kind: 'block', children: BLOCKS_INSIDE, required: true },
     hardBreak: { kind: 'inline', children: [] },
+    mention: {
+        kind: 'inline',
+        children: [],
+        marks: true,
+        attrs: {
+            id: { default: '', required: true, check: (value) => (typeof value === 'string' && /^[\w.:-]{1,64}$/.test(value) ? value : undefined) },
+            label: { default: '', required: true, check: cleanLabel },
+        },
+    },
     text: { kind: 'text', children: [] },
 };
 
@@ -100,7 +119,7 @@ export interface Profile {
     marks: readonly string[];
 }
 
-const CHAT_NODES = ['paragraph', 'text', 'hardBreak', 'blockquote', 'codeBlock'] as const;
+const CHAT_NODES = ['paragraph', 'text', 'hardBreak', 'mention', 'blockquote', 'codeBlock'] as const;
 const COMMENT_NODES = [...CHAT_NODES, 'bulletList', 'orderedList', 'listItem'] as const;
 const ARTICLE_NODES = [...COMMENT_NODES, 'heading'] as const;
 

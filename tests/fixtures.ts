@@ -42,6 +42,13 @@ export const FIXTURES: readonly Fixture[] = [
         text: 'run npm i or open and x',
     },
     {
+        id: 'mention',
+        title: 'Mentions',
+        profile: 'chat',
+        doc: doc(p(t('hi '), { type: 'mention', attrs: { id: 'u1', label: 'Ann' } }, t(', and '), { type: 'mention', attrs: { id: 'u2', label: 'Bob Lee' }, marks: [bold] }, t('!'))),
+        text: 'hi @Ann, and @Bob Lee!',
+    },
+    {
         id: 'break',
         title: 'Hard break',
         profile: 'chat',
