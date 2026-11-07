@@ -1,10 +1,35 @@
 {
   "name": "@1337exp/taoeditor",
-  "version": "0.0.0",
-  "private": true,
-  "description": "Embeddable rich-text editor for our ecosystem: comments, chats, notes, articles. Own document model and Markdown, ProseMirror as the pinned engine underneath.",
-  "type": "module",
+  "version": "0.1.0",
+  "description": "Embeddable rich-text editor for comments, chats, notes and articles: its own document model, a toolbar on TaoUI, a project chooses what it uses. ProseMirror underneath.",
+  "keywords": [
+    "editor",
+    "rich-text",
+    "wysiwyg",
+    "prosemirror",
+    "vue",
+    "vue3",
+    "comments",
+    "chat",
+    "mentions",
+    "typescript",
+    "taoui",
+    "taoux"
+  ],
+  "author": "1337exp",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/1337exp/taoeditor.git"
+  },
+  "homepage": "https://github.com/1337exp/taoeditor#readme",
+  "bugs": {
+    "url": "https://github.com/1337exp/taoeditor/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
   "sideEffects": [
     "**/*.css"
   ],
@@ -31,8 +56,12 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "CHANGELOG.md"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "typecheck": "tsc -p tsconfig.core.json && tsc -p tsconfig.node.json && tsc -p tsconfig.json && vue-tsc --noEmit -p demo/tsconfig.json",
     "test": "vitest run",
@@ -42,7 +71,9 @@
     "mutate": "node scripts/mutate.mjs . scripts/mutations.json",
     "dev:lan": "vite --host",
     "demo": "vite --config demo/vite.config.ts",
-    "demo:build": "vite build --config demo/vite.config.ts"
+    "demo:build": "vite build --config demo/vite.config.ts",
+    "screenshot": "node scripts/screenshot.mjs",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
   },
   "dependencies": {
     "prosemirror-commands": "1.7.2",
@@ -72,6 +103,7 @@
     "@types/node": "^22.20.5",
     "@vitejs/plugin-vue": "^6.0.10",
     "jsdom": "^31.0.0",
+    "playwright-core": "^1.65.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.6",
     "vitest": "^5.1.0",

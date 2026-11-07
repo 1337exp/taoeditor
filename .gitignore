@@ -13,3 +13,4 @@ dist
 .claude/*
 !.claude/skills/
 demo-dist
+.npmrc
