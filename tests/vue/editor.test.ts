@@ -121,13 +121,13 @@ describe('TaoEditor', () => {
         expect(button(m.host, 'Redo').disabled).toBe(false);
     });
 
-    it('follows the TaoUI guide: tools are ghost + neutral, small by default, the key is in the tooltip', async () => {
+    it('tools are ghost + neutral, normal size by default (no size class of their own), the key is in the tooltip', async () => {
         const m = mount();
         await nextTick();
         for (const b of buttons(m.host)) {
             expect(b.className, b.getAttribute('aria-label')!).toContain('tao-button--ghost');
             expect(b.className, b.getAttribute('aria-label')!).toMatch(/neutral/);
-            expect(b.className, b.getAttribute('aria-label')!).toMatch(/small/);
+            expect(b.className, b.getAttribute('aria-label')!).not.toMatch(/tao-size-(small|large)/);
         }
         expect(button(m.host, 'Bold').title).toBe('Bold (Ctrl+B)');
         expect(button(m.host, 'Bold').getAttribute('aria-keyshortcuts')).toBe('Ctrl+B');

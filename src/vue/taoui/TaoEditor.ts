@@ -115,7 +115,7 @@ export const TaoEditor = defineComponent({
         placeholder: { type: String, default: '' },
         /** Accessible name of the text box. / Доступное имя поля. */
         label: { type: String, default: undefined },
-        /** Size of the toolbar: `small` / `medium` / `large`. Without it `small` (the TaoUI guide: a toolbar serves the content). */
+        /** Size of the toolbar, the emoji list and the link row: `small` / `medium` / `large`. Without it the size of the ancestors (medium). */
         size: { type: String as PropType<TaoSize>, default: undefined },
         /** Show the formatting toolbar. / Показывать панель форматирования. */
         toolbar: { type: Boolean, default: true },
@@ -337,8 +337,9 @@ export const TaoEditor = defineComponent({
             const text: TaoEditorLabels = { ...DEFAULT_LABELS, ...props.labels };
             const marks = PROFILES[props.profile].marks as readonly string[];
             const locked = props.disabled || props.readonly;
-            // The guide: a toolbar or an editor panel serves the content, so it is small unless the app says otherwise.
-            const toolSize: TaoSize = props.size ?? 'small';
+            // Normal size by default (our decision, against the guide's small for tool panels: this field and its emoji are
+            // the thing people use, not a side tool). The app can still choose through `size`.
+            const toolSize: TaoSize | undefined = props.size;
             // A click must not take the focus (and with it the selection) from the editor.
             const keepFocus = (event: MouseEvent): void => event.preventDefault();
 
@@ -518,6 +519,9 @@ export const TaoEditor = defineComponent({
                                         variant: 'ghost',
                                         tone: 'neutral',
                                         size: toolSize,
+                                        // the emoji itself is the picture: bigger than the label text of a button
+                                        // a square cell, not a button with side padding: a tight grid like a picker should be
+                                        style: { fontSize: '1.4em', padding: '0', minWidth: '0', aspectRatio: '1 / 1' },
                                         'aria-label': symbol,
                                         onMousedown: keepFocus,
                                         onClick: () => handle?.insertText(symbol),
