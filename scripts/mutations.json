@@ -326,8 +326,8 @@
  [
   "lists: Enter does not start a new item",
   "src/editor/plugins.ts",
-  "...(item ? { Enter: splitListItem(item) } : {}),",
-  ""
+  "exitCodeBlock(schema), ...(item ? [splitListItem(item)] : [])),",
+  "exitCodeBlock(schema)),"
  ],
  [
   "lists: no Ctrl+Shift+8",
@@ -440,8 +440,8 @@
  [
   "colour: code does not win over colours",
   "src/core/schema.ts",
-  "'strike', 'color', 'background', 'spoiler'] }",
-  "'strike', 'spoiler'] }"
+  "'superscript', 'subscript', 'color', 'background', 'spoiler'] }",
+  "'superscript', 'subscript', 'spoiler'] }"
  ],
  [
   "colour paste: the page ink is taken",
@@ -686,7 +686,7 @@
  [
   "menus: the table popup is not closed by a press outside",
   "src/vue/taoui/TaoEditor.ts",
-  "if (!target?.closest?.('.tao-editor-table, .tao-editor-table-button')) tableOpen.value = false;",
+  "if (!target?.closest?.('.tao-editor-table, .tao-editor-table-button, .tao-editor-cell-button')) tableOpen.value = false;",
   ""
  ],
  [
