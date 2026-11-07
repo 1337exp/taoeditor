@@ -25,7 +25,7 @@ function mount(props: Record<string, unknown> = {}) {
     return { host, model, engine: () => comp.value!.engine() };
 }
 
-const names = (host: HTMLElement): string[] => [...host.querySelectorAll('.tao-editor-toolbar button')].map((b) => b.getAttribute('aria-label')!);
+const names = (host: HTMLElement): string[] => [...host.querySelectorAll('.tao-editor-toolbar button')].map((b) => b.getAttribute('aria-label')!).filter((n) => n !== 'More'); // jsdom has no widths: TaoUI's overflow button (More) is not one of ours
 const button = (host: HTMLElement, label: string): HTMLButtonElement => {
     const found = [...host.querySelectorAll<HTMLButtonElement>('.tao-editor-toolbar button')].find((b) => b.getAttribute('aria-label') === label);
     if (!found) throw new Error(`no button "${label}" in: ${names(host).join(', ')}`);

@@ -108,6 +108,7 @@ export interface TaoEditorLabels {
     emoji: string;
     emojiList: string;
     mentionList: string;
+    more: string;
     table: string;
     tableGrid: string;
     tableRowAbove: string;
@@ -176,6 +177,7 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     emoji: 'Emoji',
     emojiList: 'Emoji',
     mentionList: 'People',
+    more: 'More',
     table: 'Table',
     tableGrid: 'Table size',
     tableRowAbove: 'Insert row above',
@@ -294,6 +296,7 @@ export const TaoEditor = defineComponent({
         // (a long table may be far from the toolbar). The popup is placed under whichever opened it.
         const tableFrom = ref<'toolbar' | 'cell'>('toolbar');
         const cellAnchor = ref<{ left: number; top: number } | null>(null);
+        const anchors = new Map<string, HTMLElement>(); // the toolbar button that opened each popup, by its class
         const gridAt = ref({ row: 0, column: 0 }); // the corner of the size picker that is pointed at
         // One popup at a time: opening one closes the others.
         const closeMenus = (): void => {
@@ -456,15 +459,19 @@ export const TaoEditor = defineComponent({
             if (!box) return;
             for (const menu of menus) {
                 if (!menu.open()) continue;
-                const button = box.querySelector<HTMLElement>(menu.pos === tablePos && tableFrom.value === 'cell' ? '.tao-editor-cell-button' : menu.button);
+                const selector = menu.pos === tablePos && tableFrom.value === 'cell' ? '.tao-editor-cell-button' : menu.button;
+                const pressed = anchors.get(selector.slice(1));
+                const button = pressed?.isConnected ? pressed : box.querySelector<HTMLElement>(selector);
                 const popup = box.querySelector<HTMLElement>(menu.popup);
                 if (!button || !popup) continue;
                 const area = box.getBoundingClientRect();
                 const at = button.getBoundingClientRect();
-                const roomBelow = window.innerHeight - at.bottom;
-                const above = roomBelow < popup.offsetHeight + 8 && at.top > roomBelow;
+                // a button in the overflow panel of the toolbar: the popup goes below the whole panel, not under the button (the panel is above it)
+                const around = button.closest('.tao-toolbar__menu')?.getBoundingClientRect() ?? at;
+                const roomBelow = window.innerHeight - around.bottom;
+                const above = roomBelow < popup.offsetHeight + 8 && around.top > roomBelow;
                 const left = Math.max(0, Math.min(at.left - area.left, area.width - popup.offsetWidth));
-                const top = above ? at.top - area.top - popup.offsetHeight - 4 : at.bottom - area.top + 4;
+                const top = above ? around.top - area.top - popup.offsetHeight - 4 : around.bottom - area.top + 4;
                 const now = menu.pos.value;
                 // only when it moved: setting the same place again would draw again for ever
                 if (!now || Math.abs(now.left - left) > 0.5 || Math.abs(now.top - top) > 0.5) menu.pos.value = { left, top };
@@ -589,7 +596,11 @@ export const TaoEditor = defineComponent({
                     // not even `title: undefined`: an own key would override the tooltip TaoButton builds from the shortcut
                     ...(opts.shortcut ? {} : { title: label }),
                     ...(opts.class ? { class: opts.class } : {}),
-                    onMousedown: keepFocus,
+                    onMousedown: (event: MouseEvent) => {
+                        keepFocus(event);
+                        // the popup is placed under the button that was pressed: it may be in the row or in the panel of the toolbar's overflow
+                        if (opts.class) anchors.set(opts.class, event.currentTarget as HTMLElement);
+                    },
                     ...(opts.pressed === undefined ? { onClick: act } : { pressed: opts.pressed, 'onUpdate:pressed': act }),
                 });
             };
@@ -654,8 +665,8 @@ export const TaoEditor = defineComponent({
             if (props.toolbar) {
                 const groups = [history, styleTools, markTools, blockTools, clearTools].filter((g) => g.length > 0);
                 panel.push(
-                    h(TaoToolbar, { key: 'toolbar', label: text.toolbar, size: toolSize, variant: 'plain', class: 'tao-editor-toolbar' }, () =>
-                        groups.flatMap((group, i) => [...(i > 0 ? [h(TaoToolbarSeparator, { key: `sep-${i}` })] : []), h(TaoToolbarGroup, { key: `group-${i}` }, () => group)]),
+                    h(TaoToolbar, { key: 'toolbar', label: text.toolbar, size: toolSize, variant: 'plain', class: 'tao-editor-toolbar', ...(props.floating ? {} : { overflow: true, overflowLabel: text.more }) }, () =>
+                        groups.flatMap((group, i) => [...(i > 0 ? [h(TaoToolbarSeparator, { key: `sep-${i}` })] : []), h(TaoToolbarGroup, { key: `group-${i}`, pinned: i === 0 }, () => group)]),
                     ),
                 );
             }
@@ -778,6 +789,7 @@ export const TaoEditor = defineComponent({
                         {
                             key: 'colors',
                             class: 'tao-editor-colors',
+                            'data-tao-keep-open': '',
                             // not drawn until its place is measured, so it never flashes in the corner
                             style: colorsPos.value ? { left: `${colorsPos.value.left}px`, top: `${colorsPos.value.top}px` } : { left: '0px', top: '0px', visibility: 'hidden' },
                             role: 'group',
@@ -824,6 +836,7 @@ export const TaoEditor = defineComponent({
                         {
                             key: 'align',
                             class: 'tao-editor-menu tao-editor-align',
+                            'data-tao-keep-open': '',
                             role: 'group',
                             'aria-label': text.align,
                             style: placed(alignPos.value),
@@ -862,6 +875,7 @@ export const TaoEditor = defineComponent({
                         {
                             key: 'size',
                             class: 'tao-editor-menu tao-editor-size',
+                            'data-tao-keep-open': '',
                             role: 'group',
                             'aria-label': text.size,
                             style: placed(sizePos.value),
@@ -902,6 +916,7 @@ export const TaoEditor = defineComponent({
                         {
                             key: 'style',
                             class: 'tao-editor-menu tao-editor-style',
+                            'data-tao-keep-open': '',
                             role: 'group',
                             'aria-label': text.blockStyle,
                             style: placed(stylePos.value),
@@ -1006,6 +1021,7 @@ export const TaoEditor = defineComponent({
                         {
                             key: 'table',
                             class: 'tao-editor-menu tao-editor-table',
+                            'data-tao-keep-open': '',
                             role: 'group',
                             'aria-label': text.table,
                             style: placed(tablePos.value),

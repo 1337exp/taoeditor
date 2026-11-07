@@ -23,7 +23,7 @@ function mount(props: Record<string, unknown> = {}) {
     return { host, model, engine: () => comp.value!.engine() };
 }
 
-const names = (host: HTMLElement): string[] => [...host.querySelectorAll('.tao-editor-toolbar button')].map((b) => b.getAttribute('aria-label')!);
+const names = (host: HTMLElement): string[] => [...host.querySelectorAll('.tao-editor-toolbar button')].map((b) => b.getAttribute('aria-label')!).filter((n) => n !== 'More'); // jsdom has no widths: TaoUI's overflow button (More) is not one of ours
 const button = (host: HTMLElement, label: string): HTMLButtonElement => [...host.querySelectorAll<HTMLButtonElement>('.tao-editor-toolbar button')].find((b) => b.getAttribute('aria-label') === label)!;
 const choices = (host: HTMLElement): HTMLButtonElement[] => [...host.querySelectorAll<HTMLButtonElement>('.tao-editor-style button')];
 // a row says its name, and its key at the end (a button with text prints the key, as the menus of Docs do)

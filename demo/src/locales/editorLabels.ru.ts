@@ -47,6 +47,7 @@ export const editorLabelsRu: TaoEditorLabels = {
     emoji: 'Эмодзи',
     emojiList: 'Эмодзи',
     mentionList: 'Люди',
+    more: 'Ещё',
     table: 'Таблица',
     tableGrid: 'Размер таблицы',
     tableRowAbove: 'Вставить строку выше',
