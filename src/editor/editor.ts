@@ -15,6 +15,12 @@ export interface EditorOptions {
     doc?: Doc;
     /** What sends: `enter` (chat), `mod-enter` (comment), `none`. / Что отправляет. */
     submit?: SubmitMode;
+    /**
+     * Markdown shortcuts while typing: `**bold**`, `*italic*`, `` `code` ``, `~~strike~~`, `||spoiler||`, `> `, `- `, `1. `, `# `.
+     * Off by default: what a person types stays what they typed. Formatting comes from the toolbar and the hotkeys.
+     * Выключено по умолчанию: набранное остаётся набранным. Форматирование идёт с панели и горячих клавиш.
+     */
+    shortcuts?: boolean;
     placeholder?: string;
     /** Extra classes for the editable element, e.g. `tao-prose` under TaoUI. / Доп. классы, например `tao-prose`. */
     class?: string;
@@ -72,7 +78,7 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
     const state = EditorState.create({
         schema,
         doc: docToNode(schema, options.doc ?? emptyDoc(), profile),
-        plugins: createPlugins(schema, { submit: options.submit ?? 'none', send, placeholder: options.placeholder }),
+        plugins: createPlugins(schema, { shortcuts: options.shortcuts ?? false, submit: options.submit ?? 'none', send, placeholder: options.placeholder }),
     });
 
     const handle: EditorHandle = {

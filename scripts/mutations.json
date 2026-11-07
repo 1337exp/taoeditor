@@ -232,5 +232,17 @@
   "src/vue/taoui/TaoEditor.ts",
   "!(handle?.canUndo() ?? false)",
   "false"
+ ],
+ [
+  "editor: shortcuts are on by default",
+  "src/editor/editor.ts",
+  "shortcuts: options.shortcuts ?? false",
+  "shortcuts: options.shortcuts ?? true"
+ ],
+ [
+  "component: the floating panel shows without the focus",
+  "src/vue/taoui/TaoEditor.ts",
+  "(hasSelection && focused.value) || linkOpen.value",
+  "hasSelection || linkOpen.value"
  ]
 ]

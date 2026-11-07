@@ -97,6 +97,8 @@ function sendKeys(submit: SubmitMode, send: () => void): Plugin {
 }
 
 export interface PluginOptions {
+    /** Markdown shortcuts while typing (`**bold**`, `# `, `- `). Off unless asked: typing must not surprise anyone. */
+    shortcuts: boolean;
     submit: SubmitMode;
     send: () => void;
     placeholder?: string;
@@ -117,7 +119,7 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
 
     return [
         sendKeys(options.submit, options.send),
-        inputRulesFor(schema),
+        ...(options.shortcuts ? [inputRulesFor(schema)] : []),
         keymap({
             'Mod-b': markKey('bold'),
             'Mod-i': markKey('italic'),

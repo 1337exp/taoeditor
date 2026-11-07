@@ -33,6 +33,11 @@
     --te-spoiler-bg: var(--tao-color-border-strong);
     --te-spoiler-open-bg: var(--tao-color-surface-sunken);
 
+    /* the floating panel */
+    --te-panel-bg: var(--tao-color-surface-raised);
+    --te-panel-radius: var(--tao-radius-panel);
+    --te-panel-shadow: var(--tao-shadow-md);
+
     /* the editable field looks like a TaoUI text field */
     --te-field-bg: var(--tao-color-input-bg);
     --te-field-text: var(--tao-color-input-text);

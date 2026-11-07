@@ -65,7 +65,7 @@ describe('TaoEditor', () => {
     });
 
     it('typing updates v-model and emits change, with a valid document', async () => {
-        const m = mount();
+        const m = mount({ shortcuts: true });
         await nextTick();
         type(m.engine(), 'say **hi**');
         await nextTick();
@@ -193,6 +193,76 @@ describe('TaoEditor', () => {
         await nextTick();
         expect(comp.value!.engine().getDoc().content[0].type).toBe('paragraph');
         expect(toPlainText(comp.value!.engine().getDoc())).toBe('Title');
+    });
+
+    it('floating: the panel shows only with a selection AND the focus, and goes away without either', async () => {
+        const m = mount({ floating: true }, para('abc'));
+        await nextTick();
+        const floating = (): HTMLElement | null => m.host.querySelector('.tao-editor-floating');
+        const root = m.host.querySelector<HTMLElement>('.tao-editor-root')!;
+        expect(floating()).toBeNull(); // no fixed toolbar either
+        expect(m.host.querySelector('.tao-editor-root > .tao-editor-toolbar')).toBeNull();
+
+        const e = m.engine();
+        e.view.dispatch(e.view.state.tr.setSelection(selectAllOf(e)));
+        await nextTick();
+        expect(floating()).toBeNull(); // selection without the focus: still hidden
+
+        root.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+        await nextTick();
+        expect(floating()).not.toBeNull();
+        button(m.host, 'Bold').click();
+        await nextTick();
+        expect(runs(e)).toEqual([['abc', 'bold']]);
+
+        root.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: null }));
+        await nextTick();
+        expect(floating()).toBeNull();
+    });
+
+    it('floating: focus moving inside the component (to the link field) keeps the panel; the link form lives in it', async () => {
+        const m = mount({ floating: true }, para('site'));
+        await nextTick();
+        const root = m.host.querySelector<HTMLElement>('.tao-editor-root')!;
+        const e = m.engine();
+        e.view.dispatch(e.view.state.tr.setSelection(selectAllOf(e)));
+        root.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+        await nextTick();
+        button(m.host, 'Link').click();
+        await nextTick();
+        const input = m.host.querySelector<HTMLInputElement>('.tao-editor-floating .tao-editor-link input')!;
+        expect(input).not.toBeNull();
+        root.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: input }));
+        await nextTick();
+        expect(m.host.querySelector('.tao-editor-floating')).not.toBeNull();
+    });
+
+    it('floating: readonly never shows the panel', async () => {
+        const m = mount({ floating: true, readonly: true }, para('abc'));
+        await nextTick();
+        const e = m.engine();
+        e.view.dispatch(e.view.state.tr.setSelection(selectAllOf(e)));
+        m.host.querySelector('.tao-editor-root')!.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+        await nextTick();
+        expect(m.host.querySelector('.tao-editor-floating')).toBeNull();
+    });
+
+    it('the engine DOM stays in its host when the link row or the floating panel appears (no node reuse)', async () => {
+        for (const floating of [false, true]) {
+            const m = mount({ floating }, para('abc'));
+            await nextTick();
+            const field = m.host.querySelector('.tao-editor')!;
+            const e = m.engine();
+            e.view.dispatch(e.view.state.tr.setSelection(selectAllOf(e)));
+            m.host.querySelector('.tao-editor-root')!.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+            await nextTick();
+            button(m.host, 'Link').click();
+            await nextTick();
+            expect(m.host.querySelector('.tao-editor-link'), `floating=${floating}`).not.toBeNull();
+            expect(m.host.querySelector('.tao-editor'), `floating=${floating}`).toBe(field);
+            expect(field.parentElement!.classList.contains('tao-editor-host'), `floating=${floating}`).toBe(true);
+            expect(field.textContent).toBe('abc');
+        }
     });
 
     it('unmounting destroys the engine without errors', async () => {

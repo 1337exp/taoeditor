@@ -21,7 +21,7 @@ import {
     registerTaoIcons,
     type TaoSize,
 } from '@1337exp/taoui';
-import { defineComponent, h, onBeforeUnmount, onMounted, ref, shallowRef, watch, type PropType, type VNode } from 'vue';
+import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, ref, shallowRef, watch, type PropType, type VNode } from 'vue';
 import { PROFILES, emptyDoc, type Doc, type ProfileName } from '../../core';
 import { createEditor, type EditorHandle, type SubmitMode } from '../../editor';
 
@@ -94,6 +94,8 @@ export const TaoEditor = defineComponent({
         profile: { type: String as PropType<ProfileName>, default: 'comment' },
         /** What sends: `enter` (chat), `mod-enter` (comment), `none`. / Что отправляет. */
         submit: { type: String as PropType<SubmitMode>, default: 'none' },
+        /** Markdown shortcuts while typing (`**bold**`, `- `). Off by default. / Markdown-сокращения при наборе. */
+        shortcuts: { type: Boolean, default: false },
         placeholder: { type: String, default: '' },
         /** Accessible name of the text box. / Доступное имя поля. */
         label: { type: String, default: undefined },
@@ -101,6 +103,8 @@ export const TaoEditor = defineComponent({
         size: { type: String as PropType<TaoSize>, default: undefined },
         /** Show the formatting toolbar. / Показывать панель форматирования. */
         toolbar: { type: Boolean, default: true },
+        /** The toolbar floats over the selection instead of standing above the field. / Панель висит над выделением. */
+        floating: { type: Boolean, default: false },
         readonly: { type: Boolean, default: false },
         disabled: { type: Boolean, default: false },
         /** Own texts (any subset). / Свои тексты (любая часть). */
@@ -122,12 +126,36 @@ export const TaoEditor = defineComponent({
         const linkHref = ref('');
         const linkError = ref(false);
 
+        // The floating panel: where the selection is (relative to this component), and how big the panel is.
+        const root = ref<HTMLElement | null>(null);
+        const floatEl = ref<HTMLElement | null>(null);
+        const focused = ref(false);
+        const anchor = ref({ x: 0, top: 0, bottom: 0 });
+        const panelSize = ref({ w: 0, h: 0 });
+        const place = (): void => {
+            const handle = editor.value;
+            const box = root.value;
+            if (!handle || !box) return;
+            const { from, to, empty } = handle.view.state.selection;
+            if (empty) return;
+            try {
+                const a = handle.view.coordsAtPos(from);
+                const b = handle.view.coordsAtPos(to);
+                const r = box.getBoundingClientRect();
+                const oneLine = Math.abs(a.top - b.top) < 2;
+                anchor.value = { x: (oneLine ? (a.left + b.left) / 2 : a.left) - r.left, top: a.top - r.top, bottom: b.bottom - r.top };
+            } catch {
+                // no layout (a test, a hidden element): the panel stays where it was
+            }
+        };
+
         const build = (doc: Doc | null | undefined): void => {
             editor.value?.destroy();
             const handle = createEditor(host.value!, {
                 profile: props.profile,
                 doc: doc ?? undefined,
                 submit: props.submit,
+                shortcuts: props.shortcuts,
                 placeholder: props.placeholder,
                 label: props.label,
                 class: 'tao-prose',
@@ -138,6 +166,7 @@ export const TaoEditor = defineComponent({
                 },
                 onSend: (next) => emit('send', next),
                 onUpdate: () => {
+                    place();
                     tick.value++;
                 },
             });
@@ -148,6 +177,12 @@ export const TaoEditor = defineComponent({
         };
 
         onMounted(() => build(props.modelValue));
+        onUpdated(() => {
+            const el = floatEl.value;
+            if (el && (el.offsetWidth !== panelSize.value.w || el.offsetHeight !== panelSize.value.h)) {
+                panelSize.value = { w: el.offsetWidth, h: el.offsetHeight };
+            }
+        });
         onBeforeUnmount(() => {
             editor.value?.destroy();
             editor.value = null;
@@ -166,7 +201,7 @@ export const TaoEditor = defineComponent({
         );
         // These are fixed when the engine is built: rebuild, keeping the document.
         watch(
-            () => [props.profile, props.submit, props.placeholder, props.label, props.readonly, props.disabled],
+            () => [props.profile, props.submit, props.shortcuts, props.placeholder, props.label, props.readonly, props.disabled],
             () => {
                 if (editor.value) build(editor.value.getDoc());
             },
@@ -240,10 +275,10 @@ export const TaoEditor = defineComponent({
                     },
                 });
 
-            const children: VNode[] = [];
+            const panel: VNode[] = [];
             if (props.toolbar) {
-                children.push(
-                    h(TaoToolbar, { label: text.toolbar, size: props.size, variant: 'plain', class: 'tao-editor-toolbar' }, () => [
+                panel.push(
+                    h(TaoToolbar, { key: 'toolbar', label: text.toolbar, size: props.size, variant: 'plain', class: 'tao-editor-toolbar' }, () => [
                         h(TaoToolbarGroup, null, () => [
                             ...MARK_BUTTONS.filter((b) => marks.includes(b.mark)).map((b) =>
                                 toggle(b.mark, text[b.mark], b.icon, b.shortcut, handle?.isMarkActive(b.mark) ?? false),
@@ -259,10 +294,11 @@ export const TaoEditor = defineComponent({
                 );
             }
             if (props.toolbar && linkOpen.value) {
-                children.push(
+                panel.push(
                     h(
                         'div',
                         {
+                            key: 'link',
                             class: 'tao-editor-link',
                             onKeydown: (event: KeyboardEvent) => {
                                 if (event.key === 'Enter') {
@@ -303,8 +339,36 @@ export const TaoEditor = defineComponent({
                     ),
                 );
             }
-            children.push(h('div', { class: 'tao-editor-host', ref: host }));
-            return h('div', { class: ['tao-editor-root', { 'tao-editor-root--disabled': props.disabled }] }, children);
+            const hasSelection = handle ? !handle.view.state.selection.empty : false;
+            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value);
+            const children: VNode[] = [];
+            if (props.floating) {
+                if (showFloating) {
+                    const { w, h: height } = panelSize.value;
+                    const at = anchor.value;
+                    let top = at.top - height - 8; // above the selection, or below it when there is no room
+                    if (top < 0) top = at.bottom + 8;
+                    const left = Math.max(0, Math.min(at.x - w / 2, Math.max(0, (root.value?.clientWidth ?? 0) - w)));
+                    children.push(h('div', { key: 'floating', class: 'tao-editor-floating', ref: floatEl, style: { left: `${left}px`, top: `${top}px` } }, panel));
+                }
+            } else {
+                children.push(...panel);
+            }
+            // The keys matter: the host holds the engine's DOM, and without them Vue would reuse it for whatever is
+            // inserted before it (the link row, the floating panel).
+            children.push(h('div', { key: 'host', class: 'tao-editor-host', ref: host }));
+            return h(
+                'div',
+                {
+                    ref: root,
+                    class: ['tao-editor-root', { 'tao-editor-root--disabled': props.disabled }],
+                    onFocusin: () => (focused.value = true),
+                    onFocusout: (event: FocusEvent) => {
+                        if (!root.value?.contains(event.relatedTarget as Node | null)) focused.value = false;
+                    },
+                },
+                children,
+            );
         };
     },
 });

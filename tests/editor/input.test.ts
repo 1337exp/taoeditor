@@ -2,7 +2,8 @@
 import { closeHistory } from 'prosemirror-history';
 import { TextSelection } from 'prosemirror-state';
 import { describe, expect, it, vi } from 'vitest';
-import type { EditorHandle } from '../../src/editor';
+import { toPlainText } from '../../src/core';
+import { createEditor, type EditorHandle } from '../../src/editor';
 import { mount, press, runs, type } from './helpers';
 
 describe('markdown shortcuts: marks', () => {
@@ -249,3 +250,28 @@ function selectAll(ed: EditorHandle): TextSelection {
     const { doc } = ed.view.state;
     return TextSelection.create(doc, 1, doc.content.size - 1);
 }
+
+describe('shortcuts are opt-in', () => {
+    it('by default nothing is converted: what is typed stays what was typed', () => {
+        const host = document.createElement('div');
+        document.body.append(host);
+        const ed = createEditor(host, { profile: 'article' });
+        type(ed, '**foo** _x_ `c` ');
+        press(ed, 'Enter');
+        type(ed, '- a');
+        press(ed, 'Enter');
+        type(ed, '# T');
+        expect(ed.getDoc().content.map((b) => b.type)).toEqual(['paragraph', 'paragraph', 'paragraph']);
+        expect(toPlainText(ed.getDoc())).toBe('**foo** _x_ `c` \n- a\n# T');
+    });
+
+    it('the formatting hotkeys and the toolbar still work without them', () => {
+        const host = document.createElement('div');
+        document.body.append(host);
+        const ed = createEditor(host, { profile: 'chat' });
+        type(ed, 'a');
+        press(ed, 'b', { ctrlKey: true });
+        type(ed, 'b');
+        expect(runs(ed)).toEqual([['a', ''], ['b', 'bold']]);
+    });
+});

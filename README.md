@@ -26,10 +26,10 @@ npm run mutate     # break the code on a copy, one thing at a time, and check th
 - **Own stored document**: a versioned JSON tree (`{ v: 1, content: [...] }`). No HTML is ever stored; the engine's own JSON is never the format.
 - **Profiles are allowlists** over one schema: nodes (paragraph, hard break, quote, code block, lists, headings) and marks (bold, italic, strike, code, spoiler, link).
 - **A normalizer is the gate**: untrusted JSON in, canonical valid document out, never throws. Unknown or forbidden nodes are unwrapped (the text survives), links go through one allowlist (`https`/`http`, no credentials), control characters are stripped, nesting is capped.
-- **Markdown shortcuts while typing** (`**bold**`, `*italic*`, `` `code` ``, `~~strike~~`, `||spoiler||`, `# `, `> `, `- `, `1. `, ```` ``` ````), the first Backspace brings the typed characters back.
+- **Markdown shortcuts while typing are opt-in** (`shortcuts: true`: `**bold**`, `*italic*`, `` `code` ``, `~~strike~~`, `||spoiler||`, `# `, `> `, `- `, `1. `, ```` ``` ````; the first Backspace brings the typed characters back). Off by default: what a person types stays what they typed; formatting comes from the toolbar and the hotkeys.
 - **Safe paste**: pasted HTML is read only through the schema's parse rules (Google Docs and Word bold/italic included); scripts, handlers, images, unsafe links cannot get in.
 - **Chat mode**: Enter sends, Shift+Enter breaks the line, an IME composition never sends.
-- **`TaoEditor`** (`@1337exp/taoeditor/vue/taoui`): the field built from TaoUI components with `v-model`, `change`, `send`; a toolbar of toggle buttons (bold, italic, strike, code, spoiler, link, undo, redo) that follow the selection, a link form that refuses unsafe URLs, `size`, `readonly`, `disabled`, translatable `labels`.
+- **`TaoEditor`** (`@1337exp/taoeditor/vue/taoui`): the field built from TaoUI components with `v-model`, `change`, `send`; a toolbar (fixed, or `floating` over the selection) of toggle buttons (bold, italic, strike, code, spoiler, link, undo, redo) that follow the selection, a link form that refuses unsafe URLs, `size`, `readonly`, `disabled`, translatable `labels`.
 - **Showing a document**: `toHtml` / `toRenderTree` in the core (no DOM, safe by construction, runs on a server) and a Vue viewer `TaoEditorView` that never loads the editing engine; a spoiler opens on click, Enter or Space.
 - **Made for TaoUI, usable without it**: looks come from `--te-*` variables with neutral defaults; `taoui.css` points them at the TaoUI tokens, `class="tao-prose"` hands the text typography to TaoUI. Only files in `src/vue/taoui/` may import TaoUI (a test guards the layers).
 - **A lab** (`lab/`): the same editor on a page with the document JSON, the plain text, an engine⇄core agreement check, a log of composition, `beforeinput` and key events, and a corpus of pastes.
@@ -57,7 +57,7 @@ Decisions, what is proven and what is not: [docs/architecture.ru.md](docs/archit
 
 ## Not yet
 
-- A floating (bubble) toolbar: for now it is a fixed bar above the field. Mentions, emoji, slash menu.
+- Mentions, emoji, slash menu. The floating toolbar is checked in Chromium only (touch devices not yet).
 - Images, tables, embeds.
 - Checked only in Chromium by hand and in jsdom by tests: **IME on Android and iOS, Firefox, Safari are not checked yet**.
 
