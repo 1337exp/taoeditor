@@ -46,7 +46,7 @@ describe('the toolbar follows the profile, in the order of Gmail\'s bar', () => 
             'Align', 'Numbered list', 'Bulleted list', 'Decrease indent', 'Increase indent', 'Quote', 'Table',
             'Clear formatting',
         ]);
-        expect(m.host.querySelectorAll('.tao-editor-toolbar [role="separator"]').length).toBe(3);
+        expect(m.host.querySelectorAll('.tao-editor-toolbar [role="separator"]').length).toBe(4);
     });
 
     it('chat has no lists and no indents, but keeps the quote', async () => {

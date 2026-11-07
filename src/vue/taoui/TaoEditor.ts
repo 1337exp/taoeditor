@@ -600,13 +600,16 @@ export const TaoEditor = defineComponent({
                 tool(text.undo, 'tao-undo', () => handle?.undo(), { off: !(handle?.canUndo() ?? false) }),
                 tool(text.redo, 'tao-redo', () => handle?.redo(), { off: !(handle?.canRedo() ?? false) }),
             ];
-            const markTools = [
+            // like Gmail's groups: the style and the size, then the marks and colours, then the blocks
+            const styleTools = [
                 ...(nodes.includes('heading')
                     ? [tool(text.blockStyle, 'te-heading', () => toggleMenu('style'), { pressed: styleOpen.value, class: 'tao-editor-style-button' })]
                     : []),
                 ...(marks.includes('size')
                     ? [tool(text.size, 'te-size', () => toggleMenu('size'), { pressed: sizeOpen.value, class: 'tao-editor-size-button' })]
                     : []),
+            ];
+            const markTools = [
                 ...MARK_BUTTONS.filter((b) => marks.includes(b.mark)).map((b) =>
                     tool(text[b.mark], b.icon, () => handle?.toggleMark(b.mark), { shortcut: b.shortcut, pressed: handle?.isMarkActive(b.mark) ?? false }),
                 ),
@@ -649,7 +652,7 @@ export const TaoEditor = defineComponent({
 
             const panel: VNode[] = [];
             if (props.toolbar) {
-                const groups = [history, markTools, blockTools, clearTools].filter((g) => g.length > 0);
+                const groups = [history, styleTools, markTools, blockTools, clearTools].filter((g) => g.length > 0);
                 panel.push(
                     h(TaoToolbar, { key: 'toolbar', label: text.toolbar, size: toolSize, variant: 'plain', class: 'tao-editor-toolbar' }, () =>
                         groups.flatMap((group, i) => [...(i > 0 ? [h(TaoToolbarSeparator, { key: `sep-${i}` })] : []), h(TaoToolbarGroup, { key: `group-${i}` }, () => group)]),
