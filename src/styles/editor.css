@@ -1,0 +1,44 @@
+/**
+ * TaoEditor, the editable field. Import it with `content.css`, and with the engine's own
+ * `prosemirror-view/style/prosemirror.css`.
+ *
+ * The field is the editable element itself (`.tao-editor`): a box with a border that follows `--te-field-*`.
+ *
+ * Variables / Переменные:
+ *   --te-field-bg  --te-field-text  --te-field-border  --te-field-border-focus
+ *   --te-field-radius  --te-field-padding  --te-min-height  --te-placeholder  --te-spoiler-open-bg
+ *
+ * Редактируемое поле. Подключайте вместе с `content.css` и со стилем самого движка
+ * `prosemirror-view/style/prosemirror.css`. Поле — это сам редактируемый элемент (`.tao-editor`).
+ */
+
+.tao-editor {
+    box-sizing: border-box;
+    min-height: var(--te-min-height, 5em);
+    padding: var(--te-field-padding, 0.5em 0.75em);
+    background: var(--te-field-bg, transparent);
+    color: var(--te-field-text, inherit);
+    border: 1px solid var(--te-field-border, light-dark(#c5cad3, #3f4552));
+    border-radius: var(--te-field-radius, 0.5em);
+    outline: none;
+}
+.tao-editor:focus {
+    border-color: var(--te-field-border-focus, light-dark(#2f6df6, #7aa5ff));
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--te-field-border-focus, light-dark(#2f6df6, #7aa5ff)) 25%, transparent);
+}
+
+/* The placeholder is shown on the empty first paragraph. */
+.tao-editor .tao-empty::before {
+    content: attr(data-placeholder);
+    color: var(--te-placeholder, light-dark(#8a909c, #7a8190));
+    float: left;
+    height: 0;
+    pointer-events: none;
+}
+
+/* While editing, a spoiler stays readable but marked; the viewer hides it. */
+.tao-editor .tao-spoiler {
+    background: var(--te-spoiler-open-bg, light-dark(#e6e9ef, #2a2e36));
+    border-radius: 3px;
+    padding: 0 0.15em;
+}

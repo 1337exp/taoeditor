@@ -1,6 +1,13 @@
 import 'prosemirror-view/style/prosemirror.css';
+import taouiStyles from '@1337exp/taoui/styles.css?inline';
+import { createApp, h, shallowRef } from 'vue';
+import '../src/styles/content.css';
+import '../src/styles/editor.css';
+import taouiBridge from '../src/styles/taoui.css?inline';
 import './lab.css';
-import { PROFILES, createEditor, normalizeDoc, toPlainText, type EditorHandle, type Profile, type ProfileName, type SubmitMode } from '../src';
+import { PROFILES, normalizeDoc, toHtml, toPlainText, type Doc, type Profile, type ProfileName } from '../src/core';
+import { createEditor, type EditorHandle, type SubmitMode } from '../src/editor';
+import { TaoEditorView } from '../src/vue';
 import { FIXTURES } from '../tests/fixtures';
 
 /**
@@ -38,10 +45,35 @@ function log(kind: string, detail = ''): void {
     $('log').textContent = lines.join('\n');
 }
 
+// The viewer is a Vue component fed with the editor's current document.
+const shown = shallowRef<Doc | undefined>(undefined);
+const viewProfile = shallowRef<ProfileName>('article');
+const taouiOn = (): boolean => $<HTMLSelectElement>('look').value.startsWith('taoui');
+
+/** "Look": neutral rules that follow the system, or the TaoUI theme through the bridge and `tao-prose`. */
+function applyLook(): void {
+    const look = $<HTMLSelectElement>('look').value;
+    let style = document.getElementById('taoui-theme');
+    if (look === 'neutral') {
+        style?.remove();
+        document.documentElement.removeAttribute('data-tao-mode');
+        return;
+    }
+    if (!style) {
+        style = document.createElement('style');
+        style.id = 'taoui-theme';
+        style.textContent = `${taouiStyles}\n${taouiBridge}`;
+        document.head.append(style);
+    }
+    document.documentElement.setAttribute('data-tao-mode', look === 'taoui-light' ? 'light' : 'dark');
+}
+
 function refresh(): void {
     const doc = editor.getDoc();
+    shown.value = doc;
     $('json').textContent = JSON.stringify(doc, null, 1);
     $('plain').textContent = JSON.stringify(toPlainText(doc));
+    $('html').textContent = toHtml(doc, PROFILES[viewProfile.value]);
     const issues = editor.issues();
     const status = $('status');
     status.textContent = issues.length === 0 ? 'engine ⇄ core: in agreement' : `engine ⇄ core: ${issues.length} issue(s) ${JSON.stringify(issues)}`;
@@ -137,6 +169,7 @@ function mount(): void {
     }
     editor = createEditor(host, {
         profile: profileName,
+        class: taouiOn() ? 'tao-prose' : undefined,
         submit: $<HTMLSelectElement>('submit').value as SubmitMode,
         doc: keep,
         placeholder: 'Type here. Try **bold**, *italic*, `code`, > quote, - list',
@@ -153,6 +186,15 @@ function mount(): void {
 }
 
 function init(): void {
+    createApp({
+        render: () => h(TaoEditorView, { doc: shown.value, profile: viewProfile.value, class: taouiOn() ? 'tao-prose' : undefined }),
+    }).mount($('view'));
+    $('look').addEventListener('change', () => {
+        applyLook();
+        mount();
+        shown.value = editor.getDoc(); // the viewer redraws with or without tao-prose
+    });
+
     const fixture = $<HTMLSelectElement>('fixture');
     for (const fx of FIXTURES) fixture.append(new Option(`${fx.title} (${fx.profile})`, fx.id));
     fixture.addEventListener('change', () => {

@@ -1,0 +1,43 @@
+/**
+ * TaoEditor → TaoUI bridge: points the `--te-*` variables at the TaoUI `--tao-*` tokens, so the editor and the
+ * viewer follow the TaoUI theme (dark, light, a palette, your own) with one import:
+ *
+ *     import '@1337exp/taoui/styles.css'
+ *     import '@1337exp/taoeditor/content.css'
+ *     import '@1337exp/taoeditor/editor.css'
+ *     import '@1337exp/taoeditor/taoui.css'
+ *
+ * and `class="tao-prose"` on the editor and on the viewer, so TaoUI's typography styles the text itself.
+ * Plain CSS, no dependency on the TaoUI package. Specificity is zero (`:where`): any rule of yours wins;
+ * override a single variable on `:root` or on any ancestor.
+ *
+ * Мост TaoEditor → TaoUI: наводит переменные `--te-*` на токены `--tao-*`, и редактор с показом следуют теме
+ * TaoUI одним импортом, плюс `class="tao-prose"` на редакторе и на показе. Чистый CSS, без зависимости от пакета
+ * TaoUI. Специфичность нулевая (`:where`): любое ваше правило главнее.
+ */
+:where(:root) {
+    /* the text (the viewer, and the editor when it is not under tao-prose) */
+    --te-font-family: var(--tao-font-family);
+    --te-font-size: var(--tao-font-size-md);
+    --te-line-height: var(--tao-line-height-body);
+    --te-text: var(--tao-color-text);
+    --te-text-muted: var(--tao-color-text-muted);
+    --te-link: var(--tao-color-link);
+    --te-border: var(--tao-color-border);
+    --te-code-bg: var(--tao-color-surface-sunken);
+    --te-code-font: var(--tao-font-family-mono);
+    --te-radius: var(--tao-radius-sm);
+    --te-focus: var(--tao-color-accent);
+
+    /* the spoiler */
+    --te-spoiler-bg: var(--tao-color-border-strong);
+    --te-spoiler-open-bg: var(--tao-color-surface-sunken);
+
+    /* the editable field looks like a TaoUI text field */
+    --te-field-bg: var(--tao-color-input-bg);
+    --te-field-text: var(--tao-color-input-text);
+    --te-field-border: var(--tao-color-border-strong);
+    --te-field-border-focus: var(--tao-color-accent);
+    --te-field-radius: var(--tao-radius-control);
+    --te-placeholder: var(--tao-color-input-placeholder);
+}

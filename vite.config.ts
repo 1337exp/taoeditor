@@ -1,12 +1,18 @@
 import { defineConfig } from 'vite';
 
-// The package is a library; the lab (lab/index.html, served at /lab/ in dev) is not part of the build.
-// Пакет это библиотека; лаборатория (lab/index.html, в dev на /lab/) в сборку не входит.
+// Three entries, like TaoUX: no root import, so nothing that is not imported reaches a bundle.
+// The lab (lab/index.html, served at /lab/ in dev) is not part of the build.
+// Три входа, как у TaoUX: корневого импорта нет, поэтому не импортированное в сборку не попадает.
+// Лаборатория (lab/index.html, в dev на /lab/) в сборку не входит.
 export default defineConfig({
     base: './',
     build: {
         sourcemap: true,
-        lib: { entry: 'src/index.ts', formats: ['es'], fileName: 'index' },
-        rollupOptions: { external: [/^prosemirror-/] },
+        lib: {
+            entry: { core: 'src/core/index.ts', editor: 'src/editor/index.ts', vue: 'src/vue/index.ts' },
+            formats: ['es'],
+            fileName: (_format, name) => `${name}.js`,
+        },
+        rollupOptions: { external: [/^prosemirror-/, /^vue(\/|$)/, /^@1337exp\//] },
     },
 });

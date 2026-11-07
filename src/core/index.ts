@@ -4,5 +4,7 @@ export { MARKS, MARK_ORDER, NODES, PROFILES, childrenOf } from './schema';
 export type { AttrSpec, MarkSpec, NodeSpec, Profile, ProfileName } from './schema';
 export { MAX_DEPTH, normalizeDoc } from './normalize';
 export type { Issue, IssueCode, Normalized } from './normalize';
+export { LINK_REL, VOID_TAGS, serializeTree, toHtml, toRenderTree } from './render';
+export type { RenderElement, RenderNode } from './render';
 export { isEmptyDoc, toPlainText } from './text';
 export { safeUrl } from './url';

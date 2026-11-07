@@ -27,6 +27,13 @@
                     <option value="mod-enter">Ctrl/Cmd+Enter</option>
                 </select>
             </label>
+            <label>Look
+                <select id="look">
+                    <option value="neutral">neutral (follows the system)</option>
+                    <option value="taoui-dark">TaoUI dark</option>
+                    <option value="taoui-light">TaoUI light</option>
+                </select>
+            </label>
             <label>Fixture <select id="fixture"><option value="">—</option></select></label>
             <label>Paste corpus <select id="corpus"><option value="">—</option></select></label>
         </section>
@@ -34,9 +41,15 @@
         <div id="toolbar" class="toolbar" role="toolbar" aria-label="Formatting"></div>
         <div id="editor" class="editor-host"></div>
         <p id="status" class="status"></p>
+        <h2>Viewer (TaoEditorView): what a reader sees. Click a spoiler.</h2>
+        <div id="view" class="view-host"></div>
         <section class="panels">
             <div><h2>Document (core JSON)</h2><pre id="json"></pre></div>
-            <div><h2>Plain text</h2><pre id="plain"></pre><h2>Event log</h2><pre id="log"></pre></div>
+            <div>
+                <h2>Plain text</h2><pre id="plain"></pre>
+                <h2>HTML (toHtml, server render)</h2><pre id="html"></pre>
+                <h2>Event log</h2><pre id="log"></pre>
+            </div>
         </section>
     </main>
     <script type="module" src="./main.ts"></script>

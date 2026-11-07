@@ -5,14 +5,36 @@
   "description": "Embeddable rich-text editor for our ecosystem: comments, chats, notes, articles. Own document model and Markdown, ProseMirror as the pinned engine underneath.",
   "type": "module",
   "license": "MIT",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "exports": {
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core.js"
+    },
+    "./editor": {
+      "types": "./dist/editor/index.d.ts",
+      "import": "./dist/editor.js"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "import": "./dist/vue.js"
+    },
+    "./content.css": "./dist/content.css",
+    "./editor.css": "./dist/editor.css",
+    "./taoui.css": "./dist/taoui.css",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "typecheck": "tsc -p tsconfig.core.json && tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.core.json && tsc -p tsconfig.node.json && tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "dev": "vite",
-    "build": "vite build && tsc -p tsconfig.build.json",
+    "build": "vite build && tsc -p tsconfig.build.json && node scripts/copy-css.mjs",
     "mutate": "node scripts/mutate.mjs . scripts/mutations.json",
     "dev:lan": "vite --host"
   },
@@ -26,10 +48,25 @@
     "prosemirror-transform": "1.12.5",
     "prosemirror-view": "1.42.9"
   },
+  "peerDependencies": {
+    "@1337exp/taoui": "^5.0.0",
+    "vue": "^3.4.0"
+  },
+  "peerDependenciesMeta": {
+    "@1337exp/taoui": {
+      "optional": true
+    },
+    "vue": {
+      "optional": true
+    }
+  },
   "devDependencies": {
+    "@1337exp/taoui": "^5.29.1",
+    "@types/node": "^22.20.5",
     "jsdom": "^31.0.0",
     "typescript": "~6.0.3",
     "vite": "^8.3.6",
-    "vitest": "^5.1.0"
+    "vitest": "^5.1.0",
+    "vue": "^3.5.45"
   }
 }

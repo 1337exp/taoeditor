@@ -4,6 +4,7 @@
 
 - Стек и правила: Vue 3 + Vite + TS, ядро без DOM (`src/core`), UI на TaoUI, тесты на ядро; см. `E:\job\base\conventions.md`.
 - Хранится только наше дерево (`src/core/model.ts`). HTML не хранить, JSON ProseMirror форматом не делать. Всё, что входит и выходит, проходит `normalizeDoc`.
+- Слои (`tests/layers.test.ts`): `core` ничего не импортирует, `editor` только движок и ядро, `vue` Vue, ядро и редактор; TaoUI только в `src/vue/taoui/`. В `src` нет `innerHTML`/`eval`. Вид только через переменные `--te-*`, мост к TaoUI в `src/styles/taoui.css`.
 - ProseMirror закреплён точными версиями (без `^`). Новые чужие зависимости не добавлять без причины.
 - Перед «готово»: `npm run typecheck`, `npm test`, `npm run build`, для защит ещё `npm run mutate` (все мутанты должны быть пойманы), для интерфейса посмотреть `/lab/` в браузере.
 - Пока не проверено: IME на устройствах, Firefox/Safari. Не писать «работает», не указав это.

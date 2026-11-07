@@ -1,0 +1,98 @@
+/**
+ * TaoEditor content: how a document looks, both in the viewer (`.tao-content`) and in the editor (`.tao-editor`).
+ *
+ * Under TaoUI put `tao-prose` on the same element: TaoUI's own typography takes over the text, and the
+ * neutral rules below step aside (they are all `:where()`, zero weight, and skip `.tao-prose`).
+ * Without TaoUI these rules give a plain readable look that follows `color-scheme` (light / dark).
+ * Everything is tuned with `--te-*` variables, set on `:root` or on any ancestor; `taoui.css` points them
+ * at the TaoUI tokens.
+ *
+ * Variables / Переменные:
+ *   --te-font-family  --te-font-size  --te-line-height  --te-text  --te-text-muted
+ *   --te-link  --te-border  --te-code-bg  --te-code-font  --te-radius  --te-block-gap
+ *   --te-spoiler-bg (hidden)  --te-spoiler-open-bg (opened)  --te-focus
+ *
+ * Содержимое документа: как он выглядит и в показе (`.tao-content`), и в редакторе (`.tao-editor`).
+ * Под TaoUI добавьте тому же элементу `tao-prose`: текстом займётся типографика TaoUI, а нейтральные правила
+ * ниже уступят (они все в `:where()`, вес нулевой, и обходят `.tao-prose`). Без TaoUI они дают простой читаемый
+ * вид, следующий за `color-scheme`. Настраивается переменными `--te-*` на `:root` или на любом предке.
+ */
+
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) {
+    font-family: var(--te-font-family, inherit);
+    font-size: var(--te-font-size, inherit);
+    line-height: var(--te-line-height, 1.5);
+    color: var(--te-text, inherit);
+    overflow-wrap: anywhere;
+}
+
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(p, ul, ol, blockquote, pre) {
+    margin: 0 0 var(--te-block-gap, 0.6em);
+}
+
+:where(.tao-content):where(:not(.tao-prose)) > :where(:last-child) {
+    margin-bottom: 0;
+}
+
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(h1, h2, h3) {
+    margin: 0.8em 0 0.4em;
+    line-height: 1.25;
+}
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(h1) { font-size: 1.5em; }
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(h2) { font-size: 1.25em; }
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(h3) { font-size: 1.1em; }
+
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(ul, ol) {
+    padding-inline-start: 1.5em;
+}
+
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(blockquote) {
+    padding-inline-start: 0.75em;
+    border-inline-start: 3px solid var(--te-border, light-dark(#d5d9e0, #3a3f49));
+    color: var(--te-text-muted, light-dark(#5b6270, #9aa1ae));
+}
+
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(a) {
+    color: var(--te-link, light-dark(#2f6df6, #7aa5ff));
+}
+
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(code) {
+    font-family: var(--te-code-font, ui-monospace, 'Cascadia Mono', Consolas, monospace);
+    font-size: 0.9em;
+    background: var(--te-code-bg, light-dark(#eef0f4, #23262d));
+    border-radius: var(--te-radius, 4px);
+    padding: 0.1em 0.3em;
+}
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(pre) {
+    background: var(--te-code-bg, light-dark(#eef0f4, #23262d));
+    border-radius: var(--te-radius, 6px);
+    padding: 0.6em 0.8em;
+    overflow-x: auto;
+}
+:where(.tao-content, .tao-editor):where(:not(.tao-prose)) :where(pre code) {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+}
+
+/* Spoiler in the viewer: hidden until the reader clicks it or presses Enter / Space. */
+.tao-content .tao-spoiler {
+    border-radius: 3px;
+    cursor: pointer;
+}
+.tao-content .tao-spoiler:not(.tao-spoiler--open) {
+    background: var(--te-spoiler-bg, light-dark(#c4c9d4, #484e5b));
+    color: transparent;
+    user-select: none;
+}
+.tao-content .tao-spoiler:not(.tao-spoiler--open) * {
+    color: transparent;
+    background: none;
+}
+.tao-content .tao-spoiler--open {
+    background: var(--te-spoiler-open-bg, light-dark(#e6e9ef, #2a2e36));
+}
+.tao-content .tao-spoiler:focus-visible {
+    outline: 2px solid var(--te-focus, light-dark(#2f6df6, #7aa5ff));
+    outline-offset: 1px;
+}

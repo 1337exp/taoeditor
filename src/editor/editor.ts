@@ -16,6 +16,8 @@ export interface EditorOptions {
     /** What sends: `enter` (chat), `mod-enter` (comment), `none`. / Что отправляет. */
     submit?: SubmitMode;
     placeholder?: string;
+    /** Extra classes for the editable element, e.g. `tao-prose` under TaoUI. / Доп. классы, например `tao-prose`. */
+    class?: string;
     /** Accessible name of the text box. / Доступное имя поля. */
     label?: string;
     readOnly?: boolean;
@@ -118,7 +120,7 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
         state,
         editable: () => !options.readOnly,
         attributes: {
-            class: 'tao-editor',
+            class: options.class ? `tao-editor ${options.class}` : 'tao-editor',
             role: 'textbox',
             'aria-multiline': 'true',
             ...(options.label ? { 'aria-label': options.label } : {}),

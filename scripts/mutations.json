@@ -148,5 +148,53 @@
   "src/editor/editor.ts",
   "if (!isEmptyDoc(doc)) options.onSend?.(doc);",
   "options.onSend?.(doc);"
+ ],
+ [
+  "render: text is not escaped",
+  "src/core/render.ts",
+  "const escapeText = (value: string): string => value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');",
+  "const escapeText = (value: string): string => value;"
+ ],
+ [
+  "render: single quote not escaped in attributes",
+  "src/core/render.ts",
+  ".replace(/'/g, '&#39;')",
+  ""
+ ],
+ [
+  "render: link without rel",
+  "src/core/render.ts",
+  "rel: LINK_REL, target:",
+  "target:"
+ ],
+ [
+  "render: input is not normalized",
+  "src/core/render.ts",
+  "const { doc } = normalizeDoc(input, profile);",
+  "const doc = input as { content: DocNode[] };"
+ ],
+ [
+  "vue: a spoiler cannot be closed again",
+  "src/vue/TaoEditorView.ts",
+  "if (!keys.delete(key)) keys.add(key);",
+  "keys.add(key);"
+ ],
+ [
+  "vue: opened spoilers survive a new document",
+  "src/vue/TaoEditorView.ts",
+  "opened.value.doc === props.doc && opened.value.keys.has(key)",
+  "opened.value.keys.has(key)"
+ ],
+ [
+  "vue: Space does not open a spoiler",
+  "src/vue/TaoEditorView.ts",
+  "event.key !== 'Enter' && event.key !== ' '",
+  "event.key !== 'Enter'"
+ ],
+ [
+  "vue: spoiler not keyboard-focusable",
+  "src/core/render.ts",
+  "role: 'button', tabindex: '0'",
+  "role: 'button'"
  ]
 ]
