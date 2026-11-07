@@ -43,6 +43,7 @@ registerTaoIcons({
     'te-outdent': { body: '<path d="M4 6.5h16M12 12h8M4 17.5h16"/><path d="M7 9.5L4 12l3 2.5"/>' },
     'te-quote': { body: '<path d="M9.5 8.5C7 9 5.5 10.7 5.5 13v3.5H10V13H7.5M18.5 8.5c-2.5.5-4 2.2-4 4.5v3.5H19V13h-2.5"/>' },
     'te-clear': { body: '<path d="M5 5.5h10M10 5.5l-2 13M8 18.5h3"/><path d="M14.5 14l5.5 5.5M20 14l-5.5 5.5"/>' },
+    'te-heading': { body: '<path d="M5 6v12M13 6v12M5 12h8"/><path d="M16.5 10l2-1v9"/>' },
     'te-size': { body: '<path d="M3 8V6h10v2M8 6v11M6 17h4M14 11v-1.5h7V11M17.5 9.5V17M16 17h3"/>' },
     'te-align-justify': { body: '<path d="M4 6.5h16M4 12h16M4 17.5h16"/>', grid: true },
     'te-color': { body: '<path d="M6.5 15.5L12 4.5l5.5 11M8.4 11.5h7.2"/><path d="M5 20h14"/>' },
@@ -77,6 +78,11 @@ export interface TaoEditorLabels {
     outdent: string;
     quote: string;
     clear: string;
+    blockStyle: string;
+    styleNormal: string;
+    styleHeading1: string;
+    styleHeading2: string;
+    styleHeading3: string;
     size: string;
     sizeSmall: string;
     sizeNormal: string;
@@ -128,6 +134,11 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     outdent: 'Decrease indent',
     quote: 'Quote',
     clear: 'Clear formatting',
+    blockStyle: 'Paragraph style',
+    styleNormal: 'Normal text',
+    styleHeading1: 'Heading 1',
+    styleHeading2: 'Heading 2',
+    styleHeading3: 'Heading 3',
     size: 'Text size',
     sizeSmall: 'Small',
     sizeNormal: 'Normal',
@@ -149,7 +160,8 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
 };
 
 const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
-const key = (letter: string, shift = false): string => (mac ? `${shift ? '⇧' : ''}⌘${letter}` : `${shift ? 'Ctrl+Shift+' : 'Ctrl+'}${letter}`);
+const key = (letter: string, shift = false, alt = false): string =>
+    mac ? `${shift ? '⇧' : ''}${alt ? '⌥' : ''}⌘${letter}` : `${'Ctrl+'}${alt ? 'Alt+' : ''}${shift ? 'Shift+' : ''}${letter}`;
 
 const MARK_BUTTONS: readonly { mark: keyof TaoEditorLabels & string; icon: string; shortcut?: string }[] = [
     { mark: 'bold', icon: 'te-bold', shortcut: key('B') },
@@ -227,19 +239,22 @@ export const TaoEditor = defineComponent({
         const alignPos = ref<{ left: number; top: number } | null>(null);
         const sizeOpen = ref(false);
         const sizePos = ref<{ left: number; top: number } | null>(null);
+        const styleOpen = ref(false);
+        const stylePos = ref<{ left: number; top: number } | null>(null);
         // One popup at a time: opening one closes the others.
         const closeMenus = (): void => {
             emojiOpen.value = false;
             colorsOpen.value = false;
             alignOpen.value = false;
             sizeOpen.value = false;
+            styleOpen.value = false;
         };
-        const toggleMenu = (which: 'colors' | 'align' | 'size'): void => {
-            const open = { colors: colorsOpen, align: alignOpen, size: sizeOpen }[which];
+        const toggleMenu = (which: 'colors' | 'align' | 'size' | 'style'): void => {
+            const open = { colors: colorsOpen, align: alignOpen, size: sizeOpen, style: styleOpen }[which];
             const was = open.value;
             closeMenus();
             open.value = !was;
-            const pos = { colors: colorsPos, align: alignPos, size: sizePos }[which];
+            const pos = { colors: colorsPos, align: alignPos, size: sizePos, style: stylePos }[which];
             pos.value = null; // measured again after it is drawn
         };
 
@@ -351,6 +366,7 @@ export const TaoEditor = defineComponent({
             { open: () => colorsOpen.value, button: '.tao-editor-colors-button', popup: '.tao-editor-colors', pos: colorsPos },
             { open: () => alignOpen.value, button: '.tao-editor-align-button', popup: '.tao-editor-align', pos: alignPos },
             { open: () => sizeOpen.value, button: '.tao-editor-size-button', popup: '.tao-editor-size', pos: sizePos },
+            { open: () => styleOpen.value, button: '.tao-editor-style-button', popup: '.tao-editor-style', pos: stylePos },
         ];
         onUpdated(() => {
             const box = root.value;
@@ -386,8 +402,9 @@ export const TaoEditor = defineComponent({
             if (!target?.closest?.('.tao-editor-colors, .tao-editor-colors-button, .tao-popover__panel')) colorsOpen.value = false;
             if (!target?.closest?.('.tao-editor-align, .tao-editor-align-button')) alignOpen.value = false;
             if (!target?.closest?.('.tao-editor-size, .tao-editor-size-button')) sizeOpen.value = false;
+            if (!target?.closest?.('.tao-editor-style, .tao-editor-style-button')) styleOpen.value = false;
         };
-        watch(() => emojiOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value, (open) => {
+        watch(() => emojiOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value || styleOpen.value, (open) => {
             if (open) document.addEventListener('pointerdown', closeOnOutside, true);
             else document.removeEventListener('pointerdown', closeOnOutside, true);
         });
@@ -500,6 +517,9 @@ export const TaoEditor = defineComponent({
                 tool(text.redo, 'tao-redo', () => handle?.redo(), { off: !(handle?.canRedo() ?? false) }),
             ];
             const markTools = [
+                ...(nodes.includes('heading')
+                    ? [tool(text.blockStyle, 'te-heading', () => toggleMenu('style'), { pressed: styleOpen.value, class: 'tao-editor-style-button' })]
+                    : []),
                 ...(marks.includes('size')
                     ? [tool(text.size, 'te-size', () => toggleMenu('size'), { pressed: sizeOpen.value, class: 'tao-editor-size-button' })]
                     : []),
@@ -682,7 +702,7 @@ export const TaoEditor = defineComponent({
                 );
             }
             const hasSelection = handle ? !handle.view.state.selection.empty : false;
-            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value);
+            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value || styleOpen.value);
             const children: VNode[] = [];
             if (props.floating) {
                 if (showFloating) {
@@ -771,6 +791,47 @@ export const TaoEditor = defineComponent({
                                         sizeOpen.value = false;
                                         handle?.focus();
                                     },
+                                },
+                                () => text[label],
+                            ),
+                        ),
+                    ),
+                );
+            }
+            if (props.toolbar && styleOpen.value && nodes.includes('heading')) {
+                const choices: [Parameters<NonNullable<typeof handle>['setBlockStyle']>[0], keyof TaoEditorLabels, Record<string, string>, string | undefined][] = [
+                    ['paragraph', 'styleNormal', { fontSize: '1em' }, key('0', false, true)],
+                    [1, 'styleHeading1', { fontSize: '1.6em', fontWeight: '700' }, key('1', false, true)],
+                    [2, 'styleHeading2', { fontSize: '1.3em', fontWeight: '700' }, key('2', false, true)],
+                    [3, 'styleHeading3', { fontSize: '1.1em', fontWeight: '700' }, key('3', false, true)],
+                ];
+                overlays.push(
+                    h(
+                        'div',
+                        {
+                            key: 'style',
+                            class: 'tao-editor-menu tao-editor-style',
+                            role: 'group',
+                            'aria-label': text.blockStyle,
+                            style: placed(stylePos.value),
+                        },
+                        choices.map(([value, label, look, shortcut]) =>
+                            h(
+                                TaoButton,
+                                {
+                                    key: label,
+                                    variant: 'ghost',
+                                    tone: 'neutral',
+                                    size: toolSize,
+                                    pressed: handle?.blockStyleAt() === value,
+                                    shortcut,
+                                    style: { ...look, justifyContent: 'flex-start' },
+                                    'onUpdate:pressed': () => {
+                                        handle?.setBlockStyle(value);
+                                        styleOpen.value = false;
+                                        handle?.focus();
+                                    },
+                                    onMousedown: keepFocus,
                                 },
                                 () => text[label],
                             ),

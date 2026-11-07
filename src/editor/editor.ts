@@ -6,7 +6,7 @@ import { EditorView } from 'prosemirror-view';
 import { ALIGNS, SIZES, emptyDoc, isEmptyDoc, normalizeDoc, parseColor, resolveProfile, safeUrl, type Doc, type Issue, type Profile, type ProfileName } from '../core';
 import { docToNode, nodeToDoc } from './convert';
 import type { MentionHooks, MentionTrigger } from './mentions';
-import { alignAt, clearFormatting, indent, isBlockActive, outdent, setAlign, toggleList, toggleQuote, type Align } from './blocks';
+import { alignAt, blockStyleAt, clearFormatting, setBlockStyle, indent, isBlockActive, outdent, setAlign, toggleList, toggleQuote, type Align, type BlockStyle } from './blocks';
 import { createPlugins, type SubmitMode } from './plugins';
 import { createSchema } from './schema';
 
@@ -73,6 +73,9 @@ export interface EditorHandle {
     /** Sets the size of the selection (`small`, `large`, `huge`); `null` is the normal size. False for another value. */
     setSize(value: 'small' | 'large' | 'huge' | null): boolean;
     sizeOf(): 'small' | 'large' | 'huge' | null;
+    /** Makes the selected lines a paragraph (`'paragraph'`) or a heading of level 1 to 3. False when nothing changes (or the profile has no headings). */
+    setBlockStyle(style: BlockStyle): boolean;
+    blockStyleAt(): BlockStyle;
     /** Aligns every paragraph and heading in the selection. False when the profile has no alignment. */
     setAlign(value: Align): boolean;
     alignOf(): Align;
@@ -208,6 +211,8 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
         sizeOf: () => valueOfMark(view, schema.marks.size) as 'small' | 'large' | 'huge' | null,
         setAlign: (value) => (ALIGNS as readonly string[]).includes(value) && setAlign(value)(view.state, view.dispatch, view),
         alignOf: () => alignAt(view.state),
+        setBlockStyle: (style) => setBlockStyle(schema, style)(view.state, view.dispatch, view),
+        blockStyleAt: () => blockStyleAt(view.state),
         undo: () => undo(view.state, view.dispatch, view),
         redo: () => redo(view.state, view.dispatch, view),
         canUndo: () => undoDepth(view.state) > 0,

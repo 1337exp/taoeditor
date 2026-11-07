@@ -5,7 +5,7 @@ import { sinkListItem, splitListItem } from 'prosemirror-schema-list';
 import type { Schema } from 'prosemirror-model';
 import { Plugin, type Command } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
-import { tabOut, toggleList, toggleQuote } from './blocks';
+import { setBlockStyle, tabOut, toggleList, toggleQuote } from './blocks';
 import { mentionPlugin, type MentionHooks } from './mentions';
 
 export type SubmitMode = 'enter' | 'mod-enter' | 'none';
@@ -81,6 +81,11 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
             'Mod-Shift-7': toggleList(schema, 'orderedList'),
             'Mod-Shift-8': toggleList(schema, 'bulletList'),
             'Mod-Shift-9': toggleQuote(schema),
+            // like Docs: normal text and headings
+            'Mod-Alt-0': setBlockStyle(schema, 'paragraph'),
+            'Mod-Alt-1': setBlockStyle(schema, 1),
+            'Mod-Alt-2': setBlockStyle(schema, 2),
+            'Mod-Alt-3': setBlockStyle(schema, 3),
             // in a list: a new item, one level in, one level out; outside a list these do nothing and the browser's Tab moves on
             ...(schema.nodes.listItem
                 ? { Enter: splitListItem(schema.nodes.listItem), Tab: sinkListItem(schema.nodes.listItem), 'Shift-Tab': tabOut(schema) }

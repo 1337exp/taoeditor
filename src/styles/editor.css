@@ -207,7 +207,8 @@
     border-radius: var(--te-panel-radius, 0.5em);
     box-shadow: var(--te-panel-shadow, 0 4px 16px rgb(0 0 0 / 0.25));
 }
-.tao-editor-size {
+.tao-editor-size,
+.tao-editor-style {
     flex-direction: column;
     min-width: 9em;
 }

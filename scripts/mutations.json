@@ -488,8 +488,8 @@
  [
   "colour panel: the floating box closes with the panel open",
   "src/vue/taoui/TaoEditor.ts",
-  "|| linkOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value);",
-  "|| linkOpen.value || alignOpen.value || sizeOpen.value);"
+  "|| linkOpen.value || colorsOpen.value || alignOpen.value",
+  "|| linkOpen.value || alignOpen.value"
  ],
  [
   "features: an attribute of a missing feature stays",
@@ -562,5 +562,53 @@
   "src/vue/taoui/TaoEditor.ts",
   "marks.some((m) => m !== 'link') ?",
   "true ?"
+ ],
+ [
+  "style: a heading goes where it is not allowed",
+  "src/editor/blocks.ts",
+  "|| !$pos.parent.canReplaceWith($pos.index(), $pos.index() + 1, target)",
+  ""
+ ],
+ [
+  "style: a line that a heading cannot hold becomes one",
+  "src/editor/blocks.ts",
+  "!target.validContent(node.content) ||",
+  ""
+ ],
+ [
+  "style: indent and alignment are lost",
+  "src/editor/blocks.ts",
+  "for (const key of ['indent', 'align']) if (target.spec.attrs?.[key] !== undefined && node.attrs[key] !== undefined) attrs[key] = node.attrs[key];",
+  ""
+ ],
+ [
+  "style: only the first line of a selection changes",
+  "src/editor/blocks.ts",
+  "state.doc.nodesBetween(from, to, (node, pos) => {\n            if (!node.isTextblock || (node.type !== paragraph",
+  "state.doc.nodesBetween(from, from, (node, pos) => {\n            if (!node.isTextblock || (node.type !== paragraph"
+ ],
+ [
+  "style: the level is not set",
+  "src/editor/blocks.ts",
+  "if (target === heading) attrs.level = style;",
+  ""
+ ],
+ [
+  "style: no Ctrl+Alt+2",
+  "src/editor/plugins.ts",
+  "'Mod-Alt-2': setBlockStyle(schema, 2),",
+  ""
+ ],
+ [
+  "toolbar: the style button shows without headings",
+  "src/vue/taoui/TaoEditor.ts",
+  "...(nodes.includes('heading')\n                    ? [tool(text.blockStyle",
+  "...(true\n                    ? [tool(text.blockStyle"
+ ],
+ [
+  "menus: the style popup is not closed by a press outside",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (!target?.closest?.('.tao-editor-style, .tao-editor-style-button')) styleOpen.value = false;",
+  ""
  ]
 ]

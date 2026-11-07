@@ -136,3 +136,44 @@ export function alignAt(state: EditorState): Align {
     const block = $from.parent;
     return block.isTextblock && block.type.spec.attrs?.align !== undefined ? (block.attrs.align as Align) : 'left';
 }
+
+export type BlockStyle = 'paragraph' | 1 | 2 | 3;
+
+/**
+ * Makes every paragraph and heading in the selection a paragraph or a heading of a level, keeping its indent and
+ * alignment. A line is left alone when the result would not be valid there: a heading cannot sit in a list item and
+ * holds only text, so a line with a line break or a mention in it stays a paragraph.
+ * Делает каждый абзац и заголовок выделения абзацем или заголовком нужного уровня, сохраняя отступ и выравнивание.
+ * Строка остаётся как есть, если результат там недопустим: заголовок не бывает в пункте списка и содержит только
+ * текст, поэтому строка с переносом или упоминанием остаётся абзацем.
+ */
+export function setBlockStyle(schema: Schema, style: BlockStyle): Command {
+    const paragraph = schema.nodes.paragraph;
+    const heading = schema.nodes.heading;
+    if (!heading) return () => false;
+    return (state, dispatch) => {
+        const { from, to } = state.selection;
+        const tr = state.tr;
+        let changed = false;
+        state.doc.nodesBetween(from, to, (node, pos) => {
+            if (!node.isTextblock || (node.type !== paragraph && node.type !== heading)) return;
+            const target = style === 'paragraph' ? paragraph : heading;
+            if (node.type === target && (target !== heading || node.attrs.level === style)) return;
+            const $pos = state.doc.resolve(pos);
+            if (!target.validContent(node.content) || !$pos.parent.canReplaceWith($pos.index(), $pos.index() + 1, target)) return;
+            const attrs: Record<string, unknown> = {};
+            for (const key of ['indent', 'align']) if (target.spec.attrs?.[key] !== undefined && node.attrs[key] !== undefined) attrs[key] = node.attrs[key];
+            if (target === heading) attrs.level = style;
+            tr.setNodeMarkup(pos, target, attrs);
+            changed = true;
+        });
+        if (changed && dispatch) dispatch(tr);
+        return changed;
+    };
+}
+
+/** The style where the selection starts. */
+export function blockStyleAt(state: EditorState): BlockStyle {
+    const block = state.selection.$from.parent;
+    return block.type === state.schema.nodes.heading ? (block.attrs.level as 1 | 2 | 3) : 'paragraph';
+}
