@@ -12,3 +12,4 @@ dist
 .idea
 .claude/*
 !.claude/skills/
+demo-dist

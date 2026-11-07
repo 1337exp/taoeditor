@@ -1,0 +1,164 @@
+/* The page of the demo. It uses the TaoUI tokens directly (it is an app); the editor itself only reads --te-* variables. */
+body {
+    margin: 0;
+    background: var(--tao-color-bg);
+    color: var(--tao-color-text);
+    font-family: var(--tao-font-family);
+}
+.page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: var(--tao-space-4, 16px);
+    display: flex;
+    flex-direction: column;
+    gap: var(--tao-space-4, 16px);
+}
+.page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--tao-space-3, 12px);
+}
+.page-head h1 {
+    margin: 0;
+    font-size: var(--tao-font-size-2xl, 24px);
+}
+.page-head p {
+    margin: 4px 0 0;
+    max-width: 52em;
+    color: var(--tao-color-text-muted);
+}
+.page-tools {
+    display: flex;
+    align-items: center;
+    gap: var(--tao-space-2, 8px);
+}
+.section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tao-space-3, 12px);
+}
+.section > h2 {
+    margin: 0;
+    font-size: var(--tao-font-size-xl, 20px);
+}
+.hint {
+    margin: 0;
+    color: var(--tao-color-text-muted);
+    font-size: var(--tao-font-size-sm, 14px);
+}
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--tao-space-2, 8px);
+}
+.row.end {
+    justify-content: flex-end;
+}
+.status {
+    color: var(--tao-color-text-muted);
+    font-size: var(--tao-font-size-sm, 14px);
+}
+.card {
+    padding: var(--tao-space-3, 12px);
+    background: var(--tao-color-surface);
+    border: 1px solid var(--tao-color-border);
+    border-radius: var(--tao-radius-panel, 8px);
+}
+.card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--tao-space-2, 8px);
+    margin-bottom: var(--tao-space-2, 8px);
+    color: var(--tao-color-text-muted);
+    font-size: var(--tao-font-size-sm, 14px);
+}
+.list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tao-space-2, 8px);
+}
+.empty {
+    color: var(--tao-color-text-muted);
+    text-align: center;
+    padding: var(--tao-space-4, 16px);
+}
+.chat-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tao-space-2, 8px);
+    height: 22rem;
+    overflow-y: auto;
+    padding: var(--tao-space-3, 12px);
+    background: var(--tao-color-surface-sunken);
+    border: 1px solid var(--tao-color-border);
+    border-radius: var(--tao-radius-panel, 8px);
+}
+.bubble {
+    max-width: 75%;
+    padding: 6px 10px;
+    background: var(--tao-color-surface);
+    border: 1px solid var(--tao-color-border);
+    border-radius: var(--tao-radius-panel, 8px);
+}
+.bubble.mine {
+    align-self: flex-end;
+    background: var(--tao-color-accent-subtle);
+}
+.bubble small {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--tao-color-text-muted);
+}
+.cols {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--tao-space-4, 16px);
+}
+@media (max-width: 800px) {
+    .cols {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+.switches {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tao-space-3, 12px);
+}
+.switch-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--tao-space-1, 4px);
+}
+.switch-group h3 {
+    margin: 0 0 4px;
+    font-size: var(--tao-font-size-sm, 14px);
+    color: var(--tao-color-text-muted);
+    font-weight: 600;
+}
+.switch-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11em, 1fr));
+    gap: 6px var(--tao-space-3, 12px);
+}
+pre.json {
+    margin: 0;
+    max-height: 22rem;
+    overflow: auto;
+    padding: var(--tao-space-2, 8px);
+    background: var(--tao-color-surface-sunken);
+    border: 1px solid var(--tao-color-border);
+    border-radius: var(--tao-radius-control, 6px);
+    font: 12px/1.45 var(--tao-font-family-mono, ui-monospace, monospace);
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+.reader {
+    padding: var(--tao-space-3, 12px);
+    background: var(--tao-color-surface);
+    border: 1px solid var(--tao-color-border);
+    border-radius: var(--tao-radius-panel, 8px);
+}

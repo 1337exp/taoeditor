@@ -47,6 +47,15 @@ npm run mutate     # break the code on a copy, one thing at a time, and check th
 <TaoEditorView :doc="saved" class="tao-prose" />
 ```
 
+## The demo
+
+```bash
+npm run demo         # http://localhost:5197/ , add -- --host to open it from a phone
+npm run demo:build   # a static copy in demo-dist/
+```
+
+A page made of TaoUI and TaoUX (language and theme switch, draft in `storage`, `i18n`) that shows everything at once: **Comments** (a composer with a draft that follows you to another tab, mentions, emoji, delete with a confirm), **Chat** (Enter sends, a small bot answers), **Article** (the widest profile, the document as a reader sees it, as JSON, as HTML), **Features** (switch marks, blocks and attributes on and off and watch the toolbar, the hotkeys, the paste and the stored document follow; paste a Google Docs run, a styled page, Markdown-looking text and hostile HTML). It imports the package like a project does (`@1337exp/taoeditor/vue/taoui`), not from relative paths.
+
 ## How it is built
 
 ```
@@ -55,7 +64,8 @@ src/editor   ProseMirror layer: schema from core, input rules, keys, history, cr
 src/vue      Vue: TaoEditorView (the viewer, no TaoUI, no engine)
 src/vue/taoui  TaoEditor: the only place that imports TaoUI
 src/styles   content.css, editor.css, taoui.css (the bridge)
-lab/         the page to look at the engine; not part of the build
+lab/         the page to look at the engine (events, paste corpus); not part of the build
+demo/        the demo page above; not part of the package
 tests/       core (node), engine and viewer (jsdom), layers; fixtures are shared with the lab
 ```
 

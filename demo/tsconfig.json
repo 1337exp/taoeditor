@@ -1,0 +1,24 @@
+{
+    "compilerOptions": {
+        "target": "ES2022",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "strict": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "noFallthroughCasesInSwitch": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "skipLibCheck": true,
+        "noEmit": true,
+        "types": ["vite/client"],
+        "paths": {
+            "@1337exp/taoeditor/core": ["../src/core/index.ts"],
+            "@1337exp/taoeditor/editor": ["../src/editor/index.ts"],
+            "@1337exp/taoeditor/vue": ["../src/vue/index.ts"],
+            "@1337exp/taoeditor/vue/taoui": ["../src/vue/taoui/index.ts"]
+        }
+    },
+    "include": ["src/**/*.ts", "src/**/*.vue"]
+}
