@@ -520,8 +520,8 @@ export const TaoEditor = defineComponent({
                                         tone: 'neutral',
                                         size: toolSize,
                                         // the emoji itself is the picture: bigger than the label text of a button
-                                        // a square cell, not a button with side padding: a tight grid like a picker should be
-                                        style: { fontSize: '1.4em', padding: '0', minWidth: '0', aspectRatio: '1 / 1' },
+                                        // a cell of the grid, not a button with side padding; the grid gives it its width
+                                        style: { fontSize: '1.4em', padding: '0', minWidth: '0', width: 'auto' },
                                         'aria-label': symbol,
                                         onMousedown: keepFocus,
                                         onClick: () => handle?.insertText(symbol),
