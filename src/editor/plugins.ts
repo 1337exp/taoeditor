@@ -7,6 +7,7 @@ import { Plugin, type Command } from 'prosemirror-state';
 import { goToNextCell, tableEditing } from 'prosemirror-tables';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { setBlockStyle, tabOut, toggleList, toggleQuote } from './blocks';
+import { exitCodeBlock } from './code';
 import { mentionPlugin, type MentionHooks } from './mentions';
 
 export type SubmitMode = 'enter' | 'mod-enter' | 'none';
@@ -123,12 +124,13 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
             'Mod-Alt-2': setBlockStyle(schema, 2),
             'Mod-Alt-3': setBlockStyle(schema, 3),
             // in a list: a new item, one level in, one level out; outside a list these do nothing and the browser's Tab moves on
-            ...(item ? { Enter: splitListItem(item) } : {}),
+            // Enter on an empty last line leaves a code block; in a list it starts a new item
+            Enter: chainCommands(exitCodeBlock(schema), ...(item ? [splitListItem(item)] : [])),
             ...(item || hasTables ? { Tab: tab, 'Shift-Tab': shiftTab } : {}),
             'Mod-z': undo,
             'Mod-y': redo,
             'Mod-Shift-z': redo,
-            'Shift-Enter': lineBreak,
+            'Shift-Enter': chainCommands(exitCodeBlock(schema), lineBreak),
         }),
         keymap(baseKeymap),
         history(),

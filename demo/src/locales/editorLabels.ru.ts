@@ -23,6 +23,7 @@ export const editorLabelsRu: TaoEditorLabels = {
     indent: 'Увеличить отступ',
     outdent: 'Уменьшить отступ',
     quote: 'Цитата',
+    codeBlock: 'Блок кода',
     clear: 'Очистить форматирование',
     blockStyle: 'Стиль абзаца',
     styleNormal: 'Обычный текст',

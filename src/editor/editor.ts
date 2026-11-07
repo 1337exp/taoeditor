@@ -8,6 +8,7 @@ import { docToNode, nodeToDoc, withoutGuards } from './convert';
 import type { MentionHooks, MentionTrigger } from './mentions';
 import { alignAt, blockStyleAt, clearFormatting, setBlockStyle, indent, isBlockActive, outdent, setAlign, toggleList, toggleQuote, type Align, type BlockStyle } from './blocks';
 import { createPlugins, type SubmitMode } from './plugins';
+import { toggleCodeBlock } from './code';
 import { createSchema } from './schema';
 import { insertTable, inTable, tableCommand, type TableCommand } from './tables';
 
@@ -58,6 +59,8 @@ export interface EditorHandle {
     /** Makes the paragraphs a list, takes them out of one, or changes its kind. False when the profile has no lists. */
     toggleList(name: 'bulletList' | 'orderedList'): boolean;
     toggleQuote(): boolean;
+    /** Makes the selected lines a block of code (plain text, monospaced), or takes the block the caret is in back to a paragraph. */
+    toggleCodeBlock(): boolean;
     /** One level in / out for a list item. */
     indent(): boolean;
     outdent(): boolean;
@@ -204,6 +207,7 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
         },
         toggleList: (name) => toggleList(schema, name)(view.state, view.dispatch, view),
         toggleQuote: () => toggleQuote(schema)(view.state, view.dispatch, view),
+        toggleCodeBlock: () => toggleCodeBlock(schema)(view.state, view.dispatch, view),
         indent: () => indent(schema)(view.state, view.dispatch, view),
         outdent: () => outdent(schema)(view.state, view.dispatch, view),
         canIndent: () => indent(schema)(view.state),

@@ -700,5 +700,17 @@
   "src/editor/convert.ts",
   "if (isEmptyParagraph(content[0]) && isTable(content[1])) content = content.slice(1);",
   ""
+ ],
+ [
+  "code: Enter does not leave a block",
+  "src/editor/plugins.ts",
+  "Enter: chainCommands(exitCodeBlock(schema), ...(item ? [splitListItem(item)] : [])),",
+  "Enter: chainCommands(...(item ? [splitListItem(item)] : [])),"
+ ],
+ [
+  "code: a block is made even where it is not allowed",
+  "src/editor/code.ts",
+  "|| !range.parent.canReplaceWith(range.startIndex, range.endIndex, codeBlock)) return false;",
+  ") return false;"
  ]
 ]

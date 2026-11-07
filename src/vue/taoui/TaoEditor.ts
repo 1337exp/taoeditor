@@ -50,6 +50,7 @@ registerTaoIcons({
     'te-align-justify': { body: '<path d="M4 6.5h16M4 12h16M4 17.5h16"/>', grid: true },
     'te-color': { body: '<path d="M6.5 15.5L12 4.5l5.5 11M8.4 11.5h7.2"/><path d="M5 20h14"/>' },
     'te-code': { body: '<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>' },
+    'te-code-block': { body: '<rect x="4" y="5" width="16" height="14" rx="2"/><path d="M10 9.5L7.5 12l2.5 2.5M14 9.5l2.5 2.5-2.5 2.5"/>' },
     'te-table': { body: '<rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M4 10h16M4 14.5h16M10 5v14"/>' },
     'te-dots': { body: '<path stroke-width="3.6" d="M5.5 12h.01M12 12h.01M18.5 12h.01"/>' },
     'te-trash': { body: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/>' },
@@ -84,6 +85,7 @@ export interface TaoEditorLabels {
     indent: string;
     outdent: string;
     quote: string;
+    codeBlock: string;
     clear: string;
     blockStyle: string;
     styleNormal: string;
@@ -153,6 +155,7 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     indent: 'Increase indent',
     outdent: 'Decrease indent',
     quote: 'Quote',
+    codeBlock: 'Code block',
     clear: 'Clear formatting',
     blockStyle: 'Paragraph style',
     styleNormal: 'Normal text',
@@ -654,6 +657,7 @@ export const TaoEditor = defineComponent({
                       ]
                     : []),
                 ...(nodes.includes('blockquote') ? [tool(text.quote, 'te-quote', () => handle?.toggleQuote(), { shortcut: key('9', true), pressed: handle?.isBlockActive('blockquote') ?? false })] : []),
+                ...(nodes.includes('codeBlock') ? [tool(text.codeBlock, 'te-code-block', () => handle?.toggleCodeBlock(), { pressed: handle?.isBlockActive('codeBlock') ?? false })] : []),
                 ...(nodes.includes('table') ? [tool(text.table, 'te-table', () => {
                     tableFrom.value = 'toolbar';
                     toggleMenu('table');
