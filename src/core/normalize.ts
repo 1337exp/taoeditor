@@ -112,6 +112,12 @@ function cleanMarks(raw: unknown, path: string, ctx: Ctx): DocMark[] | undefined
     });
     const excluded = new Set<string>();
     for (const mark of found.values()) for (const other of MARKS[mark.type].excludes ?? []) excluded.add(other);
+    // two marks that exclude each other (superscript and subscript): the earlier one in the order stays
+    for (const a of found.keys()) {
+        for (const b of MARKS[a].excludes ?? []) {
+            if (found.has(b) && (MARKS[b].excludes ?? []).includes(a) && MARK_ORDER.indexOf(a) < MARK_ORDER.indexOf(b)) excluded.delete(a);
+        }
+    }
     const list = MARK_ORDER.filter((type) => found.has(type) && !excluded.has(type)).map((type) => found.get(type)!);
     return list.length > 0 ? list : undefined;
 }

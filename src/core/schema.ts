@@ -136,11 +136,13 @@ export const MARKS: Readonly<Record<string, MarkSpec>> = {
     italic: {},
     underline: {},
     strike: {},
+    superscript: { excludes: ['subscript'] },
+    subscript: { excludes: ['superscript'] },
     size: { attrs: { value: { default: '', required: true, check: oneOf(...SIZES) } } },
     color: { attrs: { value: { default: '', required: true, check: parseColor } } },
     background: { attrs: { value: { default: '', required: true, check: parseColor } } },
     spoiler: {},
-    code: { excludes: ['bold', 'italic', 'underline', 'strike', 'color', 'background', 'spoiler'] },
+    code: { excludes: ['bold', 'italic', 'underline', 'strike', 'superscript', 'subscript', 'color', 'background', 'spoiler'] },
 };
 
 export const MARK_ORDER: readonly string[] = Object.keys(MARKS);

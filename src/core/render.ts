@@ -61,6 +61,10 @@ function wrapMark(mark: DocMark, child: RenderNode, path: string): RenderElement
             return el('span', [child], { style: `color:${mark.attrs?.value ?? ''}` });
         case 'background':
             return el('span', [child], { style: `background-color:${mark.attrs?.value ?? ''}` });
+        case 'superscript':
+            return el('sup', [child]);
+        case 'subscript':
+            return el('sub', [child]);
         case 'strike':
             return el('s', [child]);
         case 'code':

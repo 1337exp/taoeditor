@@ -6,6 +6,8 @@ export const editorLabelsRu: TaoEditorLabels = {
     bold: 'Жирный',
     italic: 'Курсив',
     strike: 'Зачёркнутый',
+    superscript: 'Надстрочный',
+    subscript: 'Подстрочный',
     code: 'Код',
     spoiler: 'Спойлер',
     link: 'Ссылка',

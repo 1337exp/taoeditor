@@ -109,6 +109,9 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
             'Mod-u': markKey('underline'),
             'Mod-e': markKey('code'),
             'Mod-Shift-x': markKey('strike'),
+            // like Docs: superscript, subscript
+            'Mod-.': markKey('superscript'),
+            'Mod-,': markKey('subscript'),
             'Mod-Shift-p': markKey('spoiler'),
             // like Gmail: numbered, bulleted, quote
             'Mod-Shift-7': toggleList(schema, 'orderedList'),

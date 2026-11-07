@@ -74,6 +74,8 @@ export const ru: Dictionary = {
             italic: 'Курсив',
             underline: 'Подчёркнутый',
             strike: 'Зачёркнутый',
+            superscript: 'Надстрочный',
+            subscript: 'Подстрочный',
             size: 'Размер',
             color: 'Цвет текста',
             background: 'Цвет фона',

@@ -223,3 +223,9 @@
 .tao-editor th > :last-child {
     margin-bottom: 0;
 }
+
+/* Superscript and subscript: smaller and raised or lowered, without opening up the line they sit in. */
+:where(.tao-content, .tao-editor) :where(sup, sub) {
+    font-size: 0.75em;
+    line-height: 0;
+}

@@ -32,6 +32,8 @@ import { PALETTE } from './palette';
 registerTaoIcons({
     'te-bold': { body: '<path d="M7.5 5h5a3.2 3.2 0 010 6.5h-5zM7.5 11.5h5.8a3.3 3.3 0 010 7H7.5z"/>' },
     'te-italic': { body: '<path d="M10 5h7M7 19h7M14.5 5l-5 14"/>' },
+    'te-superscript': { body: '<path d="M4 9l7 8M11 9l-7 8"/><path d="M15 6.5c0-1 .8-1.7 1.9-1.7S19 5.5 19 6.5c0 1.8-4 2.6-4 4.5h4"/>' },
+    'te-subscript': { body: '<path d="M4 6l7 8M11 6l-7 8"/><path d="M15 16.5c0-1 .8-1.7 1.9-1.7S19 15.5 19 16.5c0 1.8-4 2.6-4 4.5h4"/>' },
     'te-strike': {
         body: '<path d="M4.5 12h15"/><path d="M16.5 7.5C16 6.4 14.5 5.5 12 5.5c-2.6 0-4.3 1.1-4.3 2.9 0 1.2.9 2 2.6 2.6M8 16.5c.6 1.2 2 2 4.2 2 2.7 0 4.3-1.1 4.3-2.9 0-.6-.2-1.1-.7-1.6"/>',
     },
@@ -65,6 +67,8 @@ export interface TaoEditorLabels {
     bold: string;
     italic: string;
     strike: string;
+    superscript: string;
+    subscript: string;
     code: string;
     spoiler: string;
     link: string;
@@ -131,6 +135,8 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     bold: 'Bold',
     italic: 'Italic',
     strike: 'Strikethrough',
+    superscript: 'Superscript',
+    subscript: 'Subscript',
     code: 'Code',
     spoiler: 'Spoiler',
     link: 'Link',
@@ -207,6 +213,8 @@ const MARK_BUTTONS: readonly { mark: keyof TaoEditorLabels & string; icon: strin
     { mark: 'italic', icon: 'te-italic', shortcut: key('I') },
     { mark: 'underline', icon: 'te-underline', shortcut: key('U') },
     { mark: 'strike', icon: 'te-strike', shortcut: key('X', true) },
+    { mark: 'superscript', icon: 'te-superscript', shortcut: key('.') },
+    { mark: 'subscript', icon: 'te-subscript', shortcut: key(',') },
     { mark: 'code', icon: 'te-code', shortcut: key('E') },
     { mark: 'spoiler', icon: 'te-spoiler', shortcut: key('P', true) },
 ];

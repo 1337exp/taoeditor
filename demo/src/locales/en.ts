@@ -72,6 +72,8 @@ export const en = {
             italic: 'Italic',
             underline: 'Underline',
             strike: 'Strikethrough',
+            superscript: 'Superscript',
+            subscript: 'Subscript',
             size: 'Size',
             color: 'Text colour',
             background: 'Background colour',

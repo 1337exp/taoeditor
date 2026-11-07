@@ -184,6 +184,15 @@ const MARK_DOM: Readonly<Record<string, MarkSpec>> = {
         ],
         toDOM: () => ['s', 0],
     },
+    // Docs and Word write them as `vertical-align` on a span; the tags are the plain way
+    superscript: {
+        parseDOM: [{ tag: 'sup' }, { style: 'vertical-align', getAttrs: (value) => value === 'super' && null }],
+        toDOM: () => ['sup', 0],
+    },
+    subscript: {
+        parseDOM: [{ tag: 'sub' }, { style: 'vertical-align', getAttrs: (value) => value === 'sub' && null }],
+        toDOM: () => ['sub', 0],
+    },
     spoiler: {
         parseDOM: [{ tag: 'span.tao-spoiler' }, { tag: 'tg-spoiler' }],
         toDOM: () => ['span', { class: 'tao-spoiler' }, 0],
