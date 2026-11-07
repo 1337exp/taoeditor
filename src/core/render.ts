@@ -44,6 +44,8 @@ function wrapMark(mark: DocMark, child: RenderNode, path: string): RenderElement
             return el('strong', [child]);
         case 'italic':
             return el('em', [child]);
+        case 'underline':
+            return el('u', [child]);
         case 'strike':
             return el('s', [child]);
         case 'code':

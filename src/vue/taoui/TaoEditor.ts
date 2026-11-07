@@ -34,6 +34,13 @@ registerTaoIcons({
         body: '<path d="M4.5 12h15"/><path d="M16.5 7.5C16 6.4 14.5 5.5 12 5.5c-2.6 0-4.3 1.1-4.3 2.9 0 1.2.9 2 2.6 2.6M8 16.5c.6 1.2 2 2 4.2 2 2.7 0 4.3-1.1 4.3-2.9 0-.6-.2-1.1-.7-1.6"/>',
     },
     'te-emoji': { body: '<circle cx="12" cy="12" r="8.5"/><path d="M8.6 14.2c.8 1.3 2 2 3.4 2s2.6-.7 3.4-2"/><path d="M9.4 9.8h.01M14.6 9.8h.01"/>' },
+    'te-underline': { body: '<path d="M7 5v6a5 5 0 0010 0V5"/><path d="M5 20h14"/>' },
+    'te-list-ordered': { body: '<path d="M10 6.5h10M10 12h10M10 17.5h10"/><path d="M4.5 5.6l1.2-.7v4M4.2 14.6c.3-.9 2.5-1 2.5.4 0 .8-2.6 1.5-2.6 2.9h2.8"/>' },
+    'te-list-bullet': { body: '<path d="M9.5 6.5H20M9.5 12H20M9.5 17.5H20"/><path d="M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01"/>' },
+    'te-indent': { body: '<path d="M4 6.5h16M12 12h8M4 17.5h16"/><path d="M4 9.5l3 2.5-3 2.5"/>' },
+    'te-outdent': { body: '<path d="M4 6.5h16M12 12h8M4 17.5h16"/><path d="M7 9.5L4 12l3 2.5"/>' },
+    'te-quote': { body: '<path d="M9.5 8.5C7 9 5.5 10.7 5.5 13v3.5H10V13H7.5M18.5 8.5c-2.5.5-4 2.2-4 4.5v3.5H19V13h-2.5"/>' },
+    'te-clear': { body: '<path d="M5 5.5h10M10 5.5l-2 13M8 18.5h3"/><path d="M14.5 14l5.5 5.5M20 14l-5.5 5.5"/>' },
     'te-code': { body: '<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>' },
     'te-spoiler': {
         body: '<path d="M4 4l16 16"/><path d="M10.2 6.2A9 9 0 0112 6c4.5 0 7.5 3.6 8.5 6a12.5 12.5 0 01-2.6 3.5M6.5 8C4.9 9.2 3.8 10.8 3.5 12c1 2.4 4 6 8.5 6 1.3 0 2.5-.3 3.5-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/>',
@@ -58,6 +65,13 @@ export interface TaoEditorLabels {
     linkApply: string;
     linkRemove: string;
     linkInvalid: string;
+    underline: string;
+    numbered: string;
+    bulleted: string;
+    indent: string;
+    outdent: string;
+    quote: string;
+    clear: string;
     emoji: string;
     emojiList: string;
     mentionList: string;
@@ -87,6 +101,13 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     linkApply: 'Apply',
     linkRemove: 'Remove link',
     linkInvalid: 'Only http and https links are allowed',
+    underline: 'Underline',
+    numbered: 'Numbered list',
+    bulleted: 'Bulleted list',
+    indent: 'Increase indent',
+    outdent: 'Decrease indent',
+    quote: 'Quote',
+    clear: 'Clear formatting',
     emoji: 'Emoji',
     emojiList: 'Emoji',
     mentionList: 'People',
@@ -98,6 +119,7 @@ const key = (letter: string, shift = false): string => (mac ? `${shift ? '⇧' :
 const MARK_BUTTONS: readonly { mark: keyof TaoEditorLabels & string; icon: string; shortcut?: string }[] = [
     { mark: 'bold', icon: 'te-bold', shortcut: key('B') },
     { mark: 'italic', icon: 'te-italic', shortcut: key('I') },
+    { mark: 'underline', icon: 'te-underline', shortcut: key('U') },
     { mark: 'strike', icon: 'te-strike', shortcut: key('X', true) },
     { mark: 'code', icon: 'te-code', shortcut: key('E') },
     { mark: 'spoiler', icon: 'te-spoiler', shortcut: key('P', true) },
@@ -255,6 +277,9 @@ export const TaoEditor = defineComponent({
                 },
             });
             handle.view.dom.addEventListener('focus', () => emit('focus'));
+            handle.view.dom.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && emojiOpen.value) emojiOpen.value = false;
+            });
             handle.view.dom.addEventListener('blur', () => emit('blur'));
             editor.value = handle;
             tick.value++;
@@ -267,7 +292,17 @@ export const TaoEditor = defineComponent({
                 panelSize.value = { w: el.offsetWidth, h: el.offsetHeight };
             }
         });
+        // A click anywhere outside the component closes the emoji list (a click inside keeps the focus in the text,
+        // so the focus alone cannot tell us).
+        const closeOnOutside = (event: PointerEvent): void => {
+            if (!root.value?.contains(event.target as Node | null)) emojiOpen.value = false;
+        };
+        watch(emojiOpen, (open) => {
+            if (open) document.addEventListener('pointerdown', closeOnOutside, true);
+            else document.removeEventListener('pointerdown', closeOnOutside, true);
+        });
         onBeforeUnmount(() => {
+            document.removeEventListener('pointerdown', closeOnOutside, true);
             editor.value?.destroy();
             editor.value = null;
         });
@@ -343,63 +378,67 @@ export const TaoEditor = defineComponent({
             // A click must not take the focus (and with it the selection) from the editor.
             const keepFocus = (event: MouseEvent): void => event.preventDefault();
 
-            const toggle = (name: string, label: string, icon: string, shortcut: string | undefined, pressed: boolean): VNode =>
-                h(TaoButton, {
+            // One kind of tool button: an icon, a name, maybe a key and a pressed state, and what it does.
+            const tool = (label: string, icon: string, run: () => void, opts: { shortcut?: string; pressed?: boolean; off?: boolean } = {}): VNode => {
+                const act = (): void => {
+                    run();
+                    handle?.focus();
+                };
+                return h(TaoButton, {
                     icon,
                     variant: 'ghost',
                     // a tool is not the main action: neutral keeps the accent for what is on (TaoUI Guide, the accent budget)
                     tone: 'neutral',
                     size: toolSize,
-                    pressed,
-                    shortcut, // TaoButton (5.30+) puts it into the tooltip, "Bold (Ctrl+B)", and aria-keyshortcuts
-                    disabled: locked,
+                    shortcut: opts.shortcut, // TaoButton (5.30+) puts it into the tooltip, "Bold (Ctrl+B)", and aria-keyshortcuts
+                    disabled: locked || !!opts.off,
                     'aria-label': label,
                     // not even `title: undefined`: an own key would override the tooltip TaoButton builds from the shortcut
-                    ...(shortcut ? {} : { title: label }),
+                    ...(opts.shortcut ? {} : { title: label }),
                     onMousedown: keepFocus,
-                    'onUpdate:pressed': () => {
-                        if (name === 'link') {
-                            linkOpen.value = !linkOpen.value;
-                            linkError.value = false;
-                            return;
-                        }
-                        handle?.toggleMark(name);
-                        handle?.focus();
-                    },
+                    ...(opts.pressed === undefined ? { onClick: act } : { pressed: opts.pressed, 'onUpdate:pressed': act }),
                 });
+            };
 
-            const plain = (label: string, icon: string, on: () => void, off: boolean): VNode =>
-                h(TaoButton, {
-                    icon,
-                    variant: 'ghost',
-                    tone: 'neutral',
-                    size: toolSize,
-                    disabled: locked || off,
-                    'aria-label': label,
-                    title: label,
-                    onMousedown: keepFocus,
-                    onClick: () => {
-                        on();
-                        handle?.focus();
-                    },
-                });
+            const nodes = PROFILES[props.profile].nodes as readonly string[];
+            // The order of Gmail's bar: undo and redo, the marks, the blocks, clear formatting.
+            const history = [
+                tool(text.undo, 'tao-undo', () => handle?.undo(), { off: !(handle?.canUndo() ?? false) }),
+                tool(text.redo, 'tao-redo', () => handle?.redo(), { off: !(handle?.canRedo() ?? false) }),
+            ];
+            const markTools = [
+                ...MARK_BUTTONS.filter((b) => marks.includes(b.mark)).map((b) =>
+                    tool(text[b.mark], b.icon, () => handle?.toggleMark(b.mark), { shortcut: b.shortcut, pressed: handle?.isMarkActive(b.mark) ?? false }),
+                ),
+                ...(marks.includes('link')
+                    ? [
+                          tool(text.link, 'te-link', () => {
+                              linkOpen.value = !linkOpen.value;
+                              linkError.value = false;
+                          }, { pressed: linkOpen.value || (handle?.isMarkActive('link') ?? false) }),
+                      ]
+                    : []),
+            ];
+            const blockTools = [
+                ...(nodes.includes('orderedList') ? [tool(text.numbered, 'te-list-ordered', () => handle?.toggleList('orderedList'), { shortcut: key('7', true), pressed: handle?.isBlockActive('orderedList') ?? false })] : []),
+                ...(nodes.includes('bulletList') ? [tool(text.bulleted, 'te-list-bullet', () => handle?.toggleList('bulletList'), { shortcut: key('8', true), pressed: handle?.isBlockActive('bulletList') ?? false })] : []),
+                ...(nodes.includes('listItem')
+                    ? [
+                          tool(text.outdent, 'te-outdent', () => handle?.outdent(), { off: !(handle?.canOutdent() ?? false) }),
+                          tool(text.indent, 'te-indent', () => handle?.indent(), { off: !(handle?.canIndent() ?? false) }),
+                      ]
+                    : []),
+                ...(nodes.includes('blockquote') ? [tool(text.quote, 'te-quote', () => handle?.toggleQuote(), { shortcut: key('9', true), pressed: handle?.isBlockActive('blockquote') ?? false })] : []),
+            ];
+            const clearTools = [tool(text.clear, 'te-clear', () => handle?.clearFormatting())];
 
             const panel: VNode[] = [];
             if (props.toolbar) {
+                const groups = [history, markTools, blockTools, clearTools].filter((g) => g.length > 0);
                 panel.push(
-                    h(TaoToolbar, { key: 'toolbar', label: text.toolbar, size: toolSize, variant: 'plain', class: 'tao-editor-toolbar' }, () => [
-                        h(TaoToolbarGroup, null, () => [
-                            ...MARK_BUTTONS.filter((b) => marks.includes(b.mark)).map((b) =>
-                                toggle(b.mark, text[b.mark], b.icon, b.shortcut, handle?.isMarkActive(b.mark) ?? false),
-                            ),
-                            ...(marks.includes('link') ? [toggle('link', text.link, 'te-link', undefined, linkOpen.value || (handle?.isMarkActive('link') ?? false))] : []),
-                        ]),
-                        h(TaoToolbarSeparator),
-                        h(TaoToolbarGroup, null, () => [
-                            plain(text.undo, 'tao-undo', () => handle?.undo(), !(handle?.canUndo() ?? false)),
-                            plain(text.redo, 'tao-redo', () => handle?.redo(), !(handle?.canRedo() ?? false)),
-                        ]),
-                    ]),
+                    h(TaoToolbar, { key: 'toolbar', label: text.toolbar, size: toolSize, variant: 'plain', class: 'tao-editor-toolbar' }, () =>
+                        groups.flatMap((group, i) => [...(i > 0 ? [h(TaoToolbarSeparator, { key: `sep-${i}` })] : []), h(TaoToolbarGroup, { key: `group-${i}` }, () => group)]),
+                    ),
                 );
             }
             if (props.toolbar && linkOpen.value) {

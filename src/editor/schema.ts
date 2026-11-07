@@ -115,6 +115,14 @@ const MARK_DOM: Readonly<Record<string, MarkSpec>> = {
         ],
         toDOM: () => ['em', 0],
     },
+    underline: {
+        parseDOM: [
+            { tag: 'u' },
+            { style: 'text-decoration', getAttrs: (value) => value.includes('underline') && null },
+            { style: 'text-decoration-line', getAttrs: (value) => value.includes('underline') && null },
+        ],
+        toDOM: () => ['u', 0],
+    },
     strike: {
         parseDOM: [
             { tag: 's' },

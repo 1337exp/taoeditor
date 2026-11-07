@@ -194,8 +194,8 @@
  [
   "component: buttons stay active when disabled",
   "src/vue/taoui/TaoEditor.ts",
-  "disabled: locked,",
-  ""
+  "disabled: locked || !!opts.off,",
+  "disabled: !!opts.off,"
  ],
  [
   "component: readonly does not lock the text box",
@@ -292,5 +292,65 @@
   "src/vue/TaoEditorView.ts",
   "instance?.vnode.props && 'onMention' in instance.vnode.props",
   "instance?.vnode.props"
+ ],
+ [
+  "emoji list: a press outside does not close it",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (!root.value?.contains(event.target as Node | null)) emojiOpen.value = false;",
+  ""
+ ],
+ [
+  "emoji list: Escape in the text does not close it",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (event.key === 'Escape' && emojiOpen.value) emojiOpen.value = false;",
+  ""
+ ],
+ [
+  "underline: a link does not win over it",
+  "src/core/schema.ts",
+  "}, excludes: ['underline'] },",
+  "} },"
+ ],
+ [
+  "underline: code does not win over it",
+  "src/core/schema.ts",
+  "'italic', 'underline', 'strike'",
+  "'italic', 'strike'"
+ ],
+ [
+  "lists: switching kind does nothing",
+  "src/editor/blocks.ts",
+  "if (dispatch) dispatch(state.tr.setNodeMarkup(inList.pos, type));",
+  ""
+ ],
+ [
+  "clear formatting: removes the link too",
+  "src/editor/blocks.ts",
+  "if (type.name !== 'link') tr =",
+  "if (true) tr ="
+ ],
+ [
+  "lists: Enter does not start a new item",
+  "src/editor/plugins.ts",
+  "Enter: splitListItem(schema.nodes.listItem), ",
+  ""
+ ],
+ [
+  "lists: no Ctrl+Shift+8",
+  "src/editor/plugins.ts",
+  "'Mod-Shift-8': toggleList(schema, 'bulletList'),",
+  ""
+ ],
+ [
+  "toolbar: list buttons show in a profile without lists",
+  "src/vue/taoui/TaoEditor.ts",
+  "nodes.includes('bulletList') ?",
+  "true ?"
+ ],
+ [
+  "toolbar: indent is never disabled",
+  "src/vue/taoui/TaoEditor.ts",
+  "{ off: !(handle?.canIndent() ?? false) }",
+  "{ off: false }"
  ]
 ]

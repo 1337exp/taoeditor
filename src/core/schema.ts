@@ -102,12 +102,13 @@ export const NODES: Readonly<Record<string, NodeSpec>> = {
 
 /** Marks in canonical order: the outermost first. / Марки в каноническом порядке: внешняя первой. */
 export const MARKS: Readonly<Record<string, MarkSpec>> = {
-    link: { attrs: { href: { default: '', required: true, check: (value) => safeUrl(value) ?? undefined } } },
+    link: { attrs: { href: { default: '', required: true, check: (value) => safeUrl(value) ?? undefined } }, excludes: ['underline'] },
     bold: {},
     italic: {},
+    underline: {},
     strike: {},
     spoiler: {},
-    code: { excludes: ['bold', 'italic', 'strike', 'spoiler'] },
+    code: { excludes: ['bold', 'italic', 'underline', 'strike', 'spoiler'] },
 };
 
 export const MARK_ORDER: readonly string[] = Object.keys(MARKS);

@@ -6,6 +6,7 @@ import { EditorView } from 'prosemirror-view';
 import { PROFILES, emptyDoc, isEmptyDoc, normalizeDoc, safeUrl, type Doc, type Issue, type Profile, type ProfileName } from '../core';
 import { docToNode, nodeToDoc } from './convert';
 import type { MentionHooks, MentionTrigger } from './mentions';
+import { clearFormatting, indent, isBlockActive, outdent, toggleList, toggleQuote } from './blocks';
 import { createPlugins, type SubmitMode } from './plugins';
 import { createSchema } from './schema';
 
@@ -53,6 +54,18 @@ export interface EditorHandle {
     insertMention(trigger: MentionTrigger, item: { id: string; label: string }): boolean;
     /** Types text at the selection (an emoji from a picker). / Вставляет текст на место выделения. */
     insertText(text: string): boolean;
+    /** Makes the paragraphs a list, takes them out of one, or changes its kind. False when the profile has no lists. */
+    toggleList(name: 'bulletList' | 'orderedList'): boolean;
+    toggleQuote(): boolean;
+    /** One level in / out for a list item. */
+    indent(): boolean;
+    outdent(): boolean;
+    canIndent(): boolean;
+    canOutdent(): boolean;
+    /** Is the caret in a list or a quote (`bulletList`, `orderedList`, `blockquote`)? */
+    isBlockActive(name: string): boolean;
+    /** Removes every mark from the selection except the link. */
+    clearFormatting(): boolean;
     /** Sets a link on the selection; `null` removes it. Unsafe URLs are refused (returns false). */
     setLink(href: string | null): boolean;
     undo(): boolean;
@@ -137,6 +150,14 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
             view.dispatch(view.state.tr.insertText(text, from, to).scrollIntoView());
             return true;
         },
+        toggleList: (name) => toggleList(schema, name)(view.state, view.dispatch, view),
+        toggleQuote: () => toggleQuote(schema)(view.state, view.dispatch, view),
+        indent: () => indent(schema)(view.state, view.dispatch, view),
+        outdent: () => outdent(schema)(view.state, view.dispatch, view),
+        canIndent: () => indent(schema)(view.state),
+        canOutdent: () => outdent(schema)(view.state),
+        isBlockActive: (name) => isBlockActive(view.state, name),
+        clearFormatting: () => clearFormatting(schema)(view.state, view.dispatch, view),
         undo: () => undo(view.state, view.dispatch, view),
         redo: () => redo(view.state, view.dispatch, view),
         canUndo: () => undoDepth(view.state) > 0,

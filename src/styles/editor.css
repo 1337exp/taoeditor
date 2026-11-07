@@ -39,7 +39,7 @@
 /* While editing, a spoiler stays readable but marked; the viewer hides it. */
 .tao-editor .tao-spoiler {
     background: var(--te-spoiler-open-bg, light-dark(#e6e9ef, #2a2e36));
-    border-radius: 3px;
+    border-radius: var(--te-radius, 3px);
     padding: 0 0.15em;
 }
 

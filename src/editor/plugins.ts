@@ -1,9 +1,11 @@
 import { baseKeymap, toggleMark } from 'prosemirror-commands';
 import { history, redo, undo } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
+import { liftListItem, sinkListItem, splitListItem } from 'prosemirror-schema-list';
 import type { Schema } from 'prosemirror-model';
 import { Plugin, type Command } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
+import { toggleList, toggleQuote } from './blocks';
 import { mentionPlugin, type MentionHooks } from './mentions';
 
 export type SubmitMode = 'enter' | 'mod-enter' | 'none';
@@ -71,9 +73,18 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
         keymap({
             'Mod-b': markKey('bold'),
             'Mod-i': markKey('italic'),
+            'Mod-u': markKey('underline'),
             'Mod-e': markKey('code'),
             'Mod-Shift-x': markKey('strike'),
             'Mod-Shift-p': markKey('spoiler'),
+            // like Gmail: numbered, bulleted, quote
+            'Mod-Shift-7': toggleList(schema, 'orderedList'),
+            'Mod-Shift-8': toggleList(schema, 'bulletList'),
+            'Mod-Shift-9': toggleQuote(schema),
+            // in a list: a new item, one level in, one level out; outside a list these do nothing and the browser's Tab moves on
+            ...(schema.nodes.listItem
+                ? { Enter: splitListItem(schema.nodes.listItem), Tab: sinkListItem(schema.nodes.listItem), 'Shift-Tab': liftListItem(schema.nodes.listItem) }
+                : {}),
             'Mod-z': undo,
             'Mod-y': redo,
             'Mod-Shift-z': redo,
