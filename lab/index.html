@@ -30,7 +30,7 @@
             <label>Look
                 <select id="look">
                     <option value="neutral">neutral (follows the system)</option>
-                    <option value="taoui-dark">TaoUI dark</option>
+                    <option value="taoui-dark" selected>TaoUI dark</option>
                     <option value="taoui-light">TaoUI light</option>
                 </select>
             </label>
@@ -41,6 +41,9 @@
         <div id="toolbar" class="toolbar" role="toolbar" aria-label="Formatting"></div>
         <div id="editor" class="editor-host"></div>
         <p id="status" class="status"></p>
+        <h2>TaoEditor: the Vue component on TaoUI (needs a TaoUI look), and what a reader sees of it</h2>
+        <div id="component"></div>
+        <div id="component-view" class="view-host"></div>
         <h2>Viewer (TaoEditorView): what a reader sees. Click a spoiler.</h2>
         <div id="view" class="view-host"></div>
         <section class="panels">

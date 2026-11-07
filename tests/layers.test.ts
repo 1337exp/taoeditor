@@ -74,6 +74,10 @@ describe('layers', () => {
         }
     });
 
+    it('the viewer entry does not pull in the TaoUI editor', () => {
+        for (const spec of imports(join(src, 'vue/index.ts'))) expect(/taoui|editor/.test(spec), `vue/index.ts → ${spec}`).toBe(false);
+    });
+
     it('no markup from strings and no code from strings anywhere in src', () => {
         const banned = /innerHTML|outerHTML|insertAdjacentHTML|document\.write|v-html|dangerouslySetInnerHTML|\beval\s*\(|new Function\s*\(/;
         for (const file of files) {

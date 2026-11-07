@@ -42,3 +42,27 @@
     border-radius: 3px;
     padding: 0 0.15em;
 }
+
+/* TaoEditor (the Vue component): toolbar, link row, the field. */
+.tao-editor-root {
+    display: flex;
+    flex-direction: column;
+    gap: var(--te-gap, 0.375em);
+}
+.tao-editor-root--disabled .tao-editor {
+    opacity: 0.6;
+}
+.tao-editor-link {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--te-gap, 0.375em);
+}
+.tao-editor-link-input {
+    flex: 1 1 12em;
+}
+.tao-editor-link-error {
+    flex-basis: 100%;
+    color: var(--te-error, light-dark(#c0392b, #ff8a80));
+    font-size: 0.875em;
+}

@@ -8,6 +8,7 @@ import './lab.css';
 import { PROFILES, normalizeDoc, toHtml, toPlainText, type Doc, type Profile, type ProfileName } from '../src/core';
 import { createEditor, type EditorHandle, type SubmitMode } from '../src/editor';
 import { TaoEditorView } from '../src/vue';
+import { TaoEditor } from '../src/vue/taoui';
 import { FIXTURES } from '../tests/fixtures';
 
 /**
@@ -185,7 +186,35 @@ function mount(): void {
     editor.focus();
 }
 
+// The component under test: the same controls drive it (profile, send key), its document is shown by the viewer.
+const componentDoc = shallowRef<Doc | null>(null);
+const componentProfile = shallowRef<ProfileName>('comment');
+const componentSubmit = shallowRef<SubmitMode>('none');
+
+function mountComponent(): void {
+    createApp({
+        render: () =>
+            h(TaoEditor, {
+                modelValue: componentDoc.value,
+                'onUpdate:modelValue': (doc: Doc) => (componentDoc.value = doc),
+                profile: componentProfile.value,
+                submit: componentSubmit.value,
+                placeholder: 'TaoEditor: type here',
+                label: 'TaoEditor component',
+                onSend: (doc: Doc) => {
+                    log('component SEND', JSON.stringify(toPlainText(doc)));
+                    componentDoc.value = null;
+                },
+            }),
+    }).mount($('component'));
+    createApp({
+        render: () => h(TaoEditorView, { doc: componentDoc.value, profile: componentProfile.value, class: taouiOn() ? 'tao-prose' : undefined }),
+    }).mount($('component-view'));
+}
+
 function init(): void {
+    applyLook();
+    mountComponent();
     createApp({
         render: () => h(TaoEditorView, { doc: shown.value, profile: viewProfile.value, class: taouiOn() ? 'tao-prose' : undefined }),
     }).mount($('view'));
@@ -217,8 +246,14 @@ function init(): void {
         corpus.value = '';
     });
 
-    $('profile').addEventListener('change', mount);
-    $('submit').addEventListener('change', mount);
+    $('profile').addEventListener('change', () => {
+        componentProfile.value = $<HTMLSelectElement>('profile').value as ProfileName;
+        mount();
+    });
+    $('submit').addEventListener('change', () => {
+        componentSubmit.value = $<HTMLSelectElement>('submit').value as SubmitMode;
+        mount();
+    });
     buildToolbar();
     mount();
 }

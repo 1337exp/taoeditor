@@ -1,5 +1,5 @@
 import { toggleMark } from 'prosemirror-commands';
-import { redo, undo } from 'prosemirror-history';
+import { redo, redoDepth, undo, undoDepth } from 'prosemirror-history';
 import type { MarkType, Schema } from 'prosemirror-model';
 import { EditorState } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
@@ -47,6 +47,8 @@ export interface EditorHandle {
     setLink(href: string | null): boolean;
     undo(): boolean;
     redo(): boolean;
+    canUndo(): boolean;
+    canRedo(): boolean;
     focus(): void;
     destroy(): void;
 }
@@ -112,6 +114,8 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
         },
         undo: () => undo(view.state, view.dispatch, view),
         redo: () => redo(view.state, view.dispatch, view),
+        canUndo: () => undoDepth(view.state) > 0,
+        canRedo: () => redoDepth(view.state) > 0,
         focus: () => view.focus(),
         destroy: () => view.destroy(),
     };

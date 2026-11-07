@@ -196,5 +196,41 @@
   "src/core/render.ts",
   "role: 'button', tabindex: '0'",
   "role: 'button'"
+ ],
+ [
+  "bridge: points at a token TaoUI does not have",
+  "src/styles/taoui.css",
+  "var(--tao-color-input-bg)",
+  "var(--tao-color-input-bgx)"
+ ],
+ [
+  "component: the echo of v-model resets the document",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (JSON.stringify(next ?? emptyDoc()) === JSON.stringify(handle.getDoc())) return;",
+  ""
+ ],
+ [
+  "component: a toolbar click takes the focus",
+  "src/vue/taoui/TaoEditor.ts",
+  "const keepFocus = (event: MouseEvent): void => event.preventDefault();",
+  "const keepFocus = (): void => undefined;"
+ ],
+ [
+  "component: buttons stay active when disabled",
+  "src/vue/taoui/TaoEditor.ts",
+  "disabled: locked,",
+  ""
+ ],
+ [
+  "component: readonly does not lock the text box",
+  "src/vue/taoui/TaoEditor.ts",
+  "readOnly: props.readonly || props.disabled,",
+  "readOnly: false,"
+ ],
+ [
+  "component: undo is never disabled",
+  "src/vue/taoui/TaoEditor.ts",
+  "!(handle?.canUndo() ?? false)",
+  "false"
  ]
 ]

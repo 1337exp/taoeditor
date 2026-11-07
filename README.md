@@ -29,29 +29,35 @@ npm run mutate     # break the code on a copy, one thing at a time, and check th
 - **Markdown shortcuts while typing** (`**bold**`, `*italic*`, `` `code` ``, `~~strike~~`, `||spoiler||`, `# `, `> `, `- `, `1. `, ```` ``` ````), the first Backspace brings the typed characters back.
 - **Safe paste**: pasted HTML is read only through the schema's parse rules (Google Docs and Word bold/italic included); scripts, handlers, images, unsafe links cannot get in.
 - **Chat mode**: Enter sends, Shift+Enter breaks the line, an IME composition never sends.
+- **`TaoEditor`** (`@1337exp/taoeditor/vue/taoui`): the field built from TaoUI components with `v-model`, `change`, `send`; a toolbar of toggle buttons (bold, italic, strike, code, spoiler, link, undo, redo) that follow the selection, a link form that refuses unsafe URLs, `size`, `readonly`, `disabled`, translatable `labels`.
 - **Showing a document**: `toHtml` / `toRenderTree` in the core (no DOM, safe by construction, runs on a server) and a Vue viewer `TaoEditorView` that never loads the editing engine; a spoiler opens on click, Enter or Space.
 - **Made for TaoUI, usable without it**: looks come from `--te-*` variables with neutral defaults; `taoui.css` points them at the TaoUI tokens, `class="tao-prose"` hands the text typography to TaoUI. Only files in `src/vue/taoui/` may import TaoUI (a test guards the layers).
 - **A lab** (`lab/`): the same editor on a page with the document JSON, the plain text, an engine⇄core agreement check, a log of composition, `beforeinput` and key events, and a corpus of pastes.
+
+```vue
+<TaoEditor v-model="doc" profile="comment" submit="mod-enter" @send="post" />
+<TaoEditorView :doc="saved" class="tao-prose" />
+```
 
 ## How it is built
 
 ```
 src/core     no DOM, runs on a server too: model, schema + profiles, normalizer, link allowlist, plain text, render (tree and HTML)
 src/editor   ProseMirror layer: schema from core, input rules, keys, history, createEditor()
-src/vue      Vue: TaoEditorView (the viewer); the TaoUI-based editor will live in src/vue/taoui/
+src/vue      Vue: TaoEditorView (the viewer, no TaoUI, no engine)
+src/vue/taoui  TaoEditor: the only place that imports TaoUI
 src/styles   content.css, editor.css, taoui.css (the bridge)
 lab/         the page to look at the engine; not part of the build
 tests/       core (node), engine and viewer (jsdom), layers; fixtures are shared with the lab
 ```
 
-Imports are by subpath, there is no root entry: `@1337exp/taoeditor/core`, `/editor`, `/vue`, `/content.css`, `/editor.css`, `/taoui.css`.
+Imports are by subpath, there is no root entry: `@1337exp/taoeditor/core`, `/editor`, `/vue`, `/vue/taoui`, `/content.css`, `/editor.css`, `/taoui.css`.
 
 Decisions, what is proven and what is not: [docs/architecture.ru.md](docs/architecture.ru.md) (Russian). An independent second opinion that shaped the plan: [docs/notes](docs/notes/grok-architecture-2026-11-07.md).
 
 ## Not yet
 
-- The Vue editor component with a bubble toolbar on TaoUI, mentions, emoji, slash menu.
-- Markdown import/export and the "source" mode.
+- A floating (bubble) toolbar: for now it is a fixed bar above the field. Mentions, emoji, slash menu.
 - Images, tables, embeds.
 - Checked only in Chromium by hand and in jsdom by tests: **IME on Android and iOS, Firefox, Safari are not checked yet**.
 

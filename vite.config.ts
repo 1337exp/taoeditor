@@ -9,7 +9,7 @@ export default defineConfig({
     build: {
         sourcemap: true,
         lib: {
-            entry: { core: 'src/core/index.ts', editor: 'src/editor/index.ts', vue: 'src/vue/index.ts' },
+            entry: { core: 'src/core/index.ts', editor: 'src/editor/index.ts', vue: 'src/vue/index.ts', 'vue-taoui': 'src/vue/taoui/index.ts' },
             formats: ['es'],
             fileName: (_format, name) => `${name}.js`,
         },

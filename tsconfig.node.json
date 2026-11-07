@@ -3,7 +3,9 @@
         "target": "ES2022",
         "module": "ESNext",
         "moduleResolution": "Bundler",
-        "lib": ["ES2022"],
+        "lib": [
+            "ES2022"
+        ],
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -11,7 +13,12 @@
         "verbatimModuleSyntax": true,
         "skipLibCheck": true,
         "noEmit": true,
-        "types": ["node"]
+        "types": [
+            "node"
+        ]
     },
-    "include": ["tests/layers.test.ts"]
+    "include": [
+        "tests/layers.test.ts",
+        "tests/bridge.test.ts"
+    ]
 }

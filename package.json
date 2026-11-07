@@ -21,6 +21,10 @@
       "types": "./dist/vue/index.d.ts",
       "import": "./dist/vue.js"
     },
+    "./vue/taoui": {
+      "types": "./dist/vue/taoui/index.d.ts",
+      "import": "./dist/vue-taoui.js"
+    },
     "./content.css": "./dist/content.css",
     "./editor.css": "./dist/editor.css",
     "./taoui.css": "./dist/taoui.css",
