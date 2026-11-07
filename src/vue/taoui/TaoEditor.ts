@@ -97,7 +97,7 @@ export const TaoEditor = defineComponent({
         placeholder: { type: String, default: '' },
         /** Accessible name of the text box. / Доступное имя поля. */
         label: { type: String, default: undefined },
-        /** `small` / `medium` / `large`; without it the size of the ancestors, as for any TaoUI control. */
+        /** Size of the toolbar: `small` / `medium` / `large`. Without it `small` (the TaoUI guide: a toolbar serves the content). */
         size: { type: String as PropType<TaoSize>, default: undefined },
         /** Show the formatting toolbar. / Показывать панель форматирования. */
         toolbar: { type: Boolean, default: true },
@@ -231,6 +231,8 @@ export const TaoEditor = defineComponent({
             const text: TaoEditorLabels = { ...DEFAULT_LABELS, ...props.labels };
             const marks = PROFILES[props.profile].marks as readonly string[];
             const locked = props.disabled || props.readonly;
+            // The guide: a toolbar or an editor panel serves the content, so it is small unless the app says otherwise.
+            const toolSize: TaoSize = props.size ?? 'small';
             // A click must not take the focus (and with it the selection) from the editor.
             const keepFocus = (event: MouseEvent): void => event.preventDefault();
 
@@ -238,13 +240,15 @@ export const TaoEditor = defineComponent({
                 h(TaoButton, {
                     icon,
                     variant: 'ghost',
-                    size: props.size,
+                    // a tool is not the main action: neutral keeps the accent for what is on (TaoUI Guide, the accent budget)
+                    tone: 'neutral',
+                    size: toolSize,
                     pressed,
+                    shortcut, // TaoButton (5.30+) puts it into the tooltip, "Bold (Ctrl+B)", and aria-keyshortcuts
                     disabled: locked,
                     'aria-label': label,
-                    // TaoButton prints `shortcut` inside the button, too much for an icon: the key goes to the tooltip
-                    title: shortcut ? `${label} (${shortcut})` : label,
-                    'aria-keyshortcuts': shortcut,
+                    // not even `title: undefined`: an own key would override the tooltip TaoButton builds from the shortcut
+                    ...(shortcut ? {} : { title: label }),
                     onMousedown: keepFocus,
                     'onUpdate:pressed': () => {
                         if (name === 'link') {
@@ -261,7 +265,8 @@ export const TaoEditor = defineComponent({
                 h(TaoButton, {
                     icon,
                     variant: 'ghost',
-                    size: props.size,
+                    tone: 'neutral',
+                    size: toolSize,
                     disabled: locked || off,
                     'aria-label': label,
                     title: label,
@@ -275,7 +280,7 @@ export const TaoEditor = defineComponent({
             const panel: VNode[] = [];
             if (props.toolbar) {
                 panel.push(
-                    h(TaoToolbar, { key: 'toolbar', label: text.toolbar, size: props.size, variant: 'plain', class: 'tao-editor-toolbar' }, () => [
+                    h(TaoToolbar, { key: 'toolbar', label: text.toolbar, size: toolSize, variant: 'plain', class: 'tao-editor-toolbar' }, () => [
                         h(TaoToolbarGroup, null, () => [
                             ...MARK_BUTTONS.filter((b) => marks.includes(b.mark)).map((b) =>
                                 toggle(b.mark, text[b.mark], b.icon, b.shortcut, handle?.isMarkActive(b.mark) ?? false),

@@ -52,7 +52,7 @@
     "prosemirror-view": "1.42.9"
   },
   "peerDependencies": {
-    "@1337exp/taoui": "^5.0.0",
+    "@1337exp/taoui": "^5.30.0",
     "vue": "^3.4.0"
   },
   "peerDependenciesMeta": {
@@ -64,7 +64,7 @@
     }
   },
   "devDependencies": {
-    "@1337exp/taoui": "^5.29.1",
+    "@1337exp/taoui": "^5.30.0",
     "@types/node": "^22.20.5",
     "jsdom": "^31.0.0",
     "typescript": "~6.0.3",
