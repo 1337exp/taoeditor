@@ -1,7 +1,7 @@
 {
   "name": "@1337exp/taoeditor",
   "version": "0.1.0",
-  "description": "Embeddable rich-text editor for comments, chats, notes and articles: its own document model, a toolbar on TaoUI, a project chooses what it uses. ProseMirror underneath.",
+  "description": "Embeddable rich-text editor for comments, chats, notes and articles",
   "keywords": [
     "editor",
     "rich-text",
