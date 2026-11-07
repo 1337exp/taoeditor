@@ -49,7 +49,7 @@ registerTaoIcons({
     'te-color': { body: '<path d="M6.5 15.5L12 4.5l5.5 11M8.4 11.5h7.2"/><path d="M5 20h14"/>' },
     'te-code': { body: '<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>' },
     'te-table': { body: '<rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M4 10h16M4 14.5h16M10 5v14"/>' },
-    'te-dots': { body: '<path d="M6 12h.01M12 12h.01M18 12h.01"/>' },
+    'te-dots': { body: '<path stroke-width="3.6" d="M5.5 12h.01M12 12h.01M18.5 12h.01"/>' },
     'te-trash': { body: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/>' },
     'te-spoiler': {
         body: '<path d="M4 4l16 16"/><path d="M10.2 6.2A9 9 0 0112 6c4.5 0 7.5 3.6 8.5 6a12.5 12.5 0 01-2.6 3.5M6.5 8C4.9 9.2 3.8 10.8 3.5 12c1 2.4 4 6 8.5 6 1.3 0 2.5-.3 3.5-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/>',
