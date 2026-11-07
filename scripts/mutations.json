@@ -654,12 +654,6 @@
   ""
  ],
  [
-  "tables: a table can be the last block",
-  "src/editor/plugins.ts",
-  "if (!firstIsTable && !lastIsTable) return null;",
-  "return null;"
- ],
- [
   "tables: a table can be put inside a table",
   "src/editor/tables.ts",
   "if (isInTable(state)) return false;",
@@ -696,12 +690,6 @@
   ""
  ],
  [
-  "tables: the guard paragraph is stored",
-  "src/editor/convert.ts",
-  "if (isEmptyParagraph(content[0]) && isTable(content[1])) content = content.slice(1);",
-  ""
- ],
- [
   "code: Enter does not leave a block",
   "src/editor/plugins.ts",
   "Enter: chainCommands(exitCodeBlock(schema), ...(item ? [splitListItem(item)] : [])),",
@@ -712,5 +700,17 @@
   "src/editor/code.ts",
   "|| !range.parent.canReplaceWith(range.startIndex, range.endIndex, codeBlock)) return false;",
   ") return false;"
+ ],
+ [
+  "gap cursor: no caret before or after a table or a code block",
+  "src/editor/plugins.ts",
+  "[typeAtGap(), gapCursor()]",
+  "[]"
+ ],
+ [
+  "gap cursor: typing after a table goes into its last cell",
+  "src/editor/plugins.ts",
+  "[typeAtGap(), gapCursor()]",
+  "[gapCursor()]"
  ]
 ]

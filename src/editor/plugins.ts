@@ -3,7 +3,8 @@ import { history, redo, undo } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
 import { sinkListItem, splitListItem } from 'prosemirror-schema-list';
 import type { Schema } from 'prosemirror-model';
-import { Plugin, type Command } from 'prosemirror-state';
+import { Plugin, TextSelection, type Command } from 'prosemirror-state';
+import { GapCursor, gapCursor } from 'prosemirror-gapcursor';
 import { goToNextCell, tableEditing } from 'prosemirror-tables';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { setBlockStyle, tabOut, toggleList, toggleQuote } from './blocks';
@@ -48,18 +49,30 @@ function sendKeys(submit: SubmitMode, send: () => void): Plugin {
     });
 }
 
-/** A table may be neither the first nor the last thing in the document: there would be no way to put the caret before or after it. */
-function paragraphAroundTable(): Plugin {
+/**
+ * Typing at the gap cursor. Before a block the browser puts the text where the engine expects it, after a table at the end it
+ * puts it into the last cell (checked in Chromium), so we do it ourselves: a paragraph with the typed text, the caret after it.
+ * Composition (IME) is left to prosemirror-gapcursor.
+ * Набор на «пустой» каретке. Перед блоком браузер кладёт текст куда надо, после таблицы в конце документа кладёт в её
+ * последнюю ячейку (проверено в Chromium), поэтому делаем сами: абзац с набранным текстом, каретка после него.
+ */
+function typeAtGap(): Plugin {
     return new Plugin({
-        appendTransaction(_transactions, _old, state) {
-            const isTable = (node: typeof state.doc.firstChild): boolean => node?.type.spec.tableRole === 'table';
-            const firstIsTable = isTable(state.doc.firstChild);
-            const lastIsTable = isTable(state.doc.lastChild);
-            if (!firstIsTable && !lastIsTable) return null;
-            const tr = state.tr;
-            if (lastIsTable) tr.insert(state.doc.content.size, state.schema.nodes.paragraph.create());
-            if (firstIsTable) tr.insert(0, state.schema.nodes.paragraph.create());
-            return tr;
+        props: {
+            handleDOMEvents: {
+                beforeinput(view, event) {
+                    const input = event as InputEvent;
+                    const sel = view.state.selection;
+                    if (input.inputType !== 'insertText' || !input.data || !(sel instanceof GapCursor)) return false;
+                    const paragraph = view.state.schema.nodes.paragraph;
+                    if (!sel.$from.parent.canReplaceWith(sel.$from.index(), sel.$from.index(), paragraph)) return false;
+                    const tr = view.state.tr.insert(sel.from, paragraph.create(null, view.state.schema.text(input.data)));
+                    tr.setSelection(TextSelection.create(tr.doc, sel.from + 1 + input.data.length));
+                    view.dispatch(tr.scrollIntoView());
+                    input.preventDefault();
+                    return true;
+                },
+            },
         },
     });
 }
@@ -103,7 +116,9 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
         // before the send keys: Enter chooses from the list while it is open
         ...(options.mentions && schema.nodes.mention ? [mentionPlugin(options.mentions)] : []),
         sendKeys(options.submit, options.send),
-        ...(hasTables ? [tableEditing(), paragraphAroundTable()] : [cellsApart()]),
+        // a caret between blocks that have no text to hold it (before a table or a code block at the start, after one at the end)
+        ...(hasTables || schema.nodes.codeBlock ? [typeAtGap(), gapCursor()] : []),
+        ...(hasTables ? [tableEditing()] : [cellsApart()]),
         keymap({
             'Mod-b': markKey('bold'),
             'Mod-i': markKey('italic'),

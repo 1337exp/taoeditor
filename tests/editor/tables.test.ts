@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { DOMParser as PMParser } from 'prosemirror-model';
+import { DOMParser as PMParser, type ResolvedPos } from 'prosemirror-model';
+import { GapCursor } from 'prosemirror-gapcursor';
 import { TextSelection } from 'prosemirror-state';
 import { describe, expect, it } from 'vitest';
 import { PROFILES, toPlainText, withoutFeatures, type Profile } from '../../src/core';
@@ -7,6 +8,8 @@ import { createSchema, nodeToDoc, type EditorHandle } from '../../src/editor';
 import { mount, press, type } from './helpers';
 
 const NL = String.fromCharCode(10);
+/** `GapCursor.valid` is in the module but not in its type declarations. */
+const validGap = (pos: ResolvedPos): boolean => (GapCursor as unknown as { valid(p: ResolvedPos): boolean }).valid(pos);
 
 /** The cells of the first table as rows of text. */
 const grid = (ed: EditorHandle): string[][] => {
@@ -36,12 +39,10 @@ const intoCell = (ed: EditorHandle, n: number): void => {
 };
 
 describe('inserting a table', () => {
-    it('replaces an empty paragraph, puts the caret in the first cell and leaves a paragraph after it', () => {
+    it('replaces an empty paragraph and puts the caret in the first cell', () => {
         const ed = mount({ profile: 'comment' });
         expect(ed.insertTable(2, 3)).toBe(true);
         expect(grid(ed)).toEqual([['', '', ''], ['', '', '']]);
-        // a place for the caret before and after the table in the editor; the document itself has only the table
-        expect([...Array(ed.view.state.doc.childCount).keys()].map((i) => ed.view.state.doc.child(i).type.name)).toEqual(['paragraph', 'table', 'paragraph']);
         expect(ed.getDoc().content.map((n) => n.type)).toEqual(['table']);
         expect(ed.inTable()).toBe(true);
         type(ed, 'x');
@@ -107,12 +108,11 @@ describe('editing a table', () => {
         expect(ed.getDoc().content[0].content![0].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
     });
 
-    it('deletes the table; the paragraph after it stays', () => {
+    it('deletes the table and leaves a paragraph', () => {
         const ed = make();
         intoCell(ed, 1);
         expect(ed.tableCommand('deleteTable')).toBe(true);
-        expect(ed.view.state.doc.childCount).toBe(2);
-        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'paragraph']); // no table left, so both are ordinary lines
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph']);
         expect(ed.inTable()).toBe(false);
     });
 
@@ -123,30 +123,52 @@ describe('editing a table', () => {
         expect(ed.tableCommand('constructor' as never)).toBe(false);
         expect(ed.tableCommand('__proto__' as never)).toBe(false);
     });
+});
 
-    it('a document that starts or ends with a table gets a paragraph there once it is edited', () => {
+describe('the caret before and after a table (the gap cursor)', () => {
+    const TABLE = { type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', content: [{ type: 'paragraph' }] }] }] };
+
+    it('can stand before a first table and after a last one, and a click or arrows get there', () => {
         const ed = mount({ profile: 'comment' });
-        ed.setDoc({ v: 1, content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', content: [{ type: 'paragraph' }] }] }] }] });
-        ed.view.dispatch(ed.view.state.tr.insertText('x', 3));
-        expect(ed.view.state.doc.firstChild!.type.name).toBe('paragraph');
-        expect(ed.view.state.doc.lastChild!.type.name).toBe('paragraph');
+        ed.setDoc({ v: 1, content: [TABLE] });
+        const doc = ed.view.state.doc;
+        expect(validGap(doc.resolve(0))).toBe(true);
+        expect(validGap(doc.resolve(doc.content.size))).toBe(true);
+        ed.view.dispatch(ed.view.state.tr.setSelection(new GapCursor(doc.resolve(0))));
+        expect(ed.view.state.selection instanceof GapCursor).toBe(true);
+        expect(ed.inTable()).toBe(false);
     });
 
-    it('the guard paragraphs are not in the document: only an empty one next to a table at the end is left out', () => {
+    it('Enter at the gap cursor makes a line there (typing is the browser and the engine: checked by hand)', () => {
         const ed = mount({ profile: 'comment' });
-        ed.insertTable(1, 1);
-        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['table']);
-        ed.view.dispatch(ed.view.state.tr.insertText('before', 1));
-        ed.view.dispatch(ed.view.state.tr.insertText('after', ed.view.state.doc.content.size - 1));
-        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'table', 'paragraph']); // they have text: kept
-        expect(ed.isEmpty()).toBe(false);
+        ed.setDoc({ v: 1, content: [TABLE] });
+        ed.view.dispatch(ed.view.state.tr.setSelection(new GapCursor(ed.view.state.doc.resolve(0))));
+        expect(press(ed, 'Enter')).toBe(true);
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'table']);
+        type(ed, 'x');
+        expect(ed.getDoc().content[0].content![0].text).toBe('x');
+        expect(ed.issues()).toEqual([]);
+    });
+    it('typing at the gap cursor after a table makes a paragraph there (the browser would put the text into the last cell)', () => {
+        const ed = mount({ profile: 'comment' });
+        ed.setDoc({ v: 1, content: [TABLE] });
+        const doc = ed.view.state.doc;
+        ed.view.dispatch(ed.view.state.tr.setSelection(new GapCursor(doc.resolve(doc.content.size))));
+        const event = new InputEvent('beforeinput', { inputType: 'insertText', data: 'end', cancelable: true, bubbles: true });
+        expect(ed.view.dom.dispatchEvent(event)).toBe(false); // taken over: the browser does not insert it itself
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['table', 'paragraph']);
+        expect(ed.getDoc().content[1].content![0].text).toBe('end');
+        type(ed, '!');
+        expect(ed.getDoc().content[1].content![0].text).toBe('end!'); // the caret is after the text
+        expect(ed.issues()).toEqual([]);
     });
 
-    it('a table is never the last thing: there is always a place for the caret after it', () => {
-        const ed = make();
-        intoCell(ed, 3);
-        ed.tableCommand('addRowAfter');
-        expect(ed.view.state.doc.lastChild!.type.name).toBe('paragraph');
+    it('works for a code block at the start or the end as well', () => {
+        const ed = mount({ profile: 'comment' });
+        ed.setDoc({ v: 1, content: [{ type: 'codeBlock', content: [{ type: 'text', text: 'a' }] }] });
+        const doc = ed.view.state.doc;
+        expect(validGap(doc.resolve(0))).toBe(true);
+        expect(validGap(doc.resolve(doc.content.size))).toBe(true);
     });
 });
 

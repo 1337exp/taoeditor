@@ -9,7 +9,7 @@
 
 An embeddable rich-text editor for comments, chat messages, notes and articles, built to sit in the TaoUI / TaoUX family. One document model and one set of rules for all of them; a project chooses what it uses, and the choice holds everywhere at once: the toolbar, the hotkeys, pasted text, a stored document.
 
-**Stack:** TypeScript 6, Vue 3 (optional), [ProseMirror](https://prosemirror.net) as the editing engine (eight small MIT packages, exact versions), [TaoUI](https://www.npmjs.com/package/@1337exp/taoui) for the toolbar, ESM only. The document, the allowlists, the link policy and the viewer are ours, so the engine stays replaceable without touching what is stored.
+**Stack:** TypeScript 6, Vue 3 (optional), [ProseMirror](https://prosemirror.net) as the editing engine (nine small MIT packages, exact versions), [TaoUI](https://www.npmjs.com/package/@1337exp/taoui) for the toolbar, ESM only. The document, the allowlists, the link policy and the viewer are ours, so the engine stays replaceable without touching what is stored.
 
 ```bash
 npm install

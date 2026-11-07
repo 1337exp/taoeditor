@@ -63,6 +63,7 @@ const NODE_DOM: Readonly<Record<string, NodeSpec>> = {
         marks: '',
         code: true,
         defining: true,
+        isolating: true, // so that the gap cursor can stand before and after it (prosemirror-gapcursor)
         parseDOM: [{ tag: 'pre', preserveWhitespace: 'full', getAttrs: (dom) => langOf(dom) }],
         toDOM: (node) => ['pre', node.attrs.lang ? { 'data-lang': node.attrs.lang } : {}, ['code', 0]],
     },

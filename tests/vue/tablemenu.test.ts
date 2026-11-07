@@ -92,7 +92,7 @@ describe('the table button', () => {
         await tick();
         byLabel(m.host, 'Delete table').click();
         await tick();
-        expect(m.engine().getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'paragraph']);
+        expect(m.engine().getDoc().content.map((n) => n.type)).toEqual(['paragraph']);
     });
 
     it('a small button on the cell with the caret opens the same menu, so a far table needs no trip to the toolbar', async () => {
