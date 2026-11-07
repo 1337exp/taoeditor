@@ -296,8 +296,8 @@
  [
   "emoji list: Escape in the text does not close it",
   "src/vue/taoui/TaoEditor.ts",
-  "if (event.key === 'Escape' && emojiOpen.value) emojiOpen.value = false;",
-  ""
+  "if (event.key === 'Escape') {",
+  "if (event.key === 'Escape' && false) {"
  ],
  [
   "underline: a link does not win over it",
@@ -416,7 +416,79 @@
  [
   "emoji list: a press into the text does not close it",
   "src/vue/taoui/TaoEditor.ts",
-  "if (target?.closest?.('.tao-editor-emoji, .tao-editor-emoji-button')) return;",
-  "if (root.value?.contains(target)) return;"
+  "if (!target?.closest?.('.tao-editor-emoji, .tao-editor-emoji-button')) emojiOpen.value = false;",
+  "if (!root.value?.contains(target)) emojiOpen.value = false;"
+ ],
+ [
+  "colour: a see-through colour is accepted",
+  "src/core/color.ts",
+  "if (alpha !== 1) return undefined;",
+  ""
+ ],
+ [
+  "colour: a channel above 255 is accepted",
+  "src/core/color.ts",
+  "if (channels.some((c) => c > 255)) return undefined;",
+  ""
+ ],
+ [
+  "colour: any length is accepted",
+  "src/core/color.ts",
+  "value.length > 40",
+  "value.length > 4000"
+ ],
+ [
+  "colour: code does not win over colours",
+  "src/core/schema.ts",
+  "'strike', 'color', 'background', 'spoiler'] }",
+  "'strike', 'spoiler'] }"
+ ],
+ [
+  "colour paste: the page ink is taken",
+  "src/editor/schema.ts",
+  "return hex && !isPageInk(hex) ? { value: hex } : false;",
+  "return hex ? { value: hex } : false;"
+ ],
+ [
+  "colour: setColor accepts a bad colour as removal",
+  "src/editor/editor.ts",
+  "if (!type || (value !== null && hex === null)) return false;",
+  "if (!type) return false;"
+ ],
+ [
+  "colour panel: a press in the custom popup closes it",
+  "src/vue/taoui/TaoEditor.ts",
+  "'.tao-editor-colors, .tao-editor-colors-button, .tao-popover__panel'",
+  "'.tao-editor-colors, .tao-editor-colors-button'"
+ ],
+ [
+  "colour panel: a press outside does not close it",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (!target?.closest?.('.tao-editor-colors, .tao-editor-colors-button, .tao-popover__panel')) colorsOpen.value = false;",
+  ""
+ ],
+ [
+  "colour panel: ArrowDown moves one swatch",
+  "src/vue/taoui/TaoEditor.ts",
+  "ArrowDown: 10",
+  "ArrowDown: 1"
+ ],
+ [
+  "colour panel: every swatch is a Tab stop",
+  "src/vue/taoui/TaoEditor.ts",
+  "tabindex: i === 0 ? 0 : -1,",
+  "tabindex: 0,"
+ ],
+ [
+  "colour panel: Default is never disabled",
+  "src/vue/taoui/TaoEditor.ts",
+  "disabled: current === null,",
+  "disabled: false,"
+ ],
+ [
+  "colour panel: the floating box closes with the panel open",
+  "src/vue/taoui/TaoEditor.ts",
+  "|| linkOpen.value || colorsOpen.value);",
+  "|| linkOpen.value);"
  ]
 ]

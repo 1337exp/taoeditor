@@ -14,6 +14,7 @@
  */
 import {
     TaoButton,
+    TaoColorInput,
     TaoInput,
     TaoToolbar,
     TaoToolbarGroup,
@@ -25,6 +26,7 @@ import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, ref, shallow
 import { PROFILES, emptyDoc, type Doc, type ProfileName } from '../../core';
 import { createEditor, type EditorHandle, type MentionTrigger, type SubmitMode } from '../../editor';
 import { DEFAULT_EMOJI } from './emoji';
+import { PALETTE } from './palette';
 
 // Icons in TaoUI's own style (24 grid, strokes). Names must not start with `tao-`.
 registerTaoIcons({
@@ -41,6 +43,7 @@ registerTaoIcons({
     'te-outdent': { body: '<path d="M4 6.5h16M12 12h8M4 17.5h16"/><path d="M7 9.5L4 12l3 2.5"/>' },
     'te-quote': { body: '<path d="M9.5 8.5C7 9 5.5 10.7 5.5 13v3.5H10V13H7.5M18.5 8.5c-2.5.5-4 2.2-4 4.5v3.5H19V13h-2.5"/>' },
     'te-clear': { body: '<path d="M5 5.5h10M10 5.5l-2 13M8 18.5h3"/><path d="M14.5 14l5.5 5.5M20 14l-5.5 5.5"/>' },
+    'te-color': { body: '<path d="M6.5 15.5L12 4.5l5.5 11M8.4 11.5h7.2"/><path d="M5 20h14"/>' },
     'te-code': { body: '<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>' },
     'te-spoiler': {
         body: '<path d="M4 4l16 16"/><path d="M10.2 6.2A9 9 0 0112 6c4.5 0 7.5 3.6 8.5 6a12.5 12.5 0 01-2.6 3.5M6.5 8C4.9 9.2 3.8 10.8 3.5 12c1 2.4 4 6 8.5 6 1.3 0 2.5-.3 3.5-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/>',
@@ -72,6 +75,11 @@ export interface TaoEditorLabels {
     outdent: string;
     quote: string;
     clear: string;
+    colors: string;
+    colorText: string;
+    colorBackground: string;
+    colorReset: string;
+    colorCustom: string;
     emoji: string;
     emojiList: string;
     mentionList: string;
@@ -108,6 +116,11 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     outdent: 'Decrease indent',
     quote: 'Quote',
     clear: 'Clear formatting',
+    colors: 'Text and background color',
+    colorText: 'Text color',
+    colorBackground: 'Background color',
+    colorReset: 'Default',
+    colorCustom: 'Custom color',
     emoji: 'Emoji',
     emojiList: 'Emoji',
     mentionList: 'People',
@@ -185,6 +198,7 @@ export const TaoEditor = defineComponent({
         const suggestAt = ref({ x: 0, y: 0 });
         let lookup = 0; // only the latest answer counts
         const emojiOpen = ref(false);
+        const colorsOpen = ref(false);
 
         // The floating panel: where the selection is (relative to this component), and how big the panel is.
         const root = ref<HTMLElement | null>(null);
@@ -280,7 +294,10 @@ export const TaoEditor = defineComponent({
             });
             handle.view.dom.addEventListener('focus', () => emit('focus'));
             handle.view.dom.addEventListener('keydown', (event) => {
-                if (event.key === 'Escape' && emojiOpen.value) emojiOpen.value = false;
+                if (event.key === 'Escape') {
+                    emojiOpen.value = false;
+                    colorsOpen.value = false;
+                }
             });
             handle.view.dom.addEventListener('blur', () => emit('blur'));
             editor.value = handle;
@@ -298,10 +315,11 @@ export const TaoEditor = defineComponent({
         // means "back to typing", and it does not change the focus (it is in the editor already), so the focus cannot tell.
         const closeOnOutside = (event: PointerEvent): void => {
             const target = event.target as Element | null;
-            if (target?.closest?.('.tao-editor-emoji, .tao-editor-emoji-button')) return;
-            emojiOpen.value = false;
+            if (!target?.closest?.('.tao-editor-emoji, .tao-editor-emoji-button')) emojiOpen.value = false;
+            // the custom colour field opens its own popup in <body>: a press in it is not outside
+            if (!target?.closest?.('.tao-editor-colors, .tao-editor-colors-button, .tao-popover__panel')) colorsOpen.value = false;
         };
-        watch(emojiOpen, (open) => {
+        watch(() => emojiOpen.value || colorsOpen.value, (open) => {
             if (open) document.addEventListener('pointerdown', closeOnOutside, true);
             else document.removeEventListener('pointerdown', closeOnOutside, true);
         });
@@ -383,7 +401,7 @@ export const TaoEditor = defineComponent({
             const keepFocus = (event: MouseEvent): void => event.preventDefault();
 
             // One kind of tool button: an icon, a name, maybe a key and a pressed state, and what it does.
-            const tool = (label: string, icon: string, run: () => void, opts: { shortcut?: string; pressed?: boolean; off?: boolean } = {}): VNode => {
+            const tool = (label: string, icon: string, run: () => void, opts: { shortcut?: string; pressed?: boolean; off?: boolean; class?: string } = {}): VNode => {
                 const act = (): void => {
                     run();
                     handle?.focus();
@@ -399,6 +417,7 @@ export const TaoEditor = defineComponent({
                     'aria-label': label,
                     // not even `title: undefined`: an own key would override the tooltip TaoButton builds from the shortcut
                     ...(opts.shortcut ? {} : { title: label }),
+                    ...(opts.class ? { class: opts.class } : {}),
                     onMousedown: keepFocus,
                     ...(opts.pressed === undefined ? { onClick: act } : { pressed: opts.pressed, 'onUpdate:pressed': act }),
                 });
@@ -420,6 +439,13 @@ export const TaoEditor = defineComponent({
                               linkOpen.value = !linkOpen.value;
                               linkError.value = false;
                           }, { pressed: linkOpen.value || (handle?.isMarkActive('link') ?? false) }),
+                      ]
+                    : []),
+                ...(marks.includes('color')
+                    ? [
+                          tool(text.colors, 'te-color', () => {
+                              colorsOpen.value = !colorsOpen.value;
+                          }, { pressed: colorsOpen.value, class: 'tao-editor-colors-button' }),
                       ]
                     : []),
             ];
@@ -491,8 +517,92 @@ export const TaoEditor = defineComponent({
                     ),
                 );
             }
+            if (props.toolbar && colorsOpen.value && marks.includes('color')) {
+                // Arrow keys walk the swatches of a section; only one swatch is a Tab stop, the rest is reached by arrows.
+                const swatchKeys = (event: KeyboardEvent): void => {
+                    const all = [...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('.tao-editor-swatch')];
+                    const at = all.indexOf(event.target as HTMLElement);
+                    const step: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 10, ArrowUp: -10 };
+                    if (at < 0 || step[event.key] === undefined) return;
+                    event.preventDefault();
+                    const next = all[Math.max(0, Math.min(all.length - 1, at + step[event.key]))];
+                    all.forEach((el) => (el.tabIndex = -1));
+                    next.tabIndex = 0;
+                    next.focus();
+                };
+                const section = (kind: 'color' | 'background', title: string): VNode => {
+                    const current = handle?.colorOf(kind) ?? null;
+                    return h('div', { class: 'tao-editor-colors-section' }, [
+                        h('div', { class: 'tao-editor-colors-head' }, [
+                            h('span', { class: 'tao-editor-colors-title' }, title),
+                            h(
+                                TaoButton,
+                                {
+                                    variant: 'text',
+                                    tone: 'neutral',
+                                    size: toolSize,
+                                    disabled: current === null,
+                                    onMousedown: keepFocus,
+                                    onClick: () => {
+                                        handle?.setColor(kind, null);
+                                        handle?.focus();
+                                    },
+                                },
+                                () => text.colorReset,
+                            ),
+                        ]),
+                        h(
+                            'div',
+                            { class: 'tao-editor-swatches', role: 'group', 'aria-label': title, onKeydown: swatchKeys },
+                            PALETTE.map((hex, i) =>
+                                h('button', {
+                                    key: hex,
+                                    type: 'button',
+                                    class: ['tao-editor-swatch', { 'tao-editor-swatch--on': hex === current }],
+                                    style: { backgroundColor: hex },
+                                    title: hex,
+                                    'aria-label': `${title} ${hex}`,
+                                    'aria-pressed': String(hex === current),
+                                    tabindex: i === 0 ? 0 : -1,
+                                    onMousedown: keepFocus,
+                                    onClick: () => {
+                                        handle?.setColor(kind, hex);
+                                        handle?.focus();
+                                    },
+                                }),
+                            ),
+                        ),
+                        h(TaoColorInput, {
+                            modelValue: current ?? '',
+                            size: toolSize,
+                            placeholder: text.colorCustom,
+                            chooseLabel: text.colorCustom,
+                            'onUpdate:modelValue': (hex: string) => {
+                                if (hex) handle?.setColor(kind, hex);
+                            },
+                        }),
+                    ]);
+                };
+                panel.push(
+                    h(
+                        'div',
+                        {
+                            key: 'colors',
+                            class: 'tao-editor-colors',
+                            role: 'group',
+                            'aria-label': text.colors,
+                            onKeydown: (event: KeyboardEvent) => {
+                                if (event.key !== 'Escape') return;
+                                colorsOpen.value = false;
+                                handle?.focus();
+                            },
+                        },
+                        [section('color', text.colorText), section('background', text.colorBackground)],
+                    ),
+                );
+            }
             const hasSelection = handle ? !handle.view.state.selection.empty : false;
-            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value);
+            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value || colorsOpen.value);
             const children: VNode[] = [];
             if (props.floating) {
                 if (showFloating) {

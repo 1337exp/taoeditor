@@ -50,6 +50,11 @@ function wrapMark(mark: DocMark, child: RenderNode, path: string): RenderElement
             return el('em', [child]);
         case 'underline':
             return el('u', [child]);
+        // the value is `#rrggbb`, checked by the normalizer: a style attribute that can carry nothing else
+        case 'color':
+            return el('span', [child], { style: `color:${mark.attrs?.value ?? ''}` });
+        case 'background':
+            return el('span', [child], { style: `background-color:${mark.attrs?.value ?? ''}` });
         case 'strike':
             return el('s', [child]);
         case 'code':

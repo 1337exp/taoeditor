@@ -7,4 +7,5 @@ export type { Issue, IssueCode, Normalized } from './normalize';
 export { LINK_REL, VOID_TAGS, serializeTree, toHtml, toRenderTree } from './render';
 export type { RenderElement, RenderNode } from './render';
 export { isEmptyDoc, toPlainText } from './text';
+export { isPageInk, parseColor } from './color';
 export { safeUrl } from './url';

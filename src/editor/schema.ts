@@ -8,7 +8,7 @@
  * правила, поэтому всё, чего здесь нет, в документ попасть не может.
  */
 import { Schema, type MarkSpec, type NodeSpec } from 'prosemirror-model';
-import { MARKS, MARK_ORDER, NODES, childrenOf, safeUrl, type Profile } from '../core';
+import { MARKS, MARK_ORDER, NODES, childrenOf, isPageInk, parseColor, safeUrl, type Profile } from '../core';
 import { indentOf } from './indent';
 
 const expr = (names: readonly string[], required?: boolean): string | undefined => {
@@ -20,6 +20,12 @@ const langOf = (dom: HTMLElement): { lang: string | null } => {
     const raw = dom.getAttribute('data-lang') ?? /(?:^|\s)language-([\w+#.-]+)/.exec(dom.querySelector('code')?.className ?? '')?.[1];
     const lang = raw ? NODES.codeBlock.attrs!.lang.check(raw) : undefined;
     return { lang: typeof lang === 'string' ? lang : null };
+};
+
+/** A colour from pasted HTML: a real colour that is not the page's own black ink or white paper. */
+const pastedColor = (value: string): { value: string } | false => {
+    const hex = parseColor(value);
+    return hex && !isPageInk(hex) ? { value: hex } : false;
 };
 
 const NODE_DOM: Readonly<Record<string, NodeSpec>> = {
@@ -127,6 +133,16 @@ const MARK_DOM: Readonly<Record<string, MarkSpec>> = {
             { style: 'text-decoration-line', getAttrs: (value) => value.includes('underline') && null },
         ],
         toDOM: () => ['u', 0],
+    },
+    color: {
+        attrs: { value: {} },
+        parseDOM: [{ style: 'color', getAttrs: (value) => pastedColor(value) }],
+        toDOM: (mark) => ['span', { style: `color:${mark.attrs.value}` }, 0],
+    },
+    background: {
+        attrs: { value: {} },
+        parseDOM: [{ style: 'background-color', getAttrs: (value) => pastedColor(value) }],
+        toDOM: (mark) => ['span', { style: `background-color:${mark.attrs.value}` }, 0],
     },
     strike: {
         parseDOM: [

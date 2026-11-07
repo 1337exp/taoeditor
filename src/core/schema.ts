@@ -8,6 +8,7 @@
  * белые списки поверх тех же описаний.
  */
 import type { AttrValue } from './model';
+import { parseColor } from './color';
 import { safeUrl } from './url';
 
 export interface AttrSpec {
@@ -107,8 +108,10 @@ export const MARKS: Readonly<Record<string, MarkSpec>> = {
     italic: {},
     underline: {},
     strike: {},
+    color: { attrs: { value: { default: '', required: true, check: parseColor } } },
+    background: { attrs: { value: { default: '', required: true, check: parseColor } } },
     spoiler: {},
-    code: { excludes: ['bold', 'italic', 'underline', 'strike', 'spoiler'] },
+    code: { excludes: ['bold', 'italic', 'underline', 'strike', 'color', 'background', 'spoiler'] },
 };
 
 export const MARK_ORDER: readonly string[] = Object.keys(MARKS);
