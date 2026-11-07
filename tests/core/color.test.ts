@@ -56,7 +56,7 @@ describe('parseColor', () => {
 const text = (value: string, marks?: unknown) => ({ type: 'text', text: value, ...(marks ? { marks } : {}) });
 const wrap = (...content: unknown[]) => ({ v: 1, content });
 const para = (...content: unknown[]) => ({ type: 'paragraph', content });
-const norm = (input: unknown) => normalizeDoc(input, PROFILES.chat);
+const norm = (input: unknown) => normalizeDoc(input, PROFILES.article);
 
 describe('colour marks in the document', () => {
     it('are stored as #rrggbb, whatever form came in, in canonical order between strike and spoiler', () => {

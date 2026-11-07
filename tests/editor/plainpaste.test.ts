@@ -14,12 +14,12 @@ const HTML = '<p><strong>bold</strong> <span style="color:#cc0000">red</span> <a
 
 describe('paste without formatting (Ctrl+Shift+V)', () => {
     it('Ctrl+V keeps what the profile allows; Ctrl+Shift+V takes only the text', () => {
-        const rich = mount({ profile: 'comment' });
+        const rich = mount({ profile: 'article' });
         paste(rich.view.dom, HTML, 'bold red link');
         expect(JSON.stringify(rich.getDoc())).toContain('"bold"');
         expect(JSON.stringify(rich.getDoc())).toContain('#cc0000');
 
-        const plain = mount({ profile: 'comment' });
+        const plain = mount({ profile: 'article' });
         plain.view.dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'v', keyCode: 86, ctrlKey: true, shiftKey: true, bubbles: true }));
         paste(plain.view.dom, HTML, 'bold red link');
         const json = JSON.stringify(plain.getDoc());
@@ -28,7 +28,7 @@ describe('paste without formatting (Ctrl+Shift+V)', () => {
     });
 
     it('the text of a pasted table keeps its lines and tabs, with no table in the document', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         ed.view.dom.dispatchEvent(new KeyboardEvent('keydown', { key: 'v', keyCode: 86, ctrlKey: true, shiftKey: true, bubbles: true }));
         paste(ed.view.dom, '<table><tr><td>a</td><td>b</td></tr></table>', 'a\tb\nc\td');
         expect(JSON.stringify(ed.getDoc())).not.toContain('table');

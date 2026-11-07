@@ -14,7 +14,7 @@ const doc = (...content: DocNode[]): Doc => ({ v: 1, content });
 /** Two comments to start the list with. */
 export const SEED_COMMENTS: { id: number; author: string; doc: Doc }[] = [
     { id: 1, author: 'Ann Lee', doc: doc(p(t('Looks great! The '), t('spoiler', { type: 'spoiler' }), t(' mark is hidden until you click it, and '), mention('u3', 'Bob Stone'), t(' can read it all the same.'))) },
-    { id: 2, author: 'Andy Park', doc: doc(p(t('Try '), t('bold', bold), t(', '), t('colour', color('#e06666')), t(' and '), t('a highlight', background('#fff2cc'), color('#7f6000')), t(' with the toolbar.'))) },
+    { id: 2, author: 'Andy Park', doc: doc(p(t('Try '), t('bold', bold), t(', '), t('italic', { type: 'italic' }), t(' and x'), t('2', { type: 'superscript' }), t(' with the toolbar.'))) },
 ];
 
 /** A page of an article: headings, a list, a quote, code, an indent, alignment, sizes, colours. */

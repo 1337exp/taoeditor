@@ -13,7 +13,7 @@ const marks = (ed: EditorHandle) => ed.getDoc().content[0].content?.map((n) => [
 
 describe('setColor and colorOf', () => {
     it('colours the selection, replaces a colour, takes it off, and keeps the text', () => {
-        const ed = mount({ profile: 'chat' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'abcd');
         select(ed, 2, 4);
         expect(ed.setColor('color', '#ff0000')).toBe(true);
@@ -28,7 +28,7 @@ describe('setColor and colorOf', () => {
     });
 
     it('text colour and background are independent', () => {
-        const ed = mount({ profile: 'chat' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'ab');
         select(ed, 1, 3);
         ed.setColor('color', '#ff0000');
@@ -39,7 +39,7 @@ describe('setColor and colorOf', () => {
     });
 
     it('refuses a colour that is not one', () => {
-        const ed = mount({ profile: 'chat' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'ab');
         select(ed, 1, 3);
         expect(ed.setColor('color', 'red')).toBe(false);
@@ -48,7 +48,7 @@ describe('setColor and colorOf', () => {
     });
 
     it('with a caret it colours what is typed next, and only that', () => {
-        const ed = mount({ profile: 'chat' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'a');
         ed.setColor('color', '#ff0000');
         expect(ed.colorOf('color')).toBe('#ff0000');
@@ -59,7 +59,7 @@ describe('setColor and colorOf', () => {
     });
 
     it('colorOf reads the first coloured run of a selection', () => {
-        const ed = mount({ profile: 'chat' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'abc');
         select(ed, 2, 3);
         ed.setColor('background', '#00ff00');
@@ -69,7 +69,7 @@ describe('setColor and colorOf', () => {
     });
 
     it('code stays free of colours', () => {
-        const ed = mount({ profile: 'chat' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'x');
         select(ed, 1, 2);
         ed.setColor('color', '#ff0000');
@@ -80,9 +80,9 @@ describe('setColor and colorOf', () => {
 
 describe('pasted colours', () => {
     const parse = (html: string) => {
-        const schema = createSchema(PROFILES.chat);
+        const schema = createSchema(PROFILES.article);
         const dom = new window.DOMParser().parseFromString(html, 'text/html').body;
-        const { doc, issues } = nodeToDoc(PMParser.fromSchema(schema).parse(dom), PROFILES.chat);
+        const { doc, issues } = nodeToDoc(PMParser.fromSchema(schema).parse(dom), PROFILES.article);
         expect(issues).toEqual([]);
         return doc.content[0].content?.map((n) => [n.text, (n.marks ?? []).map((m) => `${m.type}:${m.attrs?.value}`).join(' ')]);
     };

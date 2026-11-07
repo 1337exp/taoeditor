@@ -56,7 +56,7 @@ async function launch() {
 }
 
 const t = (text, ...marks) => (marks.length > 0 ? { type: 'text', text, marks } : { type: 'text', text });
-/** The draft that waits in the composer: a mention, a bold word, a colour and a highlight. */
+/** The draft that waits in the composer: a mention, a bold word, an italic one and a superscript. */
 const DRAFT = {
     v: 1,
     content: [
@@ -68,9 +68,9 @@ const DRAFT = {
                 t(', that works. '),
                 t('Bold', { type: 'bold' }),
                 t(', '),
-                t('red', { type: 'color', attrs: { value: '#e06666' } }),
-                t(' and '),
-                t('highlighted', { type: 'background', attrs: { value: '#fff2cc' } }, { type: 'color', attrs: { value: '#7f6000' } }),
+                t('italic', { type: 'italic' }),
+                t(' and x'),
+                t('2', { type: 'superscript' }),
                 t(' text, and a line that is just '),
                 t('typed', { type: 'underline' }),
                 t('.'),
@@ -124,6 +124,8 @@ try {
     {
         const page = await open('light', false);
         await page.getByRole('tab', { name: 'Features' }).click();
+        // the article profile has the colours (a comment does not): the pasted run keeps them there
+        await page.getByText('article', { exact: true }).click();
         await page.locator('label', { hasText: /^Bold$/ }).click();
         await page.getByRole('button', { name: 'Bold and colours from Google Docs' }).click();
         await page.waitForTimeout(500);

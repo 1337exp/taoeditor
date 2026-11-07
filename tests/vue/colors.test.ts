@@ -19,7 +19,7 @@ function mount(props: Record<string, unknown> = {}) {
     const comp = ref<{ engine: () => EditorHandle } | null>(null);
     const host = document.createElement('div');
     document.body.append(host);
-    const app = createApp({ render: () => h(TaoEditor, { ref: comp, modelValue: model.value, 'onUpdate:modelValue': (d: Doc) => (model.value = d), profile: 'chat', ...props }) });
+    const app = createApp({ render: () => h(TaoEditor, { ref: comp, modelValue: model.value, 'onUpdate:modelValue': (d: Doc) => (model.value = d), profile: 'article', ...props }) });
     app.mount(host);
     apps.push(app);
     return { host, model, engine: () => comp.value!.engine() };

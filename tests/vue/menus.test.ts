@@ -36,7 +36,7 @@ const inPopup = (host: HTMLElement, cls: string): HTMLButtonElement[] => [...hos
 
 describe('the toolbar shows only what the profile has', () => {
     it('a made profile: no Bold, no Align, no Quote; the rest stays', async () => {
-        const profile = withoutFeatures('comment', { marks: ['bold'], nodes: ['blockquote'], features: ['align'] });
+        const profile = withoutFeatures('article', { marks: ['bold'], nodes: ['blockquote'], features: ['align'] });
         const m = mount({ profile });
         await nextTick();
         const list = names(m.host);
@@ -47,7 +47,7 @@ describe('the toolbar shows only what the profile has', () => {
     });
 
     it('the hotkey of a mark that is out does nothing in the component either', async () => {
-        const m = mount({ profile: withoutFeatures('comment', { marks: ['bold'] }) });
+        const m = mount({ profile: withoutFeatures('article', { marks: ['bold'] }) });
         await nextTick();
         type(m.engine(), 'abc');
         selectAll(m.engine());
@@ -56,7 +56,7 @@ describe('the toolbar shows only what the profile has', () => {
     });
 
     it('size, colours, lists and indents go when their features go', async () => {
-        const profile = withoutFeatures('comment', { marks: ['size', 'color', 'background'], nodes: ['bulletList', 'orderedList'], features: ['indent'] });
+        const profile = withoutFeatures('article', { marks: ['size', 'color', 'background'], nodes: ['bulletList', 'orderedList'], features: ['indent'] });
         const m = mount({ profile });
         await nextTick();
         const list = names(m.host);
@@ -65,7 +65,7 @@ describe('the toolbar shows only what the profile has', () => {
     });
 
     it('with only one of the colours there is one section', async () => {
-        const m = mount({ profile: withoutFeatures('comment', { marks: ['background'] }) });
+        const m = mount({ profile: withoutFeatures('article', { marks: ['background'] }) });
         await nextTick();
         button(m.host, 'Text and background color').click();
         await nextTick();
@@ -97,7 +97,7 @@ describe('the toolbar shows only what the profile has', () => {
 
 describe('the alignment popup', () => {
     it('opens under its button, offers four, aligns the paragraph and closes', async () => {
-        const m = mount({ profile: 'comment' });
+        const m = mount({ profile: 'article' });
         await nextTick();
         type(m.engine(), 'abc');
         expect(m.host.querySelector('.tao-editor-align')).toBeNull();
@@ -124,7 +124,7 @@ describe('the alignment popup', () => {
     });
 
     it('one popup at a time, and a press outside or Escape in the text closes it', async () => {
-        const m = mount({ profile: 'comment', emoji: true });
+        const m = mount({ profile: 'article', emoji: true });
         await nextTick();
         button(m.host, 'Align').click();
         await nextTick();
@@ -156,7 +156,7 @@ describe('the alignment popup', () => {
     });
 
     it('a press on its own button or inside it does not close it', async () => {
-        const m = mount({ profile: 'comment' });
+        const m = mount({ profile: 'article' });
         await nextTick();
         button(m.host, 'Align').click();
         await nextTick();
@@ -169,7 +169,7 @@ describe('the alignment popup', () => {
 
 describe('the size popup', () => {
     it('offers small, normal, large, huge; a choice sizes the selection; normal takes it off', async () => {
-        const m = mount({ profile: 'comment' });
+        const m = mount({ profile: 'article' });
         await nextTick();
         type(m.engine(), 'abc');
         selectAll(m.engine());

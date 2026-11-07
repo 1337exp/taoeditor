@@ -42,7 +42,7 @@ describe('the toolbar follows the profile, in the order of Gmail\'s bar', () => 
         await nextTick();
         expect(names(m.host)).toEqual([
             'Undo', 'Redo',
-            'Text size', 'Bold', 'Italic', 'Underline', 'Strikethrough', 'Superscript', 'Subscript', 'Code', 'Spoiler', 'Link', 'Text and background color',
+            'Text size', 'Bold', 'Italic', 'Underline', 'Strikethrough', 'Superscript', 'Code', 'Spoiler', 'Link',
             'Align', 'Numbered list', 'Bulleted list', 'Decrease indent', 'Increase indent', 'Quote', 'Table',
             'Clear formatting',
         ]);
