@@ -49,6 +49,7 @@ registerTaoIcons({
     'te-color': { body: '<path d="M6.5 15.5L12 4.5l5.5 11M8.4 11.5h7.2"/><path d="M5 20h14"/>' },
     'te-code': { body: '<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>' },
     'te-table': { body: '<rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M4 10h16M4 14.5h16M10 5v14"/>' },
+    'te-dots': { body: '<path d="M6 12h.01M12 12h.01M18 12h.01"/>' },
     'te-trash': { body: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/>' },
     'te-spoiler': {
         body: '<path d="M4 4l16 16"/><path d="M10.2 6.2A9 9 0 0112 6c4.5 0 7.5 3.6 8.5 6a12.5 12.5 0 01-2.6 3.5M6.5 8C4.9 9.2 3.8 10.8 3.5 12c1 2.4 4 6 8.5 6 1.3 0 2.5-.3 3.5-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/>',
@@ -281,6 +282,10 @@ export const TaoEditor = defineComponent({
         const stylePos = ref<{ left: number; top: number } | null>(null);
         const tableOpen = ref(false);
         const tablePos = ref<{ left: number; top: number } | null>(null);
+        // The table menu opens from the toolbar button or from a small button at the corner of the cell with the caret
+        // (a long table may be far from the toolbar). The popup is placed under whichever opened it.
+        const tableFrom = ref<'toolbar' | 'cell'>('toolbar');
+        const cellAnchor = ref<{ left: number; top: number } | null>(null);
         const gridAt = ref({ row: 0, column: 0 }); // the corner of the size picker that is pointed at
         // One popup at a time: opening one closes the others.
         const closeMenus = (): void => {
@@ -321,6 +326,31 @@ export const TaoEditor = defineComponent({
                 anchor.value = { x: (oneLine ? (a.left + b.left) / 2 : a.left) - r.left, top: a.top - r.top, bottom: b.bottom - r.top };
             } catch {
                 // no layout (a test, a hidden element): the panel stays where it was
+            }
+        };
+
+        const placeCell = (): void => {
+            const handle = editor.value;
+            const box = root.value;
+            if (!handle || !box || !handle.inTable()) {
+                cellAnchor.value = null;
+                return;
+            }
+            try {
+                const at = handle.view.domAtPos(handle.view.state.selection.from).node;
+                const cell = (at instanceof Element ? at : at.parentElement)?.closest('td, th');
+                if (!cell) {
+                    cellAnchor.value = null;
+                    return;
+                }
+                const c = cell.getBoundingClientRect();
+                const r = box.getBoundingClientRect();
+                const next = { left: c.right - r.left - 30, top: c.top - r.top + 2 };
+                const now = cellAnchor.value;
+                // only when it moved: the same place again would draw again for ever
+                if (!now || Math.abs(now.left - next.left) > 0.5 || Math.abs(now.top - next.top) > 0.5) cellAnchor.value = next;
+            } catch {
+                cellAnchor.value = null; // no layout (a test): no button
             }
         };
 
@@ -390,6 +420,7 @@ export const TaoEditor = defineComponent({
                 onSend: (next) => emit('send', next),
                 onUpdate: () => {
                     place();
+                    placeCell();
                     tick.value++;
                 },
             });
@@ -417,7 +448,7 @@ export const TaoEditor = defineComponent({
             if (!box) return;
             for (const menu of menus) {
                 if (!menu.open()) continue;
-                const button = box.querySelector<HTMLElement>(menu.button);
+                const button = box.querySelector<HTMLElement>(menu.pos === tablePos && tableFrom.value === 'cell' ? '.tao-editor-cell-button' : menu.button);
                 const popup = box.querySelector<HTMLElement>(menu.popup);
                 if (!button || !popup) continue;
                 const area = box.getBoundingClientRect();
@@ -447,7 +478,7 @@ export const TaoEditor = defineComponent({
             if (!target?.closest?.('.tao-editor-align, .tao-editor-align-button')) alignOpen.value = false;
             if (!target?.closest?.('.tao-editor-size, .tao-editor-size-button')) sizeOpen.value = false;
             if (!target?.closest?.('.tao-editor-style, .tao-editor-style-button')) styleOpen.value = false;
-            if (!target?.closest?.('.tao-editor-table, .tao-editor-table-button')) tableOpen.value = false;
+            if (!target?.closest?.('.tao-editor-table, .tao-editor-table-button, .tao-editor-cell-button')) tableOpen.value = false;
         };
         watch(() => emojiOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value || styleOpen.value || tableOpen.value, (open) => {
             if (open) document.addEventListener('pointerdown', closeOnOutside, true);
@@ -601,7 +632,10 @@ export const TaoEditor = defineComponent({
                       ]
                     : []),
                 ...(nodes.includes('blockquote') ? [tool(text.quote, 'te-quote', () => handle?.toggleQuote(), { shortcut: key('9', true), pressed: handle?.isBlockActive('blockquote') ?? false })] : []),
-                ...(nodes.includes('table') ? [tool(text.table, 'te-table', () => toggleMenu('table'), { pressed: tableOpen.value || (handle?.inTable() ?? false), class: 'tao-editor-table-button' })] : []),
+                ...(nodes.includes('table') ? [tool(text.table, 'te-table', () => {
+                    tableFrom.value = 'toolbar';
+                    toggleMenu('table');
+                }, { pressed: (tableOpen.value && tableFrom.value === 'toolbar') || (handle?.inTable() ?? false), class: 'tao-editor-table-button' })] : []),
             ];
             const clearTools = marks.some((m) => m !== 'link') ? [tool(text.clear, 'te-clear', () => handle?.clearFormatting())] : [];
 
@@ -885,7 +919,7 @@ export const TaoEditor = defineComponent({
                     ),
                 );
             }
-            if (props.toolbar && tableOpen.value && nodes.includes('table')) {
+            if (tableOpen.value && nodes.includes('table') && (props.toolbar || tableFrom.value === 'cell') && (tableFrom.value === 'toolbar' || (handle?.inTable() ?? false))) {
                 const finish = (): void => {
                     tableOpen.value = false;
                     handle?.focus();
@@ -973,6 +1007,29 @@ export const TaoEditor = defineComponent({
                 );
             }
             children.push(...overlays);
+            if (nodes.includes('table') && !locked && cellAnchor.value && (handle?.inTable() ?? false)) {
+                children.push(
+                    h(TaoButton, {
+                        key: 'cell-button',
+                        class: 'tao-editor-cell-button',
+                        // small on purpose: it sits on the cell, over the text. Inline: TaoButton sets its own `position`.
+                        style: { position: 'absolute', left: `${cellAnchor.value.left}px`, top: `${cellAnchor.value.top}px`, zIndex: 1 },
+                        icon: 'te-dots',
+                        variant: 'ghost',
+                        tone: 'neutral',
+                        size: 'small',
+                        pressed: tableOpen.value && tableFrom.value === 'cell',
+                        'aria-label': text.table,
+                        title: text.table,
+                        onMousedown: keepFocus,
+                        'onUpdate:pressed': () => {
+                            tableFrom.value = 'cell';
+                            toggleMenu('table');
+                            handle?.focus();
+                        },
+                    }),
+                );
+            }
             if (trigger.value && people.value.length > 0) {
                 const left = Math.max(0, Math.min(suggestAt.value.x, (root.value?.clientWidth ?? 0) - 220));
                 children.push(

@@ -41,7 +41,7 @@ describe('inserting a table', () => {
         expect(ed.insertTable(2, 3)).toBe(true);
         expect(grid(ed)).toEqual([['', '', ''], ['', '', '']]);
         const types = ed.getDoc().content.map((n) => n.type);
-        expect(types).toEqual(['table', 'paragraph']);
+        expect(types).toEqual(['paragraph', 'table', 'paragraph']); // a place for the caret before and after the table
         expect(ed.inTable()).toBe(true);
         type(ed, 'x');
         expect(grid(ed)[0][0]).toBe('x');
@@ -100,17 +100,17 @@ describe('editing a table', () => {
         const ed = make();
         intoCell(ed, 0);
         ed.tableCommand('toggleHeaderRow');
-        expect(ed.getDoc().content[0].content![0].content!.map((c) => c.type)).toEqual(['tableHeader', 'tableHeader']);
-        expect(ed.getDoc().content[0].content![1].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
+        expect(ed.getDoc().content[1].content![0].content!.map((c) => c.type)).toEqual(['tableHeader', 'tableHeader']);
+        expect(ed.getDoc().content[1].content![1].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
         ed.tableCommand('toggleHeaderRow');
-        expect(ed.getDoc().content[0].content![0].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
+        expect(ed.getDoc().content[1].content![0].content!.map((c) => c.type)).toEqual(['tableCell', 'tableCell']);
     });
 
     it('deletes the table; the paragraph after it stays', () => {
         const ed = make();
         intoCell(ed, 1);
         expect(ed.tableCommand('deleteTable')).toBe(true);
-        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph']);
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'paragraph']);
         expect(ed.inTable()).toBe(false);
     });
 
@@ -120,6 +120,13 @@ describe('editing a table', () => {
         expect(ed.canTableCommand('deleteTable')).toBe(false);
         expect(ed.tableCommand('constructor' as never)).toBe(false);
         expect(ed.tableCommand('__proto__' as never)).toBe(false);
+    });
+
+    it('a document that starts or ends with a table gets a paragraph there once it is edited', () => {
+        const ed = mount({ profile: 'comment' });
+        ed.setDoc({ v: 1, content: [{ type: 'table', content: [{ type: 'tableRow', content: [{ type: 'tableCell', content: [{ type: 'paragraph' }] }] }] }] });
+        ed.view.dispatch(ed.view.state.tr.insertText('x', 3));
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'table', 'paragraph']);
     });
 
     it('a table is never the last thing: there is always a place for the caret after it', () => {
@@ -163,11 +170,11 @@ describe('what is typed into a table', () => {
         const ed = mount({ profile: 'comment' });
         ed.insertTable(1, 1);
         type(ed, 'ab');
-        ed.view.dispatch(ed.view.state.tr.setSelection(TextSelection.create(ed.view.state.doc, 3, 5)));
+        ed.view.dispatch(ed.view.state.tr.setSelection(TextSelection.create(ed.view.state.doc, 5, 7)));
         ed.toggleMark('bold');
         press(ed, 'Enter');
         expect(ed.issues()).toEqual([]);
-        expect(ed.getDoc().content[0].content![0].content![0].content).toHaveLength(2);
+        expect(ed.getDoc().content[1].content![0].content![0].content).toHaveLength(2);
     });
 
     it('a headings command does not break a cell (headings are not allowed in one)', () => {

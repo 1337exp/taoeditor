@@ -656,7 +656,7 @@
  [
   "tables: a table can be the last block",
   "src/editor/plugins.ts",
-  "if (!last || last.type.spec.tableRole !== 'table') return null;",
+  "if (!firstIsTable && !lastIsTable) return null;",
   "return null;"
  ],
  [

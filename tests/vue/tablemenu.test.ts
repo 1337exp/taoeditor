@@ -64,7 +64,7 @@ describe('the table button', () => {
         expect(m.host.querySelectorAll('.tao-editor-grid-cell--on')).toHaveLength(6);
         target.click();
         await tick();
-        const table = m.engine().getDoc().content[0];
+        const table = m.engine().getDoc().content[1];
         expect(table.type).toBe('table');
         expect(table.content).toHaveLength(2);
         expect(table.content![0].content).toHaveLength(3);
@@ -87,12 +87,32 @@ describe('the table button', () => {
         ]);
         byLabel(m.host, 'Insert row below').click();
         await tick();
-        expect(m.engine().getDoc().content[0].content).toHaveLength(3);
+        expect(m.engine().getDoc().content[1].content).toHaveLength(3);
         button(m.host, 'Table').click();
         await tick();
         byLabel(m.host, 'Delete table').click();
         await tick();
-        expect(m.engine().getDoc().content.map((n) => n.type)).toEqual(['paragraph']);
+        expect(m.engine().getDoc().content.map((n) => n.type)).toEqual(['paragraph', 'paragraph']);
+    });
+
+    it('a small button on the cell with the caret opens the same menu, so a far table needs no trip to the toolbar', async () => {
+        const m = mount({ profile: 'comment' });
+        await nextTick();
+        expect(m.host.querySelector('.tao-editor-cell-button')).toBeNull(); // no table, no button
+        m.engine().insertTable(2, 2);
+        await tick();
+        const cellButton = m.host.querySelector<HTMLButtonElement>('.tao-editor-cell-button')!;
+        expect(cellButton).not.toBeNull();
+        cellButton.click();
+        await tick();
+        expect(popupButtons(m.host).map((b) => b.getAttribute('aria-label') ?? b.textContent!.trim())).toContain('Delete table');
+        byLabel(m.host, 'Insert column after').click();
+        await tick();
+        expect(m.engine().getDoc().content[1].content![0].content).toHaveLength(3);
+        m.engine().tableCommand('deleteTable');
+        await tick();
+        expect(m.host.querySelector('.tao-editor-cell-button')).toBeNull(); // the caret left the table
+        expect(m.host.querySelector('.tao-editor-table')).toBeNull();
     });
 
     it('closes with Escape and with a press outside', async () => {

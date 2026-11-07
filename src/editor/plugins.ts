@@ -47,13 +47,18 @@ function sendKeys(submit: SubmitMode, send: () => void): Plugin {
     });
 }
 
-/** A table may not be the last thing in the document: there would be no way to put the caret after it. */
-function paragraphAfterTable(): Plugin {
+/** A table may be neither the first nor the last thing in the document: there would be no way to put the caret before or after it. */
+function paragraphAroundTable(): Plugin {
     return new Plugin({
         appendTransaction(_transactions, _old, state) {
-            const last = state.doc.lastChild;
-            if (!last || last.type.spec.tableRole !== 'table') return null;
-            return state.tr.insert(state.doc.content.size, state.schema.nodes.paragraph.create());
+            const isTable = (node: typeof state.doc.firstChild): boolean => node?.type.spec.tableRole === 'table';
+            const firstIsTable = isTable(state.doc.firstChild);
+            const lastIsTable = isTable(state.doc.lastChild);
+            if (!firstIsTable && !lastIsTable) return null;
+            const tr = state.tr;
+            if (lastIsTable) tr.insert(state.doc.content.size, state.schema.nodes.paragraph.create());
+            if (firstIsTable) tr.insert(0, state.schema.nodes.paragraph.create());
+            return tr;
         },
     });
 }
@@ -97,7 +102,7 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
         // before the send keys: Enter chooses from the list while it is open
         ...(options.mentions && schema.nodes.mention ? [mentionPlugin(options.mentions)] : []),
         sendKeys(options.submit, options.send),
-        ...(hasTables ? [tableEditing(), paragraphAfterTable()] : [cellsApart()]),
+        ...(hasTables ? [tableEditing(), paragraphAroundTable()] : [cellsApart()]),
         keymap({
             'Mod-b': markKey('bold'),
             'Mod-i': markKey('italic'),
