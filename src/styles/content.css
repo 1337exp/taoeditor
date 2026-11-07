@@ -229,3 +229,26 @@
     font-size: 0.75em;
     line-height: 0;
 }
+
+/* The viewer with `maxRows`: cut to --te-rows lines, faded at the bottom when there is more, and a plain button to open the rest. */
+.tao-content--clamped {
+    max-height: calc(var(--te-rows) * 1lh);
+    overflow: hidden;
+}
+.tao-content--faded {
+    -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5lh), transparent);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 1.5lh), transparent);
+}
+.tao-content-more {
+    margin-top: 0.25em;
+    padding: 0;
+    font: inherit;
+    font-size: 0.9em;
+    color: var(--te-link, light-dark(#2f6df6, #7aa5ff));
+    background: none;
+    border: 0;
+    cursor: pointer;
+}
+.tao-content-more:hover {
+    text-decoration: underline;
+}

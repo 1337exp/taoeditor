@@ -39,3 +39,17 @@ describe('a long text: maxHeight and sticky', () => {
         expect(plain.classList.contains('tao-editor-root--sticky')).toBe(false);
     });
 });
+
+describe('the height in rows', () => {
+    it('minRows and maxRows become heights counted in lines; maxHeight wins; nonsense is ignored', async () => {
+        const rows = mount({ minRows: 3, maxRows: 8 });
+        const both = mount({ maxRows: 8, maxHeight: 100 });
+        const bad = mount({ minRows: 0, maxRows: Number.NaN });
+        await nextTick();
+        expect(rows.style.getPropertyValue('--te-min-height')).toBe('calc(3 * 1lh + 1em + 2px)');
+        expect(rows.style.getPropertyValue('--te-max-height')).toBe('calc(8 * 1lh + 1em + 2px)');
+        expect(both.style.getPropertyValue('--te-max-height')).toBe('100px');
+        expect(bad.style.getPropertyValue('--te-min-height')).toBe('');
+        expect(bad.style.getPropertyValue('--te-max-height')).toBe('');
+    });
+});

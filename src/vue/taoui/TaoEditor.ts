@@ -209,6 +209,19 @@ const TABLE_MENU: readonly (readonly [TableCommand, keyof TaoEditorLabels, strin
     ['deleteTable', 'tableDelete', 'te-trash'],
 ];
 
+/** Rows of text as a height: that many lines, plus the padding (1em) and the border (2px) of the field. Nonsense is ignored. */
+const rowsHeight = (rows: number): string | undefined => (Number.isFinite(rows) && rows >= 1 ? `calc(${Math.floor(rows)} * 1lh + 1em + 2px)` : undefined);
+
+function sizeStyle(minRows: number | undefined, maxRows: number | undefined, maxHeight: number | string | undefined): Record<string, string> | undefined {
+    const style: Record<string, string> = {};
+    const min = minRows === undefined ? undefined : rowsHeight(minRows);
+    // a custom property holds any text: a number is px, a string is a CSS length (the app's own, not checked)
+    const max = maxHeight !== undefined ? (typeof maxHeight === 'number' ? `${maxHeight}px` : maxHeight) : maxRows === undefined ? undefined : rowsHeight(maxRows);
+    if (min) style['--te-min-height'] = min;
+    if (max) style['--te-max-height'] = max;
+    return Object.keys(style).length > 0 ? style : undefined;
+}
+
 const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 const key = (letter: string, shift = false, alt = false): string =>
     mac ? `${shift ? '⇧' : ''}${alt ? '⌥' : ''}⌘${letter}` : `${'Ctrl+'}${alt ? 'Alt+' : ''}${shift ? 'Shift+' : ''}${letter}`;
@@ -257,6 +270,14 @@ export const TaoEditor = defineComponent({
          * растёт вместе с текстом, а прокручивается страница. То же, что `--te-max-height` на компоненте.
          */
         maxHeight: { type: [Number, String] as PropType<number | string>, default: undefined },
+        /**
+         * The height in lines of text instead of pixels: a chat starts at 1 line and grows to 8, a comment at 3 to 12. Counted with the line
+         * height of the text (the `lh` unit: Chrome 109, Firefox 120, Safari 16.4); `maxHeight` wins over `maxRows`.
+         * Высота в строках текста, а не в пикселях: чат начинается с 1 строки и растёт до 8, комментарий с 3 до 12. Считается по высоте
+         * строки текста (единица `lh`: Chrome 109, Firefox 120, Safari 16.4); `maxHeight` главнее `maxRows`.
+         */
+        minRows: { type: Number, default: undefined },
+        maxRows: { type: Number, default: undefined },
         /** The toolbar floats over the selection instead of standing above the field. / Панель висит над выделением. */
         floating: { type: Boolean, default: false },
         /**
@@ -1175,7 +1196,7 @@ export const TaoEditor = defineComponent({
                     ref: root,
                     class: ['tao-editor-root', { 'tao-editor-root--disabled': props.disabled, 'tao-editor-root--sticky': props.sticky && !props.floating }],
                     // a number is px; the string is a CSS length (not checked: it only goes into a custom property)
-                    style: props.maxHeight === undefined ? undefined : { '--te-max-height': typeof props.maxHeight === 'number' ? `${props.maxHeight}px` : props.maxHeight },
+                    style: sizeStyle(props.minRows, props.maxRows, props.maxHeight),
                     onFocusin: () => (focused.value = true),
                     onFocusout: (event: FocusEvent) => {
                         if (!root.value?.contains(event.relatedTarget as Node | null)) {

@@ -10,6 +10,8 @@ export const ru: Dictionary = {
     common: {
         you: 'Вы',
         justNow: 'только что',
+        showMore: 'Показать полностью',
+        showLess: 'Свернуть',
         mention: 'Нажато упоминание, id {0}',
     },
     comments: {

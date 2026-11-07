@@ -8,6 +8,8 @@ export const en = {
     common: {
         you: 'You',
         justNow: 'just now',
+        showMore: 'Show more',
+        showLess: 'Show less',
         mention: 'A mention was clicked, id {0}',
     },
     comments: {

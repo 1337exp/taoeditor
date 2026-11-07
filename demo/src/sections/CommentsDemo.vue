@@ -42,7 +42,8 @@ function mentioned(id: string): void {
             v-model="draft.doc.value"
             profile="comment"
             submit="mod-enter"
-            :max-height="260"
+            :min-rows="3"
+            :max-rows="10"
             :mentions="searchPeople"
             :labels="labels"
             :placeholder="t('comments.placeholder')"
@@ -64,7 +65,7 @@ function mentioned(id: string): void {
                     <strong>{{ comment.author }}</strong>
                     <TaoButton variant="text" tone="neutral" size="small" @click="remove(comment.id)">{{ t('comments.delete') }}</TaoButton>
                 </div>
-                <TaoEditorView :doc="comment.doc" profile="comment" class="tao-prose" @mention="mentioned" />
+                <TaoEditorView :doc="comment.doc" profile="comment" class="tao-prose" :max-rows="4" :more-label="t('common.showMore')" :less-label="t('common.showLess')" @mention="mentioned" />
             </article>
         </div>
     </section>

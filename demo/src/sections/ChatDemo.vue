@@ -72,6 +72,8 @@ function mentioned(id: string): void {
             v-model="draft"
             profile="chat"
             submit="enter"
+            :min-rows="1"
+            :max-rows="6"
             :mentions="searchPeople"
             :labels="labels"
             :placeholder="t('chat.placeholder')"

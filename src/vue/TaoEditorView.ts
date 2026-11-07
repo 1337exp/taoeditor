@@ -9,7 +9,7 @@
  * грузится, поэтому страница, которая только показывает текст, ничего не платит за ProseMirror. Импорта TaoUI нет:
  * под TaoUI добавьте классу `tao-prose` (`<TaoEditorView class="tao-prose">`).
  */
-import { computed, defineComponent, getCurrentInstance, h, shallowRef, type PropType, type VNode } from 'vue';
+import { computed, defineComponent, getCurrentInstance, h, onMounted, onUpdated, ref, shallowRef, type PropType, type VNode } from 'vue';
 import { VOID_TAGS, resolveProfile, toRenderTree, type Doc, type Profile, type ProfileName, type RenderNode } from '../core';
 
 export const TaoEditorView = defineComponent({
@@ -26,6 +26,17 @@ export const TaoEditorView = defineComponent({
          * остальных нет. Документ один и тот же.
          */
         spaced: { type: Boolean, default: undefined },
+        /**
+         * A long text is shown as this many lines with a button to open the rest (a comment in a feed). Counted with the line height of
+         * the text (the `lh` unit: Chrome 109, Firefox 120, Safari 16.4). The button is there only when the text is longer; on a server the
+         * text is shown in full, nothing is cut without a script to open it.
+         * Длинный текст показывается столькими строками с кнопкой, которая открывает остальное (комментарий в ленте). Считается по высоте
+         * строки текста. Кнопка есть только если текст длиннее; на сервере текст виден целиком: без скрипта, который его откроет, ничего не обрезается.
+         */
+        maxRows: { type: Number, default: undefined },
+        /** Texts of the buttons (the viewer has no TaoUI: plain buttons). */
+        moreLabel: { type: String, default: 'Show more' },
+        lessLabel: { type: String, default: 'Show less' },
     },
     emits: {
         /** A mention was clicked (or Enter / Space on it): its id. Mentions are plain text unless something listens. */
@@ -79,6 +90,41 @@ export const TaoEditorView = defineComponent({
         };
 
         const compact = (): boolean => !(props.spaced ?? resolveProfile(props.profile).spaced ?? false);
-        return () => h('div', { class: compact() ? 'tao-content tao-compact' : 'tao-content' }, tree.value.map(node));
+
+        // `maxRows`: the text is cut to that many lines; after drawing we see whether it is longer, and only then there is a button
+        const body = ref<HTMLElement | null>(null);
+        const open = ref(false);
+        const ready = ref(false); // after mounting: on a server (and before hydration) nothing is cut, there is no script to open it
+        const longer = ref(false);
+        const measure = (): void => {
+            const el = body.value;
+            if (!el || props.maxRows === undefined) return;
+            // opened: the button stays (it closes again); cut: it is there if something is hidden
+            if (!open.value) longer.value = el.scrollHeight > el.clientHeight + 1;
+        };
+        onMounted(() => {
+            ready.value = true;
+            measure();
+        });
+        onUpdated(measure);
+
+        return () => {
+            const rows = props.maxRows !== undefined && Number.isFinite(props.maxRows) && props.maxRows >= 1 ? Math.floor(props.maxRows) : undefined;
+            const content = (extra?: Record<string, unknown>): VNode =>
+                h('div', { class: compact() ? 'tao-content tao-compact' : 'tao-content', ...extra }, tree.value.map(node));
+            if (rows === undefined) return content();
+            // the class and the attributes of the host go to the outer box, the text and the button are inside it
+            const cut = ready.value && !open.value;
+            return h('div', { class: 'tao-content-clamp' }, [
+                content({
+                    ref: body,
+                    class: [compact() ? 'tao-content tao-compact' : 'tao-content', { 'tao-content--clamped': cut, 'tao-content--faded': cut && longer.value }],
+                    style: cut ? { '--te-rows': String(rows) } : undefined,
+                }),
+                longer.value
+                    ? h('button', { type: 'button', class: 'tao-content-more', 'aria-expanded': String(open.value), onClick: () => (open.value = !open.value) }, open.value ? props.lessLabel : props.moreLabel)
+                    : null,
+            ]);
+        };
     },
 });
