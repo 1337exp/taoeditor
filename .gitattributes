@@ -1,0 +1,8 @@
+* text=auto eol=lf
+
+# Images are binary: never touch line endings, never diff as text
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.webp binary
+*.gif  binary

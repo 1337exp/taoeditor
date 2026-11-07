@@ -1,0 +1,34 @@
+{
+  "name": "@1337exp/taoeditor",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Embeddable rich-text editor for our ecosystem: comments, chats, notes, articles. Own document model and Markdown, ProseMirror as the pinned engine underneath.",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.core.json && tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "vite",
+    "build": "vite build && tsc -p tsconfig.build.json",
+    "mutate": "node scripts/mutate.mjs . scripts/mutations.json"
+  },
+  "dependencies": {
+    "prosemirror-commands": "1.7.2",
+    "prosemirror-history": "1.5.1",
+    "prosemirror-inputrules": "1.5.1",
+    "prosemirror-keymap": "1.2.3",
+    "prosemirror-model": "1.25.12",
+    "prosemirror-state": "1.4.4",
+    "prosemirror-transform": "1.12.5",
+    "prosemirror-view": "1.42.9"
+  },
+  "devDependencies": {
+    "jsdom": "^31.0.0",
+    "typescript": "~6.0.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  }
+}

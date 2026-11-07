@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TaoEditor lab</title>
+</head>
+<body>
+    <main>
+        <h1>TaoEditor lab</h1>
+        <p class="hint">
+            One ProseMirror engine under our own model. Try on a phone: <code>npm run dev -- --host</code>.
+            Watch the event log during IME composition, Enter, paste.
+        </p>
+        <section class="controls">
+            <label>Profile
+                <select id="profile">
+                    <option value="chat">chat</option>
+                    <option value="comment" selected>comment</option>
+                    <option value="article">article</option>
+                </select>
+            </label>
+            <label>Send on
+                <select id="submit">
+                    <option value="none">nothing</option>
+                    <option value="enter">Enter</option>
+                    <option value="mod-enter">Ctrl/Cmd+Enter</option>
+                </select>
+            </label>
+            <label>Fixture <select id="fixture"><option value="">—</option></select></label>
+            <label>Paste corpus <select id="corpus"><option value="">—</option></select></label>
+        </section>
+        <div id="toolbar" class="toolbar" role="toolbar" aria-label="Formatting"></div>
+        <div id="editor" class="editor-host"></div>
+        <p id="status" class="status"></p>
+        <section class="panels">
+            <div><h2>Document (core JSON)</h2><pre id="json"></pre></div>
+            <div><h2>Plain text</h2><pre id="plain"></pre><h2>Event log</h2><pre id="log"></pre></div>
+        </section>
+    </main>
+    <script type="module" src="./main.ts"></script>
+</body>
+</html>

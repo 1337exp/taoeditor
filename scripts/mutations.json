@@ -1,0 +1,152 @@
+[
+ [
+  "url: allow any protocol",
+  "src/core/url.ts",
+  "if (url.protocol !== 'https:' && url.protocol !== 'http:') return null;",
+  ""
+ ],
+ [
+  "url: allow credentials",
+  "src/core/url.ts",
+  "if (url.username !== '' || url.password !== '') return null;",
+  ""
+ ],
+ [
+  "url: allow inner whitespace and control chars",
+  "src/core/url.ts",
+  ".test(value)) return null;",
+  ".test(value) && false) return null;"
+ ],
+ [
+  "url: no length limit",
+  "src/core/url.ts",
+  "if (value.length === 0 || value.length > 2048) return null;",
+  "if (value.length === 0) return null;"
+ ],
+ [
+  "normalize: keep control characters",
+  "src/core/normalize.ts",
+  ".replace(CONTROL, '')",
+  ""
+ ],
+ [
+  "normalize: prototype names are nodes",
+  "src/core/normalize.ts",
+  "type !== 'doc' && Object.hasOwn(NODES, type) ? NODES[type] : undefined",
+  "type !== 'doc' && type in NODES ? NODES[type] : undefined"
+ ],
+ [
+  "normalize: ignore the profile's mark list",
+  "src/core/normalize.ts",
+  "!ctx.profile.marks.includes(item.type)",
+  "false"
+ ],
+ [
+  "normalize: no depth limit",
+  "src/core/normalize.ts",
+  "if (d > MAX_DEPTH) {",
+  "if (false) {"
+ ],
+ [
+  "normalize: code does not exclude other marks",
+  "src/core/normalize.ts",
+  "for (const other of MARKS[mark.type].excludes ?? []) excluded.add(other);",
+  ""
+ ],
+ [
+  "normalize: marks in insertion order",
+  "src/core/normalize.ts",
+  "const list = MARK_ORDER.filter((type) => found.has(type) && !excluded.has(type)).map((type) => found.get(type)!);",
+  "const list = [...found.values()].filter((m) => !excluded.has(m.type));"
+ ],
+ [
+  "normalize: unknown nodes lose their text",
+  "src/core/normalize.ts",
+  "walk(item.content, `${here}/content`, d + 1); // keep what is inside / оставляем содержимое",
+  ""
+ ],
+ [
+  "normalize: accept any version",
+  "src/core/normalize.ts",
+  "if (input.v !== DOC_VERSION) {",
+  "if (false) {"
+ ],
+ [
+  "normalize: do not merge equal neighbours",
+  "src/core/normalize.ts",
+  "if (last && last.type === 'text' && sameMarks(last.marks, marks)) {",
+  "if (false) {"
+ ],
+ [
+  "normalize: keep empty containers",
+  "src/core/normalize.ts",
+  "if (content.length === 0 && spec.required) return null;",
+  ""
+ ],
+ [
+  "normalize: newline in paragraph stays text",
+  "src/core/normalize.ts",
+  ".split('",
+  ".split('ZZ-never-"
+ ],
+ [
+  "schema: link href is optional",
+  "src/core/schema.ts",
+  "default: '', required: true,",
+  "default: '', required: false,"
+ ],
+ [
+  "schema(engine): paste keeps unsafe link href",
+  "src/editor/schema.ts",
+  "return href ? { href } : false;",
+  "return { href: dom.getAttribute('href') };"
+ ],
+ [
+  "send: ignores IME composition",
+  "src/editor/plugins.ts",
+  "if (event.isComposing || event.keyCode === 229 || view.composing) return false;",
+  ""
+ ],
+ [
+  "send: ignores Shift",
+  "src/editor/plugins.ts",
+  "!event.shiftKey && !event.altKey && (submit",
+  "!event.altKey && (submit"
+ ],
+ [
+  "rule: underscore italic fires inside words",
+  "src/editor/plugins.ts",
+  "(?<![_\\w\\\\])_([^_\\s]",
+  "_([^_\\s]"
+ ],
+ [
+  "rule: fires inside the code mark",
+  "src/editor/plugins.ts",
+  "if (noCode && state.doc.rangeHasMark(start, end, noCode)) return null;",
+  ""
+ ],
+ [
+  "rule: mark stays on for the next characters",
+  "src/editor/plugins.ts",
+  "return tr.removeStoredMark(type);",
+  "return tr;"
+ ],
+ [
+  "keys: Backspace does not undo the rule",
+  "src/editor/plugins.ts",
+  "Backspace: undoInputRule,",
+  ""
+ ],
+ [
+  "editor: link without the url check",
+  "src/editor/editor.ts",
+  "if (!safe) return false;",
+  ""
+ ],
+ [
+  "editor: sends an empty message",
+  "src/editor/editor.ts",
+  "if (!isEmptyDoc(doc)) options.onSend?.(doc);",
+  "options.onSend?.(doc);"
+ ]
+]

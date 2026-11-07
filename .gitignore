@@ -1,0 +1,14 @@
+node_modules
+dist
+*.local
+.DS_Store
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+
+# IDE and local settings
+.idea
+.claude/*
+!.claude/skills/
