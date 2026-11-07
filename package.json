@@ -1,6 +1,6 @@
 {
   "name": "@1337exp/taoeditor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Embeddable rich-text editor for comments, chats, notes and articles",
   "keywords": [
     "editor",
@@ -82,6 +82,7 @@
     "prosemirror-model": "1.25.12",
     "prosemirror-schema-list": "1.6.0",
     "prosemirror-state": "1.4.4",
+    "prosemirror-tables": "1.8.5",
     "prosemirror-transform": "1.12.5",
     "prosemirror-view": "1.42.9"
   },

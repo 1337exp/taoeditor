@@ -24,7 +24,7 @@ import {
 } from '@1337exp/taoui';
 import { defineComponent, h, onBeforeUnmount, onMounted, onUpdated, ref, shallowRef, watch, type PropType, type VNode } from 'vue';
 import { SIZES, emptyDoc, resolveProfile, type Doc, type Profile, type ProfileName } from '../../core';
-import { createEditor, type EditorHandle, type MentionTrigger, type SubmitMode } from '../../editor';
+import { createEditor, type EditorHandle, type MentionTrigger, type SubmitMode, type TableCommand } from '../../editor';
 import { DEFAULT_EMOJI } from './emoji';
 import { PALETTE } from './palette';
 
@@ -48,6 +48,8 @@ registerTaoIcons({
     'te-align-justify': { body: '<path d="M4 6.5h16M4 12h16M4 17.5h16"/>', grid: true },
     'te-color': { body: '<path d="M6.5 15.5L12 4.5l5.5 11M8.4 11.5h7.2"/><path d="M5 20h14"/>' },
     'te-code': { body: '<path d="M9 7l-5 5 5 5M15 7l5 5-5 5"/>' },
+    'te-table': { body: '<rect x="4" y="5" width="16" height="14" rx="1.5"/><path d="M4 10h16M4 14.5h16M10 5v14"/>' },
+    'te-trash': { body: '<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/>' },
     'te-spoiler': {
         body: '<path d="M4 4l16 16"/><path d="M10.2 6.2A9 9 0 0112 6c4.5 0 7.5 3.6 8.5 6a12.5 12.5 0 01-2.6 3.5M6.5 8C4.9 9.2 3.8 10.8 3.5 12c1 2.4 4 6 8.5 6 1.3 0 2.5-.3 3.5-.8"/><path d="M9.9 9.9a3 3 0 004.2 4.2"/>',
     },
@@ -101,6 +103,16 @@ export interface TaoEditorLabels {
     emoji: string;
     emojiList: string;
     mentionList: string;
+    table: string;
+    tableGrid: string;
+    tableRowAbove: string;
+    tableRowBelow: string;
+    tableRowDelete: string;
+    tableColumnBefore: string;
+    tableColumnAfter: string;
+    tableColumnDelete: string;
+    tableHeaderRow: string;
+    tableDelete: string;
 }
 
 /** One person in the list shown after `@`. `id` is what is stored, `label` what the text shows. */
@@ -157,7 +169,33 @@ export const DEFAULT_LABELS: Readonly<TaoEditorLabels> = {
     emoji: 'Emoji',
     emojiList: 'Emoji',
     mentionList: 'People',
+    table: 'Table',
+    tableGrid: 'Table size',
+    tableRowAbove: 'Insert row above',
+    tableRowBelow: 'Insert row below',
+    tableRowDelete: 'Delete row',
+    tableColumnBefore: 'Insert column before',
+    tableColumnAfter: 'Insert column after',
+    tableColumnDelete: 'Delete column',
+    tableHeaderRow: 'Header row',
+    tableDelete: 'Delete table',
 };
+
+/** The size picker for a new table: this many columns and rows to point at. */
+const GRID_COLUMNS = 8;
+const GRID_ROWS = 6;
+
+/** The table menu: what runs, what it is called, and its icon. A gap between the groups. */
+const TABLE_MENU: readonly (readonly [TableCommand, keyof TaoEditorLabels, string | undefined])[] = [
+    ['addRowBefore', 'tableRowAbove', 'tao-plus'],
+    ['addRowAfter', 'tableRowBelow', 'tao-plus'],
+    ['deleteRow', 'tableRowDelete', 'te-trash'],
+    ['addColumnBefore', 'tableColumnBefore', 'tao-plus'],
+    ['addColumnAfter', 'tableColumnAfter', 'tao-plus'],
+    ['deleteColumn', 'tableColumnDelete', 'te-trash'],
+    ['toggleHeaderRow', 'tableHeaderRow', undefined],
+    ['deleteTable', 'tableDelete', 'te-trash'],
+];
 
 const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 const key = (letter: string, shift = false, alt = false): string =>
@@ -241,6 +279,9 @@ export const TaoEditor = defineComponent({
         const sizePos = ref<{ left: number; top: number } | null>(null);
         const styleOpen = ref(false);
         const stylePos = ref<{ left: number; top: number } | null>(null);
+        const tableOpen = ref(false);
+        const tablePos = ref<{ left: number; top: number } | null>(null);
+        const gridAt = ref({ row: 0, column: 0 }); // the corner of the size picker that is pointed at
         // One popup at a time: opening one closes the others.
         const closeMenus = (): void => {
             emojiOpen.value = false;
@@ -248,13 +289,15 @@ export const TaoEditor = defineComponent({
             alignOpen.value = false;
             sizeOpen.value = false;
             styleOpen.value = false;
+            tableOpen.value = false;
         };
-        const toggleMenu = (which: 'colors' | 'align' | 'size' | 'style'): void => {
-            const open = { colors: colorsOpen, align: alignOpen, size: sizeOpen, style: styleOpen }[which];
+        const toggleMenu = (which: 'colors' | 'align' | 'size' | 'style' | 'table'): void => {
+            const open = { colors: colorsOpen, align: alignOpen, size: sizeOpen, style: styleOpen, table: tableOpen }[which];
             const was = open.value;
             closeMenus();
             open.value = !was;
-            const pos = { colors: colorsPos, align: alignPos, size: sizePos, style: stylePos }[which];
+            gridAt.value = { row: 0, column: 0 };
+            const pos = { colors: colorsPos, align: alignPos, size: sizePos, style: stylePos, table: tablePos }[which];
             pos.value = null; // measured again after it is drawn
         };
 
@@ -367,6 +410,7 @@ export const TaoEditor = defineComponent({
             { open: () => alignOpen.value, button: '.tao-editor-align-button', popup: '.tao-editor-align', pos: alignPos },
             { open: () => sizeOpen.value, button: '.tao-editor-size-button', popup: '.tao-editor-size', pos: sizePos },
             { open: () => styleOpen.value, button: '.tao-editor-style-button', popup: '.tao-editor-style', pos: stylePos },
+            { open: () => tableOpen.value, button: '.tao-editor-table-button', popup: '.tao-editor-table', pos: tablePos },
         ];
         onUpdated(() => {
             const box = root.value;
@@ -403,8 +447,9 @@ export const TaoEditor = defineComponent({
             if (!target?.closest?.('.tao-editor-align, .tao-editor-align-button')) alignOpen.value = false;
             if (!target?.closest?.('.tao-editor-size, .tao-editor-size-button')) sizeOpen.value = false;
             if (!target?.closest?.('.tao-editor-style, .tao-editor-style-button')) styleOpen.value = false;
+            if (!target?.closest?.('.tao-editor-table, .tao-editor-table-button')) tableOpen.value = false;
         };
-        watch(() => emojiOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value || styleOpen.value, (open) => {
+        watch(() => emojiOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value || styleOpen.value || tableOpen.value, (open) => {
             if (open) document.addEventListener('pointerdown', closeOnOutside, true);
             else document.removeEventListener('pointerdown', closeOnOutside, true);
         });
@@ -556,6 +601,7 @@ export const TaoEditor = defineComponent({
                       ]
                     : []),
                 ...(nodes.includes('blockquote') ? [tool(text.quote, 'te-quote', () => handle?.toggleQuote(), { shortcut: key('9', true), pressed: handle?.isBlockActive('blockquote') ?? false })] : []),
+                ...(nodes.includes('table') ? [tool(text.table, 'te-table', () => toggleMenu('table'), { pressed: tableOpen.value || (handle?.inTable() ?? false), class: 'tao-editor-table-button' })] : []),
             ];
             const clearTools = marks.some((m) => m !== 'link') ? [tool(text.clear, 'te-clear', () => handle?.clearFormatting())] : [];
 
@@ -702,7 +748,7 @@ export const TaoEditor = defineComponent({
                 );
             }
             const hasSelection = handle ? !handle.view.state.selection.empty : false;
-            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value || styleOpen.value);
+            const showFloating = props.floating && props.toolbar && !locked && ((hasSelection && focused.value) || linkOpen.value || colorsOpen.value || alignOpen.value || sizeOpen.value || styleOpen.value || tableOpen.value);
             const children: VNode[] = [];
             if (props.floating) {
                 if (showFloating) {
@@ -836,6 +882,93 @@ export const TaoEditor = defineComponent({
                                 () => text[label],
                             ),
                         ),
+                    ),
+                );
+            }
+            if (props.toolbar && tableOpen.value && nodes.includes('table')) {
+                const finish = (): void => {
+                    tableOpen.value = false;
+                    handle?.focus();
+                };
+                let body: VNode[];
+                if (handle?.inTable()) {
+                    // in a table: what can be done to it
+                    body = TABLE_MENU.flatMap(([name, label, icon], i) => [
+                        ...(i > 0 && (i === 3 || i === 6) ? [h('div', { key: `sep-${i}`, class: 'tao-editor-menu-sep', role: 'separator' })] : []),
+                        h(
+                            TaoButton,
+                            {
+                                key: name,
+                                ...(icon ? { icon } : {}),
+                                variant: 'ghost',
+                                tone: 'neutral',
+                                size: toolSize,
+                                disabled: !handle.canTableCommand(name),
+                                style: { justifyContent: 'flex-start' },
+                                onMousedown: keepFocus,
+                                onClick: () => {
+                                    handle.tableCommand(name);
+                                    finish();
+                                },
+                            },
+                            () => text[label],
+                        ),
+                    ]);
+                } else {
+                    // outside: point at the size of a new table
+                    const cells: VNode[] = [];
+                    for (let row = 0; row < GRID_ROWS; row++) {
+                        for (let column = 0; column < GRID_COLUMNS; column++) {
+                            const at = { row, column };
+                            cells.push(
+                                h('button', {
+                                    key: `${row}-${column}`,
+                                    type: 'button',
+                                    class: ['tao-editor-grid-cell', { 'tao-editor-grid-cell--on': row <= gridAt.value.row && column <= gridAt.value.column }],
+                                    'aria-label': `${column + 1} × ${row + 1}`,
+                                    tabindex: row === 0 && column === 0 ? 0 : -1,
+                                    onMousedown: keepFocus,
+                                    onMouseenter: () => (gridAt.value = at),
+                                    onFocus: () => (gridAt.value = at),
+                                    onClick: () => {
+                                        handle?.insertTable(row + 1, column + 1);
+                                        finish();
+                                    },
+                                }),
+                            );
+                        }
+                    }
+                    // arrows walk the grid; only one cell is a Tab stop
+                    const gridKeys = (event: KeyboardEvent): void => {
+                        const all = [...(event.currentTarget as HTMLElement).querySelectorAll<HTMLElement>('.tao-editor-grid-cell')];
+                        const index = all.indexOf(event.target as HTMLElement);
+                        const step: Record<string, number> = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: GRID_COLUMNS, ArrowUp: -GRID_COLUMNS };
+                        if (index < 0 || step[event.key] === undefined) return;
+                        event.preventDefault();
+                        const next = all[Math.max(0, Math.min(all.length - 1, index + step[event.key]))];
+                        all.forEach((el) => (el.tabIndex = -1));
+                        next.tabIndex = 0;
+                        next.focus();
+                    };
+                    body = [
+                        h('div', { key: 'grid', class: 'tao-editor-grid', role: 'group', 'aria-label': text.tableGrid, onKeydown: gridKeys }, cells),
+                        h('div', { key: 'size', class: 'tao-editor-grid-label', 'aria-live': 'polite' }, `${gridAt.value.column + 1} × ${gridAt.value.row + 1}`),
+                    ];
+                }
+                overlays.push(
+                    h(
+                        'div',
+                        {
+                            key: 'table',
+                            class: 'tao-editor-menu tao-editor-table',
+                            role: 'group',
+                            'aria-label': text.table,
+                            style: placed(tablePos.value),
+                            onKeydown: (event: KeyboardEvent) => {
+                                if (event.key === 'Escape') finish();
+                            },
+                        },
+                        body,
                     ),
                 );
             }

@@ -14,7 +14,7 @@
 import { DOC_VERSION, emptyDoc, type Attrs, type Doc, type DocMark, type DocNode } from './model';
 import { childrenOf, MARK_ORDER, MARKS, NODES, type AttrSpec, type NodeSpec, type Profile } from './schema';
 
-export type IssueCode = 'bad-doc' | 'bad-version' | 'unknown-node' | 'disallowed-node' | 'bad-attr' | 'bad-mark' | 'too-deep';
+export type IssueCode = 'bad-doc' | 'bad-version' | 'unknown-node' | 'disallowed-node' | 'bad-attr' | 'bad-mark' | 'too-deep' | 'too-big';
 
 export interface Issue {
     code: IssueCode;
@@ -208,6 +208,10 @@ function normalizeChildren(raw: unknown, parentType: string, path: string, depth
 
     walk(raw, path, depth);
     flush();
+    if (parent.limit !== undefined && out.length > parent.limit) {
+        ctx.issues.push({ code: 'too-big', path });
+        out.length = parent.limit;
+    }
     return out;
 }
 
@@ -231,6 +235,22 @@ function cleanNode(
     }
     const content = normalizeChildren(raw.content, type, `${path}/content`, depth, ctx);
     if (content.length === 0 && spec.required) return null;
+    if (type === 'table') squareUp(content, ctx);
     if (content.length > 0) node.content = content;
     return node;
+}
+
+/**
+ * A table is a rectangle: a row with fewer cells than the widest one gets empty cells at its end. This is what the
+ * engine does with a ragged table as well, so the stored document and the editor's tree stay the same.
+ * Таблица — прямоугольник: в короткую строку добавляются пустые ячейки. Так же делает и движок, поэтому
+ * сохранённый документ и дерево редактора совпадают.
+ */
+function squareUp(rows: DocNode[], ctx: Ctx): void {
+    const cell = ctx.profile.nodes.includes('tableCell') ? 'tableCell' : 'tableHeader';
+    const width = Math.max(...rows.map((row) => row.content?.length ?? 0));
+    for (const row of rows) {
+        const cells = (row.content ??= []);
+        while (cells.length < width) cells.push({ type: cell, content: [{ type: 'paragraph' }] });
+    }
 }

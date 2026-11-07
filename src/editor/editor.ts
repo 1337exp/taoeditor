@@ -9,6 +9,7 @@ import type { MentionHooks, MentionTrigger } from './mentions';
 import { alignAt, blockStyleAt, clearFormatting, setBlockStyle, indent, isBlockActive, outdent, setAlign, toggleList, toggleQuote, type Align, type BlockStyle } from './blocks';
 import { createPlugins, type SubmitMode } from './plugins';
 import { createSchema } from './schema';
+import { insertTable, inTable, tableCommand, type TableCommand } from './tables';
 
 export interface EditorOptions {
     /** Which allowlist applies. Default `comment`. / Какой белый список. По умолчанию `comment`. */
@@ -79,6 +80,13 @@ export interface EditorHandle {
     /** Aligns every paragraph and heading in the selection. False when the profile has no alignment. */
     setAlign(value: Align): boolean;
     alignOf(): Align;
+    /** Puts a table of `rows` by `columns` after the current block. False inside a table or when the profile has none. */
+    insertTable(rows: number, columns: number): boolean;
+    /** Is the caret in a table? */
+    inTable(): boolean;
+    /** A command of the table menu (rows, columns, header, delete). False when it does not apply here. */
+    tableCommand(name: TableCommand): boolean;
+    canTableCommand(name: TableCommand): boolean;
     /** Sets a link on the selection; `null` removes it. Unsafe URLs are refused (returns false). */
     setLink(href: string | null): boolean;
     undo(): boolean;
@@ -162,6 +170,10 @@ export function createEditor(parent: HTMLElement, options: EditorOptions = {}): 
             const type = schema.marks[name];
             return type ? markActive(view.state, type) : false;
         },
+        insertTable: (rows, columns) => insertTable(schema, rows, columns)(view.state, view.dispatch, view),
+        inTable: () => inTable(view.state),
+        tableCommand: (name) => tableCommand(name)(view.state, view.dispatch, view),
+        canTableCommand: (name) => tableCommand(name)(view.state),
         setLink(href) {
             const type = schema.marks.link;
             const { from, to, empty } = view.state.selection;

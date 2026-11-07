@@ -1,9 +1,10 @@
-import { baseKeymap, toggleMark } from 'prosemirror-commands';
+import { baseKeymap, chainCommands, toggleMark } from 'prosemirror-commands';
 import { history, redo, undo } from 'prosemirror-history';
 import { keymap } from 'prosemirror-keymap';
 import { sinkListItem, splitListItem } from 'prosemirror-schema-list';
 import type { Schema } from 'prosemirror-model';
 import { Plugin, type Command } from 'prosemirror-state';
+import { goToNextCell, tableEditing } from 'prosemirror-tables';
 import { Decoration, DecorationSet } from 'prosemirror-view';
 import { setBlockStyle, tabOut, toggleList, toggleQuote } from './blocks';
 import { mentionPlugin, type MentionHooks } from './mentions';
@@ -46,6 +47,25 @@ function sendKeys(submit: SubmitMode, send: () => void): Plugin {
     });
 }
 
+/** A table may not be the last thing in the document: there would be no way to put the caret after it. */
+function paragraphAfterTable(): Plugin {
+    return new Plugin({
+        appendTransaction(_transactions, _old, state) {
+            const last = state.doc.lastChild;
+            if (!last || last.type.spec.tableRole !== 'table') return null;
+            return state.tr.insert(state.doc.content.size, state.schema.nodes.paragraph.create());
+        },
+    });
+}
+
+/**
+ * Without tables a pasted table would run together ("a" and "b" become "ab"): a space after each cell keeps them apart.
+ * Без таблиц вставленная таблица слиплась бы («a» и «b» стали бы «ab»): пробел после каждой ячейки их разделяет.
+ */
+function cellsApart(): Plugin {
+    return new Plugin({ props: { transformPastedHTML: (html) => html.replace(/<[/]t[dh]>/gi, (tag) => `${tag} `) } });
+}
+
 export interface PluginOptions {
     mentions?: MentionHooks;
     submit: SubmitMode;
@@ -66,10 +86,18 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
         return true;
     };
 
+    const hasTables = !!schema.nodes.table;
+    const item = schema.nodes.listItem;
+    // Tab: one level in inside a list, else the next cell; Shift-Tab: out of a nested item, else the previous cell.
+    // Where none of them applies the key falls through, so the keyboard is never trapped.
+    const tab = chainCommands(...(item ? [sinkListItem(item)] : []), ...(hasTables ? [goToNextCell(1)] : []));
+    const shiftTab = chainCommands(...(item ? [tabOut(schema)] : []), ...(hasTables ? [goToNextCell(-1)] : []));
+
     return [
         // before the send keys: Enter chooses from the list while it is open
         ...(options.mentions && schema.nodes.mention ? [mentionPlugin(options.mentions)] : []),
         sendKeys(options.submit, options.send),
+        ...(hasTables ? [tableEditing(), paragraphAfterTable()] : [cellsApart()]),
         keymap({
             'Mod-b': markKey('bold'),
             'Mod-i': markKey('italic'),
@@ -87,9 +115,8 @@ export function createPlugins(schema: Schema, options: PluginOptions): Plugin[] 
             'Mod-Alt-2': setBlockStyle(schema, 2),
             'Mod-Alt-3': setBlockStyle(schema, 3),
             // in a list: a new item, one level in, one level out; outside a list these do nothing and the browser's Tab moves on
-            ...(schema.nodes.listItem
-                ? { Enter: splitListItem(schema.nodes.listItem), Tab: sinkListItem(schema.nodes.listItem), 'Shift-Tab': tabOut(schema) }
-                : {}),
+            ...(item ? { Enter: splitListItem(item) } : {}),
+            ...(item || hasTables ? { Tab: tab, 'Shift-Tab': shiftTab } : {}),
             'Mod-z': undo,
             'Mod-y': redo,
             'Mod-Shift-z': redo,

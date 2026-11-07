@@ -326,7 +326,7 @@
  [
   "lists: Enter does not start a new item",
   "src/editor/plugins.ts",
-  "Enter: splitListItem(schema.nodes.listItem), ",
+  "...(item ? { Enter: splitListItem(item) } : {}),",
   ""
  ],
  [
@@ -609,6 +609,90 @@
   "menus: the style popup is not closed by a press outside",
   "src/vue/taoui/TaoEditor.ts",
   "if (!target?.closest?.('.tao-editor-style, .tao-editor-style-button')) styleOpen.value = false;",
+  ""
+ ],
+ [
+  "tables: no limit on rows and columns",
+  "src/core/normalize.ts",
+  "if (parent.limit !== undefined && out.length > parent.limit) {",
+  "if (false) {"
+ ],
+ [
+  "tables: ragged rows stay ragged",
+  "src/core/normalize.ts",
+  "if (type === 'table') squareUp(content, ctx);",
+  ""
+ ],
+ [
+  "tables: a table may sit in a cell",
+  "src/core/schema.ts",
+  "const CELL_BLOCKS = ['paragraph', 'bulletList', 'orderedList'] as const;",
+  "const CELL_BLOCKS = ['paragraph', 'bulletList', 'orderedList', 'table'] as const;"
+ ],
+ [
+  "tables: a table may sit in a quote",
+  "src/core/schema.ts",
+  "const BLOCKS_INSIDE = ['paragraph', 'codeBlock', 'bulletList', 'orderedList', 'blockquote'] as const;",
+  "const BLOCKS_INSIDE = ['paragraph', 'codeBlock', 'bulletList', 'orderedList', 'blockquote', 'table'] as const;"
+ ],
+ [
+  "tables: a profile may have a part without the table",
+  "src/core/profile.ts",
+  "const whole = nodes.includes('table') && nodes.includes('tableRow') && (nodes.includes('tableCell') || nodes.includes('tableHeader'));",
+  "const whole = true;"
+ ],
+ [
+  "tables: header cells render as plain cells",
+  "src/core/render.ts",
+  "return el('th', kids());",
+  "return el('td', kids());"
+ ],
+ [
+  "tables: Tab does not go to the next cell",
+  "src/editor/plugins.ts",
+  "...(hasTables ? [goToNextCell(1)] : [])",
+  ""
+ ],
+ [
+  "tables: a table can be the last block",
+  "src/editor/plugins.ts",
+  "if (!last || last.type.spec.tableRole !== 'table') return null;",
+  "return null;"
+ ],
+ [
+  "tables: a table can be put inside a table",
+  "src/editor/tables.ts",
+  "if (isInTable(state)) return false;",
+  ""
+ ],
+ [
+  "tables: the size of a new table is not cut",
+  "src/editor/tables.ts",
+  "Math.min(TABLE_MAX_ROWS, Math.floor(rows))",
+  "Math.floor(rows)"
+ ],
+ [
+  "tables: any name reaches the library",
+  "src/editor/tables.ts",
+  "Object.hasOwn(COMMANDS, name) ? COMMANDS[name as TableCommand] : () => false",
+  "COMMANDS[name as TableCommand] ?? (() => false)"
+ ],
+ [
+  "tables: pasted cells run together without tables",
+  "src/editor/plugins.ts",
+  "transformPastedHTML: (html) => html.replace(/<[/]t[dh]>/gi, (tag) => `${tag} `)",
+  "transformPastedHTML: (html) => html"
+ ],
+ [
+  "toolbar: the table button shows without tables",
+  "src/vue/taoui/TaoEditor.ts",
+  "...(nodes.includes('table') ? [tool(text.table",
+  "...(true ? [tool(text.table"
+ ],
+ [
+  "menus: the table popup is not closed by a press outside",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (!target?.closest?.('.tao-editor-table, .tao-editor-table-button')) tableOpen.value = false;",
   ""
  ]
 ]

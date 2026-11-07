@@ -110,6 +110,14 @@ function block(node: DocNode, path: string): RenderElement {
             return el('ol', kids(), node.attrs?.start && node.attrs.start !== 1 ? { start: String(node.attrs.start) } : undefined);
         case 'listItem':
             return el('li', kids());
+        case 'table':
+            return el('table', [el('tbody', kids())]);
+        case 'tableRow':
+            return el('tr', kids());
+        case 'tableCell':
+            return el('td', kids());
+        case 'tableHeader':
+            return el('th', kids());
         default: {
             // 'paragraph'. An empty one keeps its height, like the engine's trailing break.
             const children = inline(node.content, path);

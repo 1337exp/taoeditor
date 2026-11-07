@@ -24,6 +24,15 @@ export const SAMPLE_ARTICLE: Doc = doc(
     { type: 'heading', attrs: { level: 2 }, content: [t('Lists and quotes')] },
     { type: 'bulletList', content: [{ type: 'listItem', content: [p(t('A bulleted list'))] }, { type: 'listItem', content: [p(t('with a nested one')), { type: 'orderedList', content: [{ type: 'listItem', content: [p(t('Tab nests an item'))] }, { type: 'listItem', content: [p(t('Shift+Tab brings it back'))] }] }] }] },
     { type: 'blockquote', content: [p(t('A quote keeps '), t('its marks', italic), t('.'))] },
+    { type: 'heading', attrs: { level: 2 }, content: [t('Tables')] },
+    {
+        type: 'table',
+        content: [
+            { type: 'tableRow', content: [{ type: 'tableHeader', content: [p(t('Part'))] }, { type: 'tableHeader', content: [p(t('Keys'))] }] },
+            { type: 'tableRow', content: [{ type: 'tableCell', content: [p(t('Next cell'))] }, { type: 'tableCell', content: [p(t('Tab'))] }] },
+            { type: 'tableRow', content: [{ type: 'tableCell', content: [p(t('Previous cell'))] }, { type: 'tableCell', content: [p(t('Shift+Tab'))] }] },
+        ],
+    },
     { type: 'heading', attrs: { level: 2 }, content: [t('Alignment and indents')] },
     { type: 'paragraph', attrs: { align: 'center' }, content: [t('Centered')] },
     { type: 'paragraph', attrs: { align: 'right' }, content: [t('Right')] },
@@ -36,6 +45,7 @@ export const SAMPLE_ARTICLE: Doc = doc(
 export const PASTE_SAMPLES = {
     docs: '<meta charset="utf-8"><b style="font-weight:normal"><p><span style="font-weight:700">Bold</span> <span style="color:#cc0000">red</span> <span style="background-color:#ffff00">yellow</span> <span style="color:#000000;background-color:#ffffff">black on white is paper, not a choice</span> <i>italic</i></p></b>',
     page: '<h2>A page</h2><p style="text-align:center;margin-left:80px">Centered and indented <u>underlined</u> <small>small</small> <big>big</big></p><ul><li>one</li><li>two</li></ul><blockquote>quoted</blockquote>',
+    table: '<table><thead><tr><th>Name</th><th>Score</th><th>Note</th></tr></thead><tbody><tr><td><b>Ann</b></td><td>10</td><td style="color:#cc0000">best</td></tr><tr><td colspan="2">merged cells come in as single ones</td></tr></tbody></table>',
     markdown: '<p>**not bold**, _not italic_, `not code`, ~~not struck~~</p><p>- not a list</p><p># not a heading</p>',
     hostile: '<p onclick="alert(1)">a<script>alert(1)</script><img src=x onerror=alert(1)><iframe src="https://evil.example"></iframe> <a href="javascript:alert(1)">js link</a> <a href="https://666.io">good link</a> <span style="color:red;background:url(javascript:alert(1))">x</span></p>',
 };

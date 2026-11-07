@@ -232,7 +232,7 @@ describe('fuzz: the normalizer is total and idempotent', () => {
         x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x;
         return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
     };
-    const TYPES = ['mention', 'paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'listItem', 'hardBreak', 'text', 'script', 'constructor', 'doc', 42, null];
+    const TYPES = ['table', 'tableRow', 'tableCell', 'tableHeader', 'mention', 'paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'listItem', 'hardBreak', 'text', 'script', 'constructor', 'doc', 42, null];
     const MARK_TYPES = ['bold', 'italic', 'strike', 'code', 'spoiler', 'link', 'x', '__proto__'];
 
     function gen(rand: () => number, depth: number): unknown {

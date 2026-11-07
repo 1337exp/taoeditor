@@ -9,7 +9,7 @@
 
 An embeddable rich-text editor for comments, chat messages, notes and articles, built to sit in the TaoUI / TaoUX family. One document model and one set of rules for all of them; a project chooses what it uses, and the choice holds everywhere at once: the toolbar, the hotkeys, pasted text, a stored document.
 
-**Stack:** TypeScript 6, Vue 3 (optional), [ProseMirror](https://prosemirror.net) as the editing engine (seven small MIT packages, exact versions), [TaoUI](https://www.npmjs.com/package/@1337exp/taoui) for the toolbar, ESM only. The document, the allowlists, the link policy and the viewer are ours, so the engine stays replaceable without touching what is stored.
+**Stack:** TypeScript 6, Vue 3 (optional), [ProseMirror](https://prosemirror.net) as the editing engine (eight small MIT packages, exact versions), [TaoUI](https://www.npmjs.com/package/@1337exp/taoui) for the toolbar, ESM only. The document, the allowlists, the link policy and the viewer are ours, so the engine stays replaceable without touching what is stored.
 
 ```bash
 npm install
@@ -59,7 +59,8 @@ On a server (previews, e-mails, search) use `@1337exp/taoeditor/core`: `normaliz
 - **Own stored document**: a versioned JSON tree (`{ v: 1, content: [...] }`). No HTML is ever stored, and the engine's own JSON is never the format.
 - **A normalizer is the gate**: untrusted JSON in, a canonical valid document out, never throws. Unknown or forbidden nodes are unwrapped (the text survives), links go through one allowlist (`https`/`http`, no credentials), control characters are stripped, nesting is capped.
 - **Choose what the project uses.** Ready profiles `chat`, `comment`, `article`; make your own with `withoutFeatures(...)` or `defineProfile(...)`. What a profile leaves out has no button, its hotkey does nothing, pasted formatting that has it comes in as plain text, and a stored document is shown without it. A typo in a name throws.
-- **The bar of a mail client**: undo and redo, bold, italic, underline, strikethrough, code, spoiler, link, text size, text and background colour (a grid of 80 and a field for any other), alignment, numbered and bulleted lists, quote, indents, paragraph style (normal text, Heading 1 to 3), clear formatting. Gmail and Docs hotkeys. Fixed or `floating` over the selection. The buttons a profile cannot use are not shown.
+- **The bar of a mail client**: undo and redo, bold, italic, underline, strikethrough, code, spoiler, link, text size, text and background colour (a grid of 80 and a field for any other), alignment, numbered and bulleted lists, quote, tables, indents, paragraph style (normal text, Heading 1 to 3), clear formatting. Gmail and Docs hotkeys. Fixed or `floating` over the selection. The buttons a profile cannot use are not shown.
+- **Tables** (`comment` and `article`; `chat` has none): a size picker in the toolbar, then a menu for the table the caret is in (rows and columns above, below, before, after, delete; a header row; delete the table). Tab and Shift+Tab walk the cells and leave at the ends, so the keyboard is never trapped. A table is a plain rectangle: no merged cells (a pasted merge comes in as single cells), at most 50 rows by 20 columns, no table inside a table. A profile without tables shows a pasted table as text.
 - **Nothing is converted behind your back.** What is typed or pasted stays what it was: text that looks like Markdown stays text. Formatting exists only when it was applied explicitly or came as real formatting in the pasted HTML (Google Docs, Word and Gmail runs are read, their black ink and white paper are not).
 - **Safe paste and safe output**: pasted HTML is read only through the schema's rules, so scripts, handlers, images and unsafe links cannot get in; the output never takes a string as markup, and a colour can put nothing but a colour into a style.
 - **Mentions** (`@name`): one unit in the text with an `id` and the label shown at the time. The editor only notices `@query`; the list of people is the app's (`mentions` prop: a function that returns people, now or as a promise). It works with the keys and the mouse and is announced to screen readers. **The `id` is a claim, the app must check it.**
@@ -86,7 +87,7 @@ The decisions, what is proven and what is not: [docs/architecture.ru.md](docs/ar
 ## Not yet
 
 - Export to Markdown (`.md`) for taking notes out, when it is needed.
-- Images, tables, embeds; custom (picture) emoji.
+- Images, embeds; merged table cells and column widths; custom (picture) emoji.
 - Checked only by hand in Chromium and by tests in jsdom: **IME on Android and iOS (and Japanese or Korean composition), touch devices, Firefox and Safari are not checked yet.**
 
 ## License

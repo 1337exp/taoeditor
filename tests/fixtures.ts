@@ -92,6 +92,22 @@ export const FIXTURES: readonly Fixture[] = [
         text: 'one\ntwo\nthree',
     },
     {
+        id: 'table',
+        title: 'A table with a header row',
+        profile: 'comment',
+        doc: doc(
+            {
+                type: 'table',
+                content: [
+                    { type: 'tableRow', content: [{ type: 'tableHeader', content: [p(t('Name'))] }, { type: 'tableHeader', content: [p(t('Score'))] }] },
+                    { type: 'tableRow', content: [{ type: 'tableCell', content: [p(t('Ann', bold))] }, { type: 'tableCell', content: [p(t('10'))] }] },
+                ],
+            },
+            p(t('after')),
+        ),
+        text: ['Name', 'Score', 'Ann', '10', 'after'].join(String.fromCharCode(10)),
+    },
+    {
         id: 'article',
         title: 'Headings',
         profile: 'article',

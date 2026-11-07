@@ -43,7 +43,7 @@ describe('the toolbar follows the profile, in the order of Gmail\'s bar', () => 
         expect(names(m.host)).toEqual([
             'Undo', 'Redo',
             'Text size', 'Bold', 'Italic', 'Underline', 'Strikethrough', 'Code', 'Spoiler', 'Link', 'Text and background color',
-            'Align', 'Numbered list', 'Bulleted list', 'Decrease indent', 'Increase indent', 'Quote',
+            'Align', 'Numbered list', 'Bulleted list', 'Decrease indent', 'Increase indent', 'Quote', 'Table',
             'Clear formatting',
         ]);
         expect(m.host.querySelectorAll('.tao-editor-toolbar [role="separator"]').length).toBe(3);

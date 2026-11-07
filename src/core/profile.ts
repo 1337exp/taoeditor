@@ -9,7 +9,7 @@
  * везде сразу: нет кнопки в панели, не работает горячая клавиша, вставленный текст с этим приходит простым, в
  * сохранённом документе показывается без этого. Опечатки бросают ошибку, молча не проходят.
  */
-import { MARKS, NODES, PROFILES, type Profile, type ProfileName } from './schema';
+import { MARKS, NODES, PROFILES, TABLE_PARTS, type Profile, type ProfileName } from './schema';
 
 /** Features that are attributes of a block rather than a node or a mark. / Возможности-атрибуты блока. */
 export const FEATURES: readonly string[] = ['indent', 'align'];
@@ -30,6 +30,12 @@ const isNode = (name: string): boolean => Object.hasOwn(NODES, name) && name !==
 const isMark = (name: string): boolean => Object.hasOwn(MARKS, name);
 const isFeature = (name: string): boolean => FEATURES.includes(name);
 
+/** `table` and its parts go together: no table without rows and cells, no rows and cells without a table. */
+function tableParts(nodes: readonly string[]): string[] {
+    const whole = nodes.includes('table') && nodes.includes('tableRow') && (nodes.includes('tableCell') || nodes.includes('tableHeader'));
+    return nodes.filter((n) => n !== 'table' && !TABLE_PARTS.includes(n as (typeof TABLE_PARTS)[number])).concat(whole ? nodes.filter((n) => n === 'table' || TABLE_PARTS.includes(n as (typeof TABLE_PARTS)[number])) : []);
+}
+
 /** A profile like `base` without the listed marks, nodes and features. Lists lose their items when no list is left. */
 export function withoutFeatures(base: ProfileName | Profile, remove: Removal): Profile {
     const profile = resolveProfile(base);
@@ -40,7 +46,9 @@ export function withoutFeatures(base: ProfileName | Profile, remove: Removal): P
     known('node', nodes, isNode);
     known('feature', features, isFeature);
     for (const name of nodes) if (name === 'paragraph' || name === 'text') throw new Error(`taoeditor: "${name}" cannot be removed`);
-    let kept = profile.nodes.filter((n) => !nodes.includes(n));
+    // asking to remove `table` takes its parts with it
+    const gone = nodes.includes('table') ? [...nodes, ...TABLE_PARTS] : nodes;
+    let kept = tableParts(profile.nodes.filter((n) => !gone.includes(n)));
     if (!kept.includes('bulletList') && !kept.includes('orderedList')) kept = kept.filter((n) => n !== 'listItem');
     return {
         ...profile,
@@ -65,7 +73,8 @@ export function defineProfile(spec: ProfileSpec): Profile {
     known('node', spec.nodes, isNode);
     known('mark', spec.marks, isMark);
     known('feature', spec.features ?? [], isFeature);
-    const nodes = [...new Set(['paragraph', 'text', ...spec.nodes])];
+    const wanted = spec.nodes.includes('table') ? [...spec.nodes, ...TABLE_PARTS.filter((n) => !spec.nodes.includes(n))] : spec.nodes;
+    const nodes = tableParts([...new Set(['paragraph', 'text', ...wanted])]);
     const hasList = nodes.includes('bulletList') || nodes.includes('orderedList');
     if (hasList && !nodes.includes('listItem')) nodes.push('listItem');
     if (!hasList && nodes.includes('listItem')) nodes.splice(nodes.indexOf('listItem'), 1);

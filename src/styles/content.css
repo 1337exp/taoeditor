@@ -190,3 +190,36 @@
     outline: 2px solid var(--te-focus, light-dark(#2f6df6, #7aa5ff));
     outline-offset: 1px;
 }
+
+/* Tables: a plain grid, equal columns. Weak selectors for the table itself (the host's prose styles may refine it);
+   the cell's paragraph margins are stronger on purpose: TaoUI's `.tao-prose` gives paragraphs a gap that has no place inside a cell. */
+:where(.tao-content, .tao-editor) :where(table) {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    margin: 0.5em 0 var(--te-block-gap, 0.6em);
+}
+:where(.tao-content, .tao-editor) :where(td, th) {
+    border: 1px solid var(--te-border, light-dark(#d5d9e0, #3a3f49));
+    padding: 0.35em 0.6em;
+    vertical-align: top;
+    text-align: start;
+    position: relative;
+}
+:where(.tao-content, .tao-editor) :where(th) {
+    background: var(--te-code-bg, light-dark(#f3f4f6, #2a2e36));
+    font-weight: 600;
+}
+.tao-content td > *,
+.tao-content th > *,
+.tao-editor td > *,
+.tao-editor th > * {
+    margin-top: 0;
+    margin-bottom: 0.4em;
+}
+.tao-content td > :last-child,
+.tao-content th > :last-child,
+.tao-editor td > :last-child,
+.tao-editor th > :last-child {
+    margin-bottom: 0;
+}

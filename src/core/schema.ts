@@ -27,6 +27,8 @@ export interface NodeSpec {
     children: readonly string[];
     /** A container with no children is dropped. / Контейнер без детей отбрасывается. */
     required?: boolean;
+    /** At most this many children; the rest is cut. / Не больше стольких детей, остальное обрезается. */
+    limit?: number;
     /** Text inside carries marks. / Текст внутри несёт марки. */
     marks?: boolean;
     /** Text inside is code: newlines stay newlines. / Текст — код: переводы строк остаются. */
@@ -71,10 +73,16 @@ const BLOCK_ATTRS = {
 
 const BLOCKS_INSIDE = ['paragraph', 'codeBlock', 'bulletList', 'orderedList', 'blockquote'] as const;
 
+/** A table: rows of cells, each cell holds paragraphs and lists (no table inside a table, no merged cells). */
+export const TABLE_PARTS = ['tableRow', 'tableCell', 'tableHeader'] as const;
+export const TABLE_MAX_ROWS = 50;
+export const TABLE_MAX_COLUMNS = 20;
+const CELL_BLOCKS = ['paragraph', 'bulletList', 'orderedList'] as const;
+
 export const NODES: Readonly<Record<string, NodeSpec>> = {
     doc: {
         kind: 'block',
-        children: ['paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList'],
+        children: ['paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList', 'table'],
         required: true,
     },
     paragraph: { kind: 'block', children: INLINE, marks: true, attrs: BLOCK_ATTRS },
@@ -104,6 +112,10 @@ export const NODES: Readonly<Record<string, NodeSpec>> = {
         attrs: { start: { default: 1, check: intIn(1, 1_000_000_000) } },
     },
     listItem: { kind: 'block', children: BLOCKS_INSIDE, required: true },
+    table: { kind: 'block', children: ['tableRow'], required: true, limit: TABLE_MAX_ROWS },
+    tableRow: { kind: 'block', children: ['tableCell', 'tableHeader'], required: true, limit: TABLE_MAX_COLUMNS },
+    tableCell: { kind: 'block', children: CELL_BLOCKS, required: true },
+    tableHeader: { kind: 'block', children: CELL_BLOCKS, required: true },
     hardBreak: { kind: 'inline', children: [] },
     mention: {
         kind: 'inline',
@@ -145,7 +157,7 @@ export interface Profile {
 }
 
 const CHAT_NODES = ['paragraph', 'text', 'hardBreak', 'mention', 'blockquote', 'codeBlock'] as const;
-const COMMENT_NODES = [...CHAT_NODES, 'bulletList', 'orderedList', 'listItem'] as const;
+const COMMENT_NODES = [...CHAT_NODES, 'bulletList', 'orderedList', 'listItem', 'table', ...TABLE_PARTS] as const;
 const ARTICLE_NODES = [...COMMENT_NODES, 'heading'] as const;
 
 export const PROFILES = {

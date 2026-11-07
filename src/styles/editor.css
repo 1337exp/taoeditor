@@ -212,3 +212,56 @@
     flex-direction: column;
     min-width: 9em;
 }
+
+/* The cells a drag or a Shift-click selected (prosemirror-tables): a tint, and no native selection on top of it. */
+.tao-editor .selectedCell::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--te-mention-bg, light-dark(#dbe6ff, #263a66));
+    opacity: 0.6;
+    pointer-events: none;
+}
+.tao-editor .selectedCell ::selection {
+    background: transparent;
+}
+
+/* The table popup: the size picker for a new table, or the list of what can be done to the one the caret is in. */
+.tao-editor-table {
+    flex-direction: column;
+    min-width: 12em;
+}
+.tao-editor-menu-sep {
+    height: 1px;
+    margin: 0.25em 0.25em;
+    background: var(--te-border, light-dark(#d5d9e0, #3a3f49));
+}
+.tao-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1.35em);
+    gap: 0.2em;
+    padding: 0.25em;
+}
+.tao-editor-grid-cell {
+    box-sizing: border-box;
+    width: 1.35em;
+    height: 1.35em;
+    padding: 0;
+    cursor: pointer;
+    background: transparent;
+    border: 1px solid var(--te-border, light-dark(#d5d9e0, #3a3f49));
+    border-radius: 0.2em;
+}
+.tao-editor-grid-cell--on {
+    background: var(--te-mention-bg, light-dark(#dbe6ff, #263a66));
+    border-color: var(--te-focus, light-dark(#2f6df6, #7aa5ff));
+}
+.tao-editor-grid-cell:focus-visible {
+    outline: 2px solid var(--te-focus, light-dark(#2f6df6, #7aa5ff));
+    outline-offset: 1px;
+}
+.tao-editor-grid-label {
+    padding: 0 0.5em 0.25em;
+    text-align: center;
+    color: var(--te-text-muted, light-dark(#5b6270, #9aa1ae));
+}

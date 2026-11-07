@@ -33,6 +33,8 @@ const blockClass = (attrs: Record<string, unknown>): string =>
         .filter(Boolean)
         .join(' ');
 
+const CELL_ATTRS = { colspan: { default: 1 }, rowspan: { default: 1 }, colwidth: { default: null } };
+
 const NODE_DOM: Readonly<Record<string, NodeSpec>> = {
     paragraph: {
         attrs: { indent: { default: 0 }, align: { default: 'left' } },
@@ -79,6 +81,12 @@ const NODE_DOM: Readonly<Record<string, NodeSpec>> = {
         toDOM: (node) => (node.attrs.start === 1 ? ['ol', 0] : ['ol', { start: node.attrs.start }, 0]),
     },
     listItem: { defining: true, parseDOM: [{ tag: 'li' }], toDOM: () => ['li', 0] },
+    // Tables follow prosemirror-tables: its commands look for these roles and for the colspan, rowspan and colwidth attributes.
+    // Merged cells and widths are not in our model: what a pasted table says about them is not read (the defaults stay).
+    table: { tableRole: 'table', isolating: true, parseDOM: [{ tag: 'table' }], toDOM: () => ['table', ['tbody', 0]] },
+    tableRow: { tableRole: 'row', parseDOM: [{ tag: 'tr' }], toDOM: () => ['tr', 0] },
+    tableCell: { tableRole: 'cell', isolating: true, attrs: CELL_ATTRS, parseDOM: [{ tag: 'td' }], toDOM: () => ['td', 0] },
+    tableHeader: { tableRole: 'header_cell', isolating: true, attrs: CELL_ATTRS, parseDOM: [{ tag: 'th' }], toDOM: () => ['th', 0] },
     hardBreak: { inline: true, selectable: false, parseDOM: [{ tag: 'br' }], toDOM: () => ['br'] },
     // A mention is one unit: it is selected, deleted and moved over as a whole. Pasted markup only counts if its id and
     // label pass the same checks as the stored document; the app must still verify that the person exists.

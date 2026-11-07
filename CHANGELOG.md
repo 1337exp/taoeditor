@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.0
+
+- **Tables.** New nodes `table`, `tableRow`, `tableCell` and `tableHeader` in the document (`comment` and `article` have them, `chat` does not; `withoutFeatures(profile, { nodes: ['table'] })` takes the table and its parts away together). A table is a plain rectangle: the normalizer fills a short row with empty cells, cuts it to 50 rows by 20 columns, and keeps tables out of cells, quotes and lists; merged cells and column widths are not in the model. A profile without tables shows the cells as paragraphs.
+- **In the editor** (on `prosemirror-tables` 1.8.5, exact): a table button with a size picker (8 by 6, arrows walk it), and, when the caret is in a table, a menu for rows, columns, the header row and deleting the table. Tab and Shift+Tab walk the cells and fall through at the ends; a table is never the last block. `createEditor` gains `insertTable`, `inTable`, `tableCommand`, `canTableCommand`. Pasted tables (Google Docs, Excel, web pages) are read through the schema; in a profile without tables a space is kept between the cells.
+- **Viewer and server**: `TaoEditorView` and `toHtml` render `<table>` with `th` and `td`; the look is in `content.css`.
+- New labels in `TaoEditorLabels` (`table`, `tableGrid`, `tableRowAbove`, `tableRowBelow`, `tableRowDelete`, `tableColumnBefore`, `tableColumnAfter`, `tableColumnDelete`, `tableHeaderRow`, `tableDelete`): an app that passes a complete `labels` object has to add them.
+
 ## 0.1.0
 
 The first release.

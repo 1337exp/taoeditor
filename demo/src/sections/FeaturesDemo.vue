@@ -10,7 +10,7 @@ import { editorLabelsRu } from '../locales/editorLabels.ru';
 import { searchPeople } from '../people';
 import { PASTE_SAMPLES } from '../samples';
 
-const BLOCKS = ['blockquote', 'codeBlock', 'bulletList', 'orderedList', 'heading'] as const;
+const BLOCKS = ['blockquote', 'codeBlock', 'bulletList', 'orderedList', 'heading', 'table'] as const;
 const INLINE = ['mention'] as const;
 const ATTRIBUTES = ['indent', 'align'] as const;
 
@@ -133,6 +133,7 @@ function setSpacing(value: string | number | boolean | undefined): void {
                     <div class="row">
                         <TaoButton variant="secondary" size="small" @click="paste(PASTE_SAMPLES.docs)">{{ t('features.sampleDocs') }}</TaoButton>
                         <TaoButton variant="secondary" size="small" @click="paste(PASTE_SAMPLES.page)">{{ t('features.samplePage') }}</TaoButton>
+                        <TaoButton variant="secondary" size="small" @click="paste(PASTE_SAMPLES.table)">{{ t('features.sampleTable') }}</TaoButton>
                         <TaoButton variant="secondary" size="small" @click="paste(PASTE_SAMPLES.markdown)">{{ t('features.sampleMarkdown') }}</TaoButton>
                         <TaoButton variant="secondary" size="small" @click="paste(PASTE_SAMPLES.hostile)">{{ t('features.sampleHostile') }}</TaoButton>
                     </div>
