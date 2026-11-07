@@ -75,6 +75,58 @@
     font-size: inherit;
 }
 
+/* Indent levels of paragraphs and headings (the document stores a number 1 to 8, not a style). Two classes: it also wins over `tao-prose`. */
+.tao-content .tao-indent-1,
+.tao-editor .tao-indent-1 {
+    margin-inline-start: calc(1 * var(--te-indent, 2em));
+}
+.tao-content .tao-indent-2,
+.tao-editor .tao-indent-2 {
+    margin-inline-start: calc(2 * var(--te-indent, 2em));
+}
+.tao-content .tao-indent-3,
+.tao-editor .tao-indent-3 {
+    margin-inline-start: calc(3 * var(--te-indent, 2em));
+}
+.tao-content .tao-indent-4,
+.tao-editor .tao-indent-4 {
+    margin-inline-start: calc(4 * var(--te-indent, 2em));
+}
+.tao-content .tao-indent-5,
+.tao-editor .tao-indent-5 {
+    margin-inline-start: calc(5 * var(--te-indent, 2em));
+}
+.tao-content .tao-indent-6,
+.tao-editor .tao-indent-6 {
+    margin-inline-start: calc(6 * var(--te-indent, 2em));
+}
+.tao-content .tao-indent-7,
+.tao-editor .tao-indent-7 {
+    margin-inline-start: calc(7 * var(--te-indent, 2em));
+}
+.tao-content .tao-indent-8,
+.tao-editor .tao-indent-8 {
+    margin-inline-start: calc(8 * var(--te-indent, 2em));
+}
+
+/*
+ * Compact: Enter is a new line, not a new paragraph with a gap above it (a mail client, a chat). The document is the same;
+ * only the space between blocks changes. Two classes, so it also wins over `tao-prose` of TaoUI.
+ * Плотный вид: Enter — это новая строка, а не абзац с зазором (почта, чат). Документ тот же, меняется только зазор.
+ */
+.tao-content.tao-compact :where(p, ul, ol, blockquote, pre, h1, h2, h3),
+.tao-editor.tao-compact :where(p, ul, ol, blockquote, pre, h1, h2, h3) {
+    margin-block: 0;
+}
+.tao-content.tao-compact :where(ul, ol, blockquote, pre),
+.tao-editor.tao-compact :where(ul, ol, blockquote, pre) {
+    margin-block: var(--te-compact-gap, 0.25em);
+}
+.tao-content.tao-compact :where(li + li),
+.tao-editor.tao-compact :where(li + li) {
+    margin-block-start: 0;
+}
+
 /* A mention: a chip with the name; it is a button in the viewer when the app listens to it. */
 .tao-mention {
     border-radius: var(--te-radius, 0.35em);

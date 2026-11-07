@@ -9,6 +9,7 @@
  */
 import { Schema, type MarkSpec, type NodeSpec } from 'prosemirror-model';
 import { MARKS, MARK_ORDER, NODES, childrenOf, safeUrl, type Profile } from '../core';
+import { indentOf } from './indent';
 
 const expr = (names: readonly string[], required?: boolean): string | undefined => {
     if (names.length === 0) return undefined;
@@ -22,16 +23,20 @@ const langOf = (dom: HTMLElement): { lang: string | null } => {
 };
 
 const NODE_DOM: Readonly<Record<string, NodeSpec>> = {
-    paragraph: { parseDOM: [{ tag: 'p' }], toDOM: () => ['p', 0] },
+    paragraph: {
+        attrs: { indent: { default: 0 } },
+        parseDOM: [{ tag: 'p', getAttrs: (dom) => ({ indent: indentOf(dom) }) }],
+        toDOM: (node) => (node.attrs.indent > 0 ? ['p', { class: `tao-indent-${node.attrs.indent}` }, 0] : ['p', 0]),
+    },
     heading: {
-        attrs: { level: { default: 1 } },
+        attrs: { level: { default: 1 }, indent: { default: 0 } },
         defining: true,
         parseDOM: [
-            { tag: 'h1', attrs: { level: 1 } },
-            { tag: 'h2', attrs: { level: 2 } },
-            { tag: 'h3,h4,h5,h6', attrs: { level: 3 } },
+            { tag: 'h1', getAttrs: (dom) => ({ level: 1, indent: indentOf(dom) }) },
+            { tag: 'h2', getAttrs: (dom) => ({ level: 2, indent: indentOf(dom) }) },
+            { tag: 'h3,h4,h5,h6', getAttrs: (dom) => ({ level: 3, indent: indentOf(dom) }) },
         ],
-        toDOM: (node) => [`h${node.attrs.level}`, 0],
+        toDOM: (node) => [`h${node.attrs.level}`, node.attrs.indent > 0 ? { class: `tao-indent-${node.attrs.indent}` } : {}, 0],
     },
     blockquote: { defining: true, parseDOM: [{ tag: 'blockquote' }], toDOM: () => ['blockquote', 0] },
     codeBlock: {

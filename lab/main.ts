@@ -204,7 +204,8 @@ const searchPeople = (query: string) =>
 const componentDoc = shallowRef<Doc | null>(null);
 const componentProfile = shallowRef<ProfileName>('comment');
 const componentSubmit = shallowRef<SubmitMode>('none');
-const componentFloating = shallowRef(true);
+const componentFloating = shallowRef(false);
+const componentSpaced = shallowRef<boolean | undefined>(undefined);
 
 function mountComponent(): void {
     createApp({
@@ -215,6 +216,7 @@ function mountComponent(): void {
                 profile: componentProfile.value,
                 submit: componentSubmit.value,
                 floating: componentFloating.value,
+                spaced: componentSpaced.value,
                 mentions: searchPeople,
                 emoji: true,
                 placeholder: 'TaoEditor: type here',
@@ -229,6 +231,7 @@ function mountComponent(): void {
         render: () => h(TaoEditorView, {
             doc: componentDoc.value,
             profile: componentProfile.value,
+            spaced: componentSpaced.value,
             class: taouiOn() ? 'tao-prose' : undefined,
             onMention: (id: string) => log('mention clicked', id),
         }),
@@ -272,6 +275,10 @@ function init(): void {
     $('profile').addEventListener('change', () => {
         componentProfile.value = $<HTMLSelectElement>('profile').value as ProfileName;
         mount();
+    });
+    $('spacing').addEventListener('change', () => {
+        const v = $<HTMLSelectElement>('spacing').value;
+        componentSpaced.value = v === 'auto' ? undefined : v === 'spaced';
     });
     $('floating').addEventListener('change', () => {
         componentFloating.value = $<HTMLInputElement>('floating').checked;

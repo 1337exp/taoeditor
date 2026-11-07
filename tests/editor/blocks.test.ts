@@ -109,12 +109,23 @@ describe('lists', () => {
         expect(ed.issues()).toEqual([]);
     });
 
-    it('Tab outside a list is left to the browser (focus moves on)', () => {
+    it('Tab outside a list is left to the browser (focus moves on); the indent buttons work on the paragraph', () => {
         const ed = mount({ profile: 'comment' });
         type(ed, 'a');
         expect(press(ed, 'Tab')).toBe(false);
-        expect(ed.canIndent()).toBe(false);
-        expect(ed.canOutdent()).toBe(false);
+        expect(ed.canIndent()).toBe(true); // a paragraph can be indented
+        expect(ed.canOutdent()).toBe(false); // but it has no indent to take back yet
+    });
+
+    it('Shift+Tab at the top level of a list is left to the browser, so the keyboard is never trapped', () => {
+        const ed = mount({ profile: 'comment' });
+        ed.toggleList('bulletList');
+        type(ed, 'one');
+        expect(press(ed, 'Tab', { shiftKey: true })).toBe(false);
+        expect(types(ed)).toEqual(['bulletList']);
+        expect(ed.canOutdent()).toBe(true); // the toolbar button can still take it out of the list
+        ed.outdent();
+        expect(types(ed)).toEqual(['paragraph']);
     });
 
     it('the keys: Ctrl+Shift+8 bulleted, Ctrl+Shift+7 numbered', () => {

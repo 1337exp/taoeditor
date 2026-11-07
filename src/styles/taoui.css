@@ -28,6 +28,7 @@
     --te-code-font: var(--tao-font-family-mono);
     --te-radius: var(--tao-radius-sm);
     --te-focus: var(--tao-color-accent);
+    --te-error: var(--tao-color-danger-text);
 
     /* the spoiler */
     --te-spoiler-bg: var(--tao-color-border-strong);

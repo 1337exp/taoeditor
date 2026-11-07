@@ -15,7 +15,7 @@ describe('TaoEditorView', () => {
         for (const fx of FIXTURES) {
             const profile = PROFILES[fx.profile];
             const ssr = await renderToString(createSSRApp({ render: () => h(TaoEditorView, { doc: fx.doc, profile: fx.profile }) }));
-            expect(ssr.replaceAll(' aria-expanded="false"', ''), fx.id).toBe(`<div class="tao-content">${toHtml(fx.doc, profile)}</div>`);
+            expect(ssr.replaceAll(' aria-expanded="false"', ''), fx.id).toBe(`<div class="${fx.profile === 'article' ? 'tao-content' : 'tao-content tao-compact'}">${toHtml(fx.doc, profile)}</div>`);
         }
     });
 

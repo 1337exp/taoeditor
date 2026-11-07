@@ -139,6 +139,8 @@ export const TaoEditor = defineComponent({
         label: { type: String, default: undefined },
         /** Size of the toolbar, the emoji list and the link row: `small` / `medium` / `large`. Without it the size of the ancestors (medium). */
         size: { type: String as PropType<TaoSize>, default: undefined },
+        /** A gap between paragraphs (an article) or none (a mail client, a chat). Without it: by profile, `article` only. */
+        spaced: { type: Boolean, default: undefined },
         /** Show the formatting toolbar. / Показывать панель форматирования. */
         toolbar: { type: Boolean, default: true },
         /** The toolbar floats over the selection instead of standing above the field. / Панель висит над выделением. */
@@ -264,7 +266,7 @@ export const TaoEditor = defineComponent({
                 mentions: props.mentions ? { onTrigger, onKey: onMentionKey } : undefined,
                 placeholder: props.placeholder,
                 label: props.label,
-                class: 'tao-prose',
+                class: (props.spaced ?? props.profile === 'article') ? 'tao-prose' : 'tao-prose tao-compact',
                 readOnly: props.readonly || props.disabled,
                 onChange: (next) => {
                     emit('update:modelValue', next);
@@ -292,10 +294,12 @@ export const TaoEditor = defineComponent({
                 panelSize.value = { w: el.offsetWidth, h: el.offsetHeight };
             }
         });
-        // A click anywhere outside the component closes the emoji list (a click inside keeps the focus in the text,
-        // so the focus alone cannot tell us).
+        // A press anywhere except the list and its button closes it, the text field included: pressing into the text
+        // means "back to typing", and it does not change the focus (it is in the editor already), so the focus cannot tell.
         const closeOnOutside = (event: PointerEvent): void => {
-            if (!root.value?.contains(event.target as Node | null)) emojiOpen.value = false;
+            const target = event.target as Element | null;
+            if (target?.closest?.('.tao-editor-emoji, .tao-editor-emoji-button')) return;
+            emojiOpen.value = false;
         };
         watch(emojiOpen, (open) => {
             if (open) document.addEventListener('pointerdown', closeOnOutside, true);
@@ -320,7 +324,7 @@ export const TaoEditor = defineComponent({
         );
         // These are fixed when the engine is built: rebuild, keeping the document.
         watch(
-            () => [props.profile, props.submit, !!props.mentions, props.placeholder, props.label, props.readonly, props.disabled],
+            () => [props.profile, props.spaced, props.submit, !!props.mentions, props.placeholder, props.label, props.readonly, props.disabled],
             () => {
                 if (editor.value) build(editor.value.getDoc());
             },

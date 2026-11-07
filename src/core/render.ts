@@ -33,6 +33,10 @@ export const VOID_TAGS: ReadonlySet<string> = new Set(['br']);
 /** `rel` of every link we render. / `rel` каждой выводимой ссылки. */
 export const LINK_REL = 'noopener noreferrer nofollow ugc';
 
+/** An indented paragraph or heading says its level with a class (`tao-indent-2`), never with an inline style. */
+const indentClass = (node: DocNode): Record<string, string> | undefined =>
+    typeof node.attrs?.indent === 'number' && node.attrs.indent > 0 ? { class: `tao-indent-${node.attrs.indent}` } : undefined;
+
 const el = (tag: string, children: RenderNode[], attrs?: Record<string, string>): RenderElement =>
     attrs ? { tag, attrs, children } : { tag, children };
 
@@ -82,7 +86,7 @@ function block(node: DocNode, path: string): RenderElement {
     const kids = (): RenderNode[] => (node.content ?? []).map((child, i) => block(child, `${path}.${i}`));
     switch (node.type) {
         case 'heading':
-            return el(`h${node.attrs?.level ?? 1}`, inline(node.content, path));
+            return el(`h${node.attrs?.level ?? 1}`, inline(node.content, path), indentClass(node));
         case 'blockquote':
             return el('blockquote', kids());
         case 'codeBlock': {
@@ -98,7 +102,7 @@ function block(node: DocNode, path: string): RenderElement {
         default: {
             // 'paragraph'. An empty one keeps its height, like the engine's trailing break.
             const children = inline(node.content, path);
-            return el('p', children.length > 0 ? children : [el('br', [])]);
+            return el('p', children.length > 0 ? children : [el('br', [])], indentClass(node));
         }
     }
 }

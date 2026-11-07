@@ -60,12 +60,12 @@ export const NODES: Readonly<Record<string, NodeSpec>> = {
         children: ['paragraph', 'heading', 'blockquote', 'codeBlock', 'bulletList', 'orderedList'],
         required: true,
     },
-    paragraph: { kind: 'block', children: INLINE, marks: true },
+    paragraph: { kind: 'block', children: INLINE, marks: true, attrs: { indent: { default: 0, check: intIn(0, 8) } } },
     heading: {
         kind: 'block',
         children: ['text'],
         marks: true,
-        attrs: { level: { default: 1, check: intIn(1, 3) } },
+        attrs: { level: { default: 1, check: intIn(1, 3) }, indent: { default: 0, check: intIn(0, 8) } },
     },
     blockquote: { kind: 'block', children: BLOCKS_INSIDE, required: true },
     codeBlock: {

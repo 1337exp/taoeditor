@@ -294,12 +294,6 @@
   "instance?.vnode.props"
  ],
  [
-  "emoji list: a press outside does not close it",
-  "src/vue/taoui/TaoEditor.ts",
-  "if (!root.value?.contains(event.target as Node | null)) emojiOpen.value = false;",
-  ""
- ],
- [
   "emoji list: Escape in the text does not close it",
   "src/vue/taoui/TaoEditor.ts",
   "if (event.key === 'Escape' && emojiOpen.value) emojiOpen.value = false;",
@@ -352,5 +346,77 @@
   "src/vue/taoui/TaoEditor.ts",
   "{ off: !(handle?.canIndent() ?? false) }",
   "{ off: false }"
+ ],
+ [
+  "indent: any number is a level",
+  "src/core/schema.ts",
+  "indent: { default: 0, check: intIn(0, 8) } } },\n    heading",
+  "indent: { default: 0, check: (v) => (typeof v === 'number' ? v : undefined) } } },\n    heading"
+ ],
+ [
+  "indent: the level is not capped when changed",
+  "src/editor/blocks.ts",
+  "Math.min(MAX_INDENT, (node.attrs.indent as number) + delta)",
+  "((node.attrs.indent as number) + delta)"
+ ],
+ [
+  "indent: the level can go below zero",
+  "src/editor/blocks.ts",
+  "Math.max(0, Math.min(MAX_INDENT,",
+  "Math.max(-5, Math.min(MAX_INDENT,"
+ ],
+ [
+  "indent: only the first line of a selection moves",
+  "src/editor/blocks.ts",
+  "state.doc.nodesBetween(from, to, (node, pos) => {",
+  "state.doc.nodesBetween(from, from, (node, pos) => {"
+ ],
+ [
+  "indent: a list item is indented as a paragraph",
+  "src/editor/blocks.ts",
+  "inListItem(schema, state) ? sinkListItem(schema.nodes.listItem)(state, dispatch) :",
+  "false ? sinkListItem(schema.nodes.listItem)(state, dispatch) :"
+ ],
+ [
+  "Shift+Tab: leaves a top-level list (a keyboard trap)",
+  "src/editor/blocks.ts",
+  "return items >= 2 ?",
+  "return items >= 1 ?"
+ ],
+ [
+  "paste: a left margin is not an indent",
+  "src/editor/indent.ts",
+  "return Math.max(0, Math.min(MAX_INDENT, Math.round(px / 40)));",
+  "return 0;"
+ ],
+ [
+  "paste: an indent is not capped",
+  "src/editor/indent.ts",
+  "Math.max(0, Math.min(MAX_INDENT, Math.round(px / 40)))",
+  "Math.max(0, Math.round(px / 40))"
+ ],
+ [
+  "render: the indent class takes any value",
+  "src/core/render.ts",
+  "typeof node.attrs?.indent === 'number' && node.attrs.indent > 0",
+  "node.attrs?.indent !== undefined"
+ ],
+ [
+  "spacing: the viewer is compact for articles too",
+  "src/vue/TaoEditorView.ts",
+  "=== 'article')",
+  "=== 'nothing')"
+ ],
+ [
+  "spacing: the editor ignores `spaced`",
+  "src/vue/taoui/TaoEditor.ts",
+  "class: (props.spaced ?? props.profile === 'article')",
+  "class: (props.profile === 'article')"
+ ],
+ [
+  "emoji list: a press into the text does not close it",
+  "src/vue/taoui/TaoEditor.ts",
+  "if (target?.closest?.('.tao-editor-emoji, .tao-editor-emoji-button')) return;",
+  "if (root.value?.contains(target)) return;"
  ]
 ]

@@ -19,6 +19,13 @@ export const TaoEditorView = defineComponent({
         doc: { type: null as unknown as PropType<Doc | null | undefined>, default: undefined },
         /** What to allow when showing. Default `article`, the widest. / Что разрешено при показе. */
         profile: { type: [String, Object] as PropType<ProfileName | Profile>, default: 'article' },
+        /**
+         * Space between paragraphs (a gap, as in an article) or none (Enter is a new line, as in a mail client or a chat).
+         * Without it: a gap for `article`, none for the others. The stored document is the same either way.
+         * Зазор между абзацами (как в статье) или без него (как в почте и чате). По умолчанию: зазор у `article`, у
+         * остальных нет. Документ один и тот же.
+         */
+        spaced: { type: Boolean, default: undefined },
     },
     emits: {
         /** A mention was clicked (or Enter / Space on it): its id. Mentions are plain text unless something listens. */
@@ -72,6 +79,7 @@ export const TaoEditorView = defineComponent({
             return VOID_TAGS.has(item.tag) ? h(item.tag, attrs) : h(item.tag, attrs, item.children.map(node));
         };
 
-        return () => h('div', { class: 'tao-content' }, tree.value.map(node));
+        const compact = (): boolean => !(props.spaced ?? (typeof props.profile === 'string' ? props.profile : props.profile.name) === 'article');
+        return () => h('div', { class: compact() ? 'tao-content tao-compact' : 'tao-content' }, tree.value.map(node));
     },
 });

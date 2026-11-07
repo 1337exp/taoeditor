@@ -139,6 +139,18 @@ describe('the emoji list closes', () => {
         expect(m.host.querySelector('.tao-editor-emoji')).toBeNull();
     });
 
+    it('on a press into the text field too: that means back to typing, and the focus does not change', async () => {
+        const m = mount({ emoji: true });
+        await nextTick();
+        await open(m);
+        m.host.querySelector('.tao-editor-emoji-button')!.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+        await nextTick();
+        expect(m.host.querySelector('.tao-editor-emoji')).not.toBeNull(); // its own button is not outside
+        m.host.querySelector('.tao-editor')!.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+        await nextTick();
+        expect(m.host.querySelector('.tao-editor-emoji')).toBeNull();
+    });
+
     it('on Escape typed in the text, and the listener goes away with the list', async () => {
         const m = mount({ emoji: true });
         await nextTick();
