@@ -162,14 +162,15 @@ const CHAT_NODES = ['paragraph', 'text', 'hardBreak', 'mention', 'blockquote', '
 const COMMENT_NODES = [...CHAT_NODES, 'bulletList', 'orderedList', 'listItem', 'table', ...TABLE_PARTS] as const;
 const ARTICLE_NODES = [...COMMENT_NODES, 'heading'] as const;
 
-// Ready profiles are a starting point (a project can take marks away or define its own). Colours and subscript are for articles;
-// a comment keeps the superscript, a chat does not (decision of the user, 2026-11-07).
-const COMMENT_MARKS = MARK_ORDER.filter((m) => m !== 'color' && m !== 'background' && m !== 'subscript');
+// Ready profiles are a starting point (a project can take marks away or define its own). Colours, underline, subscript, alignment
+// and indents are for articles; a comment keeps the superscript, a chat does not (decision of the user, 2026-11-07: the comment
+// bar is the one of Reddit: bold, italic, strikethrough, superscript, size, link, lists, spoiler, quote, code, code block, table).
+const COMMENT_MARKS = MARK_ORDER.filter((m) => m !== 'color' && m !== 'background' && m !== 'subscript' && m !== 'underline');
 const CHAT_MARKS = COMMENT_MARKS.filter((m) => m !== 'superscript');
 
 export const PROFILES = {
     chat: { name: 'chat', nodes: CHAT_NODES, marks: CHAT_MARKS, features: [] },
-    comment: { name: 'comment', nodes: COMMENT_NODES, marks: COMMENT_MARKS, features: ['indent', 'align'] },
+    comment: { name: 'comment', nodes: COMMENT_NODES, marks: COMMENT_MARKS, features: [] },
     article: { name: 'article', nodes: ARTICLE_NODES, marks: MARK_ORDER, features: ['indent', 'align'], spaced: true },
 } as const satisfies Record<string, Profile>;
 

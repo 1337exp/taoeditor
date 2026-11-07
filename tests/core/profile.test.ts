@@ -7,8 +7,8 @@ const para = (attrs: unknown, ...content: unknown[]) => ({ type: 'paragraph', at
 
 describe('withoutFeatures', () => {
     it('takes marks, nodes and features out of a ready profile, and says it is a made one', () => {
-        const p = withoutFeatures('comment', { marks: ['bold', 'spoiler'], nodes: ['blockquote'], features: ['align'] });
-        expect(p.name).toBe('comment*');
+        const p = withoutFeatures('article', { marks: ['bold', 'spoiler'], nodes: ['blockquote'], features: ['align'] });
+        expect(p.name).toBe('article*');
         expect(p.marks).not.toContain('bold');
         expect(p.marks).not.toContain('spoiler');
         expect(p.marks).toContain('italic');
@@ -18,14 +18,14 @@ describe('withoutFeatures', () => {
     });
 
     it('does not change the ready profile', () => {
-        withoutFeatures('comment', { marks: ['bold'] });
-        expect(PROFILES.comment.marks).toContain('bold');
+        withoutFeatures('article', { marks: ['bold'] });
+        expect(PROFILES.article.marks).toContain('bold');
     });
 
     it('lists go with their items: no list left, no listItem', () => {
-        const p = withoutFeatures('comment', { nodes: ['bulletList', 'orderedList'] });
+        const p = withoutFeatures('article', { nodes: ['bulletList', 'orderedList'] });
         expect(p.nodes).not.toContain('listItem');
-        expect(withoutFeatures('comment', { nodes: ['bulletList'] }).nodes).toContain('listItem');
+        expect(withoutFeatures('article', { nodes: ['bulletList'] }).nodes).toContain('listItem');
     });
 
     it('the spacing hint of the base is kept', () => {
@@ -71,7 +71,7 @@ describe('defineProfile', () => {
 });
 
 describe('a profile that leaves a feature out leaves it out of the document', () => {
-    const noBold = withoutFeatures('comment', { marks: ['bold'] });
+    const noBold = withoutFeatures('article', { marks: ['bold'] });
 
     it('a mark that is out is dropped from a stored document, the text stays, and it is reported', () => {
         const { doc, issues } = normalizeDoc(wrap(para({}, text('a', [{ type: 'bold' }, { type: 'italic' }]))), noBold);
@@ -82,29 +82,29 @@ describe('a profile that leaves a feature out leaves it out of the document', ()
     it('the viewer of that profile shows it without the mark', () => {
         const input = wrap(para({}, text('a', [{ type: 'bold' }])));
         expect(toHtml(input, noBold)).toBe('<p>a</p>');
-        expect(toHtml(input, PROFILES.comment)).toBe('<p><strong>a</strong></p>');
+        expect(toHtml(input, PROFILES.article)).toBe('<p><strong>a</strong></p>');
     });
 
     it('a block attribute of a feature that is out is not there, quietly (a richer document in a poorer profile)', () => {
         const input = wrap(para({ indent: 2, align: 'center' }, text('a')));
-        const none = withoutFeatures('comment', { features: ['indent', 'align'] });
+        const none = withoutFeatures('article', { features: ['indent', 'align'] });
         const { doc, issues } = normalizeDoc(input, none);
         expect(doc.content[0].attrs).toBeUndefined();
         expect(issues).toEqual([]);
         expect(toHtml(input, none)).toBe('<p>a</p>');
-        expect(toHtml(input, PROFILES.comment)).toBe('<p class="tao-indent-2 tao-align-center">a</p>');
-        expect(normalizeDoc(input, withoutFeatures('comment', { features: ['align'] })).doc.content[0].attrs).toEqual({ indent: 2 });
+        expect(toHtml(input, PROFILES.article)).toBe('<p class="tao-indent-2 tao-align-center">a</p>');
+        expect(normalizeDoc(input, withoutFeatures('article', { features: ['align'] })).doc.content[0].attrs).toEqual({ indent: 2 });
     });
 
     it('a node that is out is unwrapped, its text stays', () => {
-        const noQuote = withoutFeatures('comment', { nodes: ['blockquote'] });
+        const noQuote = withoutFeatures('article', { nodes: ['blockquote'] });
         const { doc } = normalizeDoc(wrap({ type: 'blockquote', content: [para({}, text('q'))] }), noQuote);
         expect(doc.content[0].type).toBe('paragraph');
     });
 
-    it('the ready profiles: chat has no indent or alignment, comment and article have', () => {
+    it('the ready profiles: chat and comment have no indent or alignment, the article has', () => {
         expect(PROFILES.chat.features).toEqual([]);
-        expect(PROFILES.comment.features).toEqual(['indent', 'align']);
+        expect(PROFILES.comment.features).toEqual([]);
         expect(PROFILES.article.features).toEqual(['indent', 'align']);
         expect(PROFILES.article.spaced).toBe(true);
     });
@@ -112,10 +112,10 @@ describe('a profile that leaves a feature out leaves it out of the document', ()
 
 describe('alignment and size in the document', () => {
     it('alignment: left is the default and is not written; the others are kept; nonsense is dropped', () => {
-        const ok = normalizeDoc(wrap(para({ align: 'left' }, text('a')), para({ align: 'center' }, text('b')), para({ align: 'justify' }, text('c'))), PROFILES.comment).doc;
+        const ok = normalizeDoc(wrap(para({ align: 'left' }, text('a')), para({ align: 'center' }, text('b')), para({ align: 'justify' }, text('c'))), PROFILES.article).doc;
         expect(ok.content.map((b) => b.attrs ?? null)).toEqual([null, { align: 'center' }, { align: 'justify' }]);
         for (const bad of ['middle', 'CENTER', 5, null, '']) {
-            expect(normalizeDoc(wrap(para({ align: bad }, text('a'))), PROFILES.comment).doc.content[0].attrs).toBeUndefined();
+            expect(normalizeDoc(wrap(para({ align: bad }, text('a'))), PROFILES.article).doc.content[0].attrs).toBeUndefined();
         }
     });
 

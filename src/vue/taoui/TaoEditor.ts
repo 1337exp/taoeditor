@@ -624,9 +624,13 @@ export const TaoEditor = defineComponent({
                     : []),
             ];
             const markTools = [
-                ...MARK_BUTTONS.filter((b) => marks.includes(b.mark)).map((b) =>
+                // the code block stands next to the inline code: the two are one idea
+                ...MARK_BUTTONS.filter((b) => marks.includes(b.mark)).flatMap((b) => [
                     tool(text[b.mark], b.icon, () => handle?.toggleMark(b.mark), { shortcut: b.shortcut, pressed: handle?.isMarkActive(b.mark) ?? false }),
-                ),
+                    ...(b.mark === 'code' && nodes.includes('codeBlock')
+                        ? [tool(text.codeBlock, 'te-code-block', () => handle?.toggleCodeBlock(), { pressed: handle?.isBlockActive('codeBlock') ?? false })]
+                        : []),
+                ]),
                 ...(marks.includes('link')
                     ? [
                           tool(text.link, 'te-link', () => {
@@ -650,14 +654,13 @@ export const TaoEditor = defineComponent({
                     : []),
                 ...(nodes.includes('orderedList') ? [tool(text.numbered, 'te-list-ordered', () => handle?.toggleList('orderedList'), { shortcut: key('7', true), pressed: handle?.isBlockActive('orderedList') ?? false })] : []),
                 ...(nodes.includes('bulletList') ? [tool(text.bulleted, 'te-list-bullet', () => handle?.toggleList('bulletList'), { shortcut: key('8', true), pressed: handle?.isBlockActive('bulletList') ?? false })] : []),
-                ...(features.includes('indent') || nodes.includes('listItem')
+                ...(features.includes('indent')
                     ? [
                           tool(text.outdent, 'te-outdent', () => handle?.outdent(), { off: !(handle?.canOutdent() ?? false) }),
                           tool(text.indent, 'te-indent', () => handle?.indent(), { off: !(handle?.canIndent() ?? false) }),
                       ]
                     : []),
                 ...(nodes.includes('blockquote') ? [tool(text.quote, 'te-quote', () => handle?.toggleQuote(), { shortcut: key('9', true), pressed: handle?.isBlockActive('blockquote') ?? false })] : []),
-                ...(nodes.includes('codeBlock') ? [tool(text.codeBlock, 'te-code-block', () => handle?.toggleCodeBlock(), { pressed: handle?.isBlockActive('codeBlock') ?? false })] : []),
                 ...(nodes.includes('table') ? [tool(text.table, 'te-table', () => {
                     tableFrom.value = 'toolbar';
                     toggleMenu('table');

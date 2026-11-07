@@ -42,8 +42,8 @@ describe('the toolbar follows the profile, in the order of Gmail\'s bar', () => 
         await nextTick();
         expect(names(m.host)).toEqual([
             'Undo', 'Redo',
-            'Text size', 'Bold', 'Italic', 'Underline', 'Strikethrough', 'Superscript', 'Code', 'Spoiler', 'Link',
-            'Align', 'Numbered list', 'Bulleted list', 'Decrease indent', 'Increase indent', 'Quote', 'Code block', 'Table',
+            'Text size', 'Bold', 'Italic', 'Strikethrough', 'Superscript', 'Code', 'Code block', 'Spoiler', 'Link',
+            'Numbered list', 'Bulleted list', 'Quote', 'Table',
             'Clear formatting',
         ]);
         expect(m.host.querySelectorAll('.tao-editor-toolbar [role="separator"]').length).toBe(4);
@@ -58,7 +58,7 @@ describe('the toolbar follows the profile, in the order of Gmail\'s bar', () => 
     });
 
     it('the keys are in the tooltips: Underline, lists, quote', async () => {
-        const m = mount({ profile: 'comment' });
+        const m = mount({ profile: 'article' });
         await nextTick();
         expect(btn(m.host, 'Underline').title).toBe('Underline (Ctrl+U)');
         expect(btn(m.host, 'Numbered list').title).toBe('Numbered list (Ctrl+Shift+7)');
@@ -69,7 +69,7 @@ describe('the toolbar follows the profile, in the order of Gmail\'s bar', () => 
 
 describe('block buttons', () => {
     it('a list button makes the list, shows pressed, and the indent buttons wake up', async () => {
-        const m = mount({ profile: 'comment' });
+        const m = mount({ profile: 'article' });
         await nextTick();
         type(m.engine(), 'one');
         expect(btn(m.host, 'Bulleted list').getAttribute('aria-pressed')).toBe('false');
@@ -105,7 +105,7 @@ describe('block buttons', () => {
     });
 
     it('clear formatting removes the marks of the selection and keeps the text', async () => {
-        const m = mount({ profile: 'chat' });
+        const m = mount({ profile: 'article' });
         await nextTick();
         type(m.engine(), 'abc');
         selectText(m.engine(), 1, 4);

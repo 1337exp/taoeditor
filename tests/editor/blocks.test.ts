@@ -15,7 +15,7 @@ const shape = (ed: EditorHandle): unknown => JSON.stringify(ed.getDoc().content)
 
 describe('underline', () => {
     it('Ctrl+U and the toolbar toggle it; it renders as <u>', () => {
-        const ed = mount({ profile: 'chat' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'abc');
         selectAll(ed);
         press(ed, 'u', { ctrlKey: true });
@@ -26,14 +26,14 @@ describe('underline', () => {
     });
 
     it('a link already shows underlined, so the link wins; code wins too', () => {
-        const ed = mount({ profile: 'chat' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'abc');
         selectAll(ed);
         ed.toggleMark('underline');
         ed.setLink('https://666.io');
         expect(runs(ed)).toEqual([['abc', 'link']]);
         expect(ed.issues()).toEqual([]);
-        const code = mount({ profile: 'chat' });
+        const code = mount({ profile: 'article' });
         type(code, 'x');
         selectAll(code);
         code.toggleMark('underline');
@@ -42,10 +42,10 @@ describe('underline', () => {
     });
 
     it('pasted <u> and text-decoration: underline become the mark', () => {
-        const schema = createSchema(PROFILES.chat);
+        const schema = createSchema(PROFILES.article);
         const parse = (html: string) => {
             const dom = new window.DOMParser().parseFromString(html, 'text/html').body;
-            return nodeToDoc(PMParser.fromSchema(schema).parse(dom), PROFILES.chat).doc.content[0].content;
+            return nodeToDoc(PMParser.fromSchema(schema).parse(dom), PROFILES.article).doc.content[0].content;
         };
         expect(parse('<p><u>a</u><span style="text-decoration:underline">b</span></p>')).toEqual([
             { type: 'text', text: 'ab', marks: [{ type: 'underline' }] },
@@ -55,7 +55,7 @@ describe('underline', () => {
 
 describe('lists', () => {
     it('the button makes a list of the paragraph, again takes it out, the other kind changes it', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'a');
         expect(ed.isBlockActive('bulletList')).toBe(false);
         expect(ed.toggleList('bulletList')).toBe(true);
@@ -77,7 +77,7 @@ describe('lists', () => {
     });
 
     it('Enter makes a new item; Enter on the empty last item leaves the list', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         ed.toggleList('bulletList');
         type(ed, 'one');
         press(ed, 'Enter');
@@ -91,7 +91,7 @@ describe('lists', () => {
     });
 
     it('Tab nests an item under the one before, Shift+Tab brings it back; the first item cannot be nested', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         ed.toggleList('bulletList');
         type(ed, 'one');
         expect(ed.canIndent()).toBe(false);
@@ -110,7 +110,7 @@ describe('lists', () => {
     });
 
     it('Tab outside a list is left to the browser (focus moves on); the indent buttons work on the paragraph', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'a');
         expect(press(ed, 'Tab')).toBe(false);
         expect(ed.canIndent()).toBe(true); // a paragraph can be indented
@@ -118,7 +118,7 @@ describe('lists', () => {
     });
 
     it('Shift+Tab at the top level of a list is left to the browser, so the keyboard is never trapped', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         ed.toggleList('bulletList');
         type(ed, 'one');
         expect(press(ed, 'Tab', { shiftKey: true })).toBe(false);
@@ -129,7 +129,7 @@ describe('lists', () => {
     });
 
     it('the keys: Ctrl+Shift+8 bulleted, Ctrl+Shift+7 numbered', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'a');
         press(ed, '8', { ctrlKey: true, shiftKey: true });
         expect(types(ed)).toEqual(['bulletList']);
@@ -178,7 +178,7 @@ describe('clear formatting', () => {
     });
 
     it('leaves the structure alone (a list stays a list)', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         ed.toggleList('bulletList');
         type(ed, 'a');
         // doc > bulletList > listItem > paragraph > text: the text of the item is positions 3 to 4

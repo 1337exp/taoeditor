@@ -17,7 +17,7 @@ const pasteInto = (profile: Profile, html: string) => {
 };
 
 describe('what the project leaves out is out for the engine too', () => {
-    const noBold = withoutFeatures('comment', { marks: ['bold'] });
+    const noBold = withoutFeatures('article', { marks: ['bold'] });
 
     it('the mark is not in the schema: no command, the hotkey does nothing, the document stays plain', () => {
         const ed = mount({ profile: noBold });
@@ -48,7 +48,7 @@ describe('what the project leaves out is out for the engine too', () => {
     });
 
     it('colours, size and links follow the same rule', () => {
-        const none = withoutFeatures('comment', { marks: ['color', 'background', 'size', 'link'] });
+        const none = withoutFeatures('article', { marks: ['color', 'background', 'size', 'link'] });
         const content = pasteInto(none, '<p><span style="color:#ff0000">a</span><span style="background-color:#ffff00">b</span><big>c</big><a href="https://666.io">d</a></p>');
         expect(content[0].content).toEqual([{ type: 'text', text: 'abcd' }]);
         const ed = mount({ profile: none });
@@ -61,7 +61,7 @@ describe('what the project leaves out is out for the engine too', () => {
     });
 
     it('a node that is out: pasted quote and list come in as paragraphs, the commands do nothing', () => {
-        const none = withoutFeatures('comment', { nodes: ['blockquote', 'bulletList', 'orderedList'] });
+        const none = withoutFeatures('article', { nodes: ['blockquote', 'bulletList', 'orderedList'] });
         const content = pasteInto(none, '<blockquote>q</blockquote><ul><li>one</li></ul>');
         expect(content.map((b) => b.type)).toEqual(['paragraph', 'paragraph']);
         const ed = mount({ profile: none });
@@ -71,7 +71,7 @@ describe('what the project leaves out is out for the engine too', () => {
     });
 
     it('a feature that is out: indent and alignment do nothing and pasted ones are ignored', () => {
-        const none = withoutFeatures('comment', { features: ['indent', 'align'] });
+        const none = withoutFeatures('article', { features: ['indent', 'align'] });
         const content = pasteInto(none, '<p style="margin-left:80px;text-align:center">a</p>');
         expect(content[0].attrs).toBeUndefined();
         const ed = mount({ profile: none });
@@ -93,7 +93,7 @@ describe('what the project leaves out is out for the engine too', () => {
 
 describe('alignment', () => {
     it('setAlign aligns every selected paragraph and heading; alignOf reads where the caret is', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'one');
         press(ed, 'Enter');
         type(ed, 'two');
@@ -115,7 +115,7 @@ describe('alignment', () => {
     });
 
     it('refuses an alignment that does not exist', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'a');
         expect(ed.setAlign('middle' as never)).toBe(false);
     });
@@ -129,7 +129,7 @@ describe('alignment', () => {
     });
 
     it('pasted alignment: our class, the style, the align attribute (Docs, Word, Gmail); the rest is left', () => {
-        const parse = (html: string) => pasteInto(PROFILES.comment, html).map((b) => (b.attrs?.align as string | undefined) ?? 'left');
+        const parse = (html: string) => pasteInto(PROFILES.article, html).map((b) => (b.attrs?.align as string | undefined) ?? 'left');
         expect(parse('<p class="tao-align-center">a</p><p class="tao-align-right">b</p><p class="tao-align-justify">c</p>')).toEqual(['center', 'right', 'justify']);
         expect(parse('<p style="text-align:center">a</p><p style="text-align: right">b</p><p style="text-align:justify">c</p><p style="text-align:end">d</p>')).toEqual(['center', 'right', 'justify', 'right']);
         expect(parse('<p align="center">a</p><div align="right"><p>b</p></div>')).toEqual(['center', 'left']);

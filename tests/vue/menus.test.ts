@@ -192,7 +192,7 @@ describe('the size popup', () => {
     });
 
     it('the texts can be translated', async () => {
-        const m = mount({ profile: 'comment', labels: { size: 'Размер', sizeHuge: 'Огромный', align: 'Выравнивание', alignCenter: 'По центру' } });
+        const m = mount({ profile: 'article', labels: { size: 'Размер', sizeHuge: 'Огромный', align: 'Выравнивание', alignCenter: 'По центру' } });
         await nextTick();
         button(m.host, 'Размер').click();
         await nextTick();

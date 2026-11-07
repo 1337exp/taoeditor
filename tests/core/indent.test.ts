@@ -7,13 +7,13 @@ const para = (attrs: unknown, ...content: unknown[]) => ({ type: 'paragraph', at
 
 describe('indent in the document', () => {
     it('0 is the default and is not written; 1 to 8 are kept', () => {
-        const { doc, issues } = normalizeDoc(wrap(para({ indent: 0 }, text('a')), para({ indent: 3 }, text('b')), para({ indent: 8 }, text('c'))), PROFILES.comment);
+        const { doc, issues } = normalizeDoc(wrap(para({ indent: 0 }, text('a')), para({ indent: 3 }, text('b')), para({ indent: 8 }, text('c'))), PROFILES.article);
         expect(issues).toEqual([]);
         expect(doc.content.map((b) => b.attrs ?? null)).toEqual([null, { indent: 3 }, { indent: 8 }]);
     });
 
     it.each([9, -1, 1.5, '2', null, {}])('%j is not an indent: back to 0 and reported', (value) => {
-        const { doc, issues } = normalizeDoc(wrap(para({ indent: value }, text('a'))), PROFILES.comment);
+        const { doc, issues } = normalizeDoc(wrap(para({ indent: value }, text('a'))), PROFILES.article);
         expect(doc.content[0].attrs).toBeUndefined();
         expect(issues.length === 0 || issues[0].code === 'bad-attr').toBe(true);
     });

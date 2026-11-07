@@ -14,7 +14,7 @@ const selectAll = (ed: EditorHandle): void => {
 
 describe('indent of ordinary paragraphs', () => {
     it('indent and outdent change the level of the paragraph, 0 to 8', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'a');
         expect(ed.canOutdent()).toBe(false);
         expect(ed.indent()).toBe(true);
@@ -31,7 +31,7 @@ describe('indent of ordinary paragraphs', () => {
     });
 
     it('every selected line moves together, each from its own level', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         type(ed, 'one');
         press(ed, 'Enter');
         type(ed, 'two');
@@ -57,7 +57,7 @@ describe('indent of ordinary paragraphs', () => {
     });
 
     it('inside a list the same buttons nest the item instead', () => {
-        const ed = mount({ profile: 'comment' });
+        const ed = mount({ profile: 'article' });
         ed.toggleList('bulletList');
         type(ed, 'one');
         press(ed, 'Enter');
@@ -70,9 +70,9 @@ describe('indent of ordinary paragraphs', () => {
 
 describe('pasted indents', () => {
     const parse = (html: string) => {
-        const schema = createSchema(PROFILES.comment);
+        const schema = createSchema(PROFILES.article);
         const dom = new window.DOMParser().parseFromString(html, 'text/html').body;
-        const { doc, issues } = nodeToDoc(PMParser.fromSchema(schema).parse(dom), PROFILES.comment);
+        const { doc, issues } = nodeToDoc(PMParser.fromSchema(schema).parse(dom), PROFILES.article);
         expect(issues).toEqual([]);
         return doc.content.map((b) => (b.attrs?.indent as number | undefined) ?? 0);
     };

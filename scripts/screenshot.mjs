@@ -72,7 +72,7 @@ const DRAFT = {
                 t(' and x'),
                 t('2', { type: 'superscript' }),
                 t(' text, and a line that is just '),
-                t('typed', { type: 'underline' }),
+                t('typed'),
                 t('.'),
             ],
         },
