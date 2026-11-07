@@ -94,8 +94,6 @@ export const TaoEditor = defineComponent({
         profile: { type: String as PropType<ProfileName>, default: 'comment' },
         /** What sends: `enter` (chat), `mod-enter` (comment), `none`. / Что отправляет. */
         submit: { type: String as PropType<SubmitMode>, default: 'none' },
-        /** Markdown shortcuts while typing (`**bold**`, `- `). Off by default. / Markdown-сокращения при наборе. */
-        shortcuts: { type: Boolean, default: false },
         placeholder: { type: String, default: '' },
         /** Accessible name of the text box. / Доступное имя поля. */
         label: { type: String, default: undefined },
@@ -155,7 +153,6 @@ export const TaoEditor = defineComponent({
                 profile: props.profile,
                 doc: doc ?? undefined,
                 submit: props.submit,
-                shortcuts: props.shortcuts,
                 placeholder: props.placeholder,
                 label: props.label,
                 class: 'tao-prose',
@@ -201,7 +198,7 @@ export const TaoEditor = defineComponent({
         );
         // These are fixed when the engine is built: rebuild, keeping the document.
         watch(
-            () => [props.profile, props.submit, props.shortcuts, props.placeholder, props.label, props.readonly, props.disabled],
+            () => [props.profile, props.submit, props.placeholder, props.label, props.readonly, props.disabled],
             () => {
                 if (editor.value) build(editor.value.getDoc());
             },

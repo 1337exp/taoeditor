@@ -4,11 +4,11 @@
 
 An embeddable rich-text editor for our ecosystem: comments, chat messages, notes, articles. One document model and one set of rules for all of them, with a profile per place (`chat`, `comment`, `article`). The editing engine underneath is [ProseMirror](https://prosemirror.net), pinned by exact version; the document, the allowlists, the link policy and the Markdown are ours, so the engine can be replaced later without touching what is stored.
 
-> Early stage: the core and the engine layer work and are tested, the Vue component and the Markdown I/O are not written yet. See [Not yet](#not-yet).
+> Early stage: the core and the engine layer work and are tested, mentions, emoji and the rest of the plan are not written yet. See [Not yet](#not-yet).
 
 ## Stack
 
-TypeScript 6, ESM only, Vite 8, Vitest. Runtime dependencies: eight small MIT packages of ProseMirror (`model`, `state`, `view`, `transform`, `commands`, `keymap`, `history`, `inputrules`), exact versions. UI will be Vue 3 + [TaoUI](https://www.npmjs.com/package/@1337exp/taoui).
+TypeScript 6, ESM only, Vite 8, Vitest. Runtime dependencies: seven small MIT packages of ProseMirror (`model`, `state`, `view`, `transform`, `commands`, `keymap`, `history`), exact versions. UI will be Vue 3 + [TaoUI](https://www.npmjs.com/package/@1337exp/taoui).
 
 ## Commands
 
@@ -26,7 +26,7 @@ npm run mutate     # break the code on a copy, one thing at a time, and check th
 - **Own stored document**: a versioned JSON tree (`{ v: 1, content: [...] }`). No HTML is ever stored; the engine's own JSON is never the format.
 - **Profiles are allowlists** over one schema: nodes (paragraph, hard break, quote, code block, lists, headings) and marks (bold, italic, strike, code, spoiler, link).
 - **A normalizer is the gate**: untrusted JSON in, canonical valid document out, never throws. Unknown or forbidden nodes are unwrapped (the text survives), links go through one allowlist (`https`/`http`, no credentials), control characters are stripped, nesting is capped.
-- **Markdown shortcuts while typing are opt-in** (`shortcuts: true`: `**bold**`, `*italic*`, `` `code` ``, `~~strike~~`, `||spoiler||`, `# `, `> `, `- `, `1. `, ```` ``` ````; the first Backspace brings the typed characters back). Off by default: what a person types stays what they typed; formatting comes from the toolbar and the hotkeys.
+- **Nothing is converted behind your back**: what is typed or pasted stays what it was. Text that looks like Markdown stays plain text; formatting exists only when it was applied explicitly (the toolbar, the hotkeys) or came as real formatting in the pasted HTML. There is no Markdown input at all.
 - **Safe paste**: pasted HTML is read only through the schema's parse rules (Google Docs and Word bold/italic included); scripts, handlers, images, unsafe links cannot get in.
 - **Chat mode**: Enter sends, Shift+Enter breaks the line, an IME composition never sends.
 - **`TaoEditor`** (`@1337exp/taoeditor/vue/taoui`): the field built from TaoUI components with `v-model`, `change`, `send`; a toolbar (fixed, or `floating` over the selection) of toggle buttons (bold, italic, strike, code, spoiler, link, undo, redo) that follow the selection, a link form that refuses unsafe URLs, `size`, `readonly`, `disabled`, translatable `labels`.
@@ -57,7 +57,7 @@ Decisions, what is proven and what is not: [docs/architecture.ru.md](docs/archit
 
 ## Not yet
 
-- Mentions, emoji, slash menu. The floating toolbar is checked in Chromium only (touch devices not yet).
+- Export to Markdown (`.md`) for taking notes out, when it is needed. Mentions, emoji, slash menu. The floating toolbar is checked in Chromium only (touch devices not yet).
 - Images, tables, embeds.
 - Checked only in Chromium by hand and in jsdom by tests: **IME on Android and iOS, Firefox, Safari are not checked yet**.
 

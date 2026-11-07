@@ -80,6 +80,13 @@ describe('pasted HTML cannot bring anything outside the schema', () => {
         ]);
     });
 
+    it('text that looks like Markdown stays text: pasting never turns it into formatting', () => {
+        const doc = paste('<p>**not bold** and `not code`, _x_ ~~y~~ ||z||</p><p>- not a list</p><p># not a heading</p>', 'article');
+        expect(doc.content.map((b) => b.type)).toEqual(['paragraph', 'paragraph', 'paragraph']);
+        expect(JSON.stringify(doc)).not.toContain('marks');
+        expect(toPlainText(doc)).toBe('**not bold** and `not code`, _x_ ~~y~~ ||z||\n- not a list\n# not a heading');
+    });
+
     it('a hostile code language is dropped', () => {
         const doc = paste('<pre data-lang="a b&quot;><script>">x</pre>', 'chat');
         expect(doc.content).toEqual([{ type: 'codeBlock', content: [{ type: 'text', text: 'x' }] }]);

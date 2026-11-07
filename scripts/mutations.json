@@ -114,30 +114,6 @@
   "!event.altKey && (submit"
  ],
  [
-  "rule: underscore italic fires inside words",
-  "src/editor/plugins.ts",
-  "(?<![_\\w\\\\])_([^_\\s]",
-  "_([^_\\s]"
- ],
- [
-  "rule: fires inside the code mark",
-  "src/editor/plugins.ts",
-  "if (noCode && state.doc.rangeHasMark(start, end, noCode)) return null;",
-  ""
- ],
- [
-  "rule: mark stays on for the next characters",
-  "src/editor/plugins.ts",
-  "return tr.removeStoredMark(type);",
-  "return tr;"
- ],
- [
-  "keys: Backspace does not undo the rule",
-  "src/editor/plugins.ts",
-  "Backspace: undoInputRule,",
-  ""
- ],
- [
   "editor: link without the url check",
   "src/editor/editor.ts",
   "if (!safe) return false;",
@@ -232,12 +208,6 @@
   "src/vue/taoui/TaoEditor.ts",
   "!(handle?.canUndo() ?? false)",
   "false"
- ],
- [
-  "editor: shortcuts are on by default",
-  "src/editor/editor.ts",
-  "shortcuts: options.shortcuts ?? false",
-  "shortcuts: options.shortcuts ?? true"
  ],
  [
   "component: the floating panel shows without the focus",

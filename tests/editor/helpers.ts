@@ -8,11 +8,10 @@ Range.prototype.getClientRects ??= () => [] as unknown as DOMRectList;
 export function mount(options: EditorOptions = {}): EditorHandle {
     const host = document.createElement('div');
     document.body.append(host);
-    // the shortcut tests need them on; the default (off) has its own tests
-    return createEditor(host, { shortcuts: true, ...options });
+    return createEditor(host, options);
 }
 
-/** Types one character at a time through the same path as the browser: input rules first. */
+/** Types one character at a time through the same path as the browser: the engine's text input handlers first. */
 export function type(editor: EditorHandle, text: string): void {
     const { view } = editor;
     for (const ch of text) {

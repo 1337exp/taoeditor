@@ -173,8 +173,7 @@ function mount(): void {
         class: taouiOn() ? 'tao-prose' : undefined,
         submit: $<HTMLSelectElement>('submit').value as SubmitMode,
         doc: keep,
-        shortcuts: $<HTMLInputElement>('shortcuts').checked,
-        placeholder: 'Type here. Markdown shortcuts are off unless the box above is ticked.',
+        placeholder: 'Type here. Nothing you type is converted: formatting only from the toolbar and hotkeys.',
         label: 'Editor under test',
         onSend: (doc) => {
             log('SEND', JSON.stringify(toPlainText(doc)));
@@ -191,7 +190,6 @@ function mount(): void {
 const componentDoc = shallowRef<Doc | null>(null);
 const componentProfile = shallowRef<ProfileName>('comment');
 const componentSubmit = shallowRef<SubmitMode>('none');
-const componentShortcuts = shallowRef(false);
 const componentFloating = shallowRef(true);
 
 function mountComponent(): void {
@@ -202,7 +200,6 @@ function mountComponent(): void {
                 'onUpdate:modelValue': (doc: Doc) => (componentDoc.value = doc),
                 profile: componentProfile.value,
                 submit: componentSubmit.value,
-                shortcuts: componentShortcuts.value,
                 floating: componentFloating.value,
                 placeholder: 'TaoEditor: type here',
                 label: 'TaoEditor component',
@@ -253,10 +250,6 @@ function init(): void {
 
     $('profile').addEventListener('change', () => {
         componentProfile.value = $<HTMLSelectElement>('profile').value as ProfileName;
-        mount();
-    });
-    $('shortcuts').addEventListener('change', () => {
-        componentShortcuts.value = $<HTMLInputElement>('shortcuts').checked;
         mount();
     });
     $('floating').addEventListener('change', () => {

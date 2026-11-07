@@ -65,9 +65,11 @@ describe('TaoEditor', () => {
     });
 
     it('typing updates v-model and emits change, with a valid document', async () => {
-        const m = mount({ shortcuts: true });
+        const m = mount();
         await nextTick();
-        type(m.engine(), 'say **hi**');
+        type(m.engine(), 'say ');
+        m.engine().toggleMark('bold');
+        type(m.engine(), 'hi');
         await nextTick();
         expect(m.model.value).not.toBeNull();
         expect(runs(m.engine())).toEqual([['say ', ''], ['hi', 'bold']]);
