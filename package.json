@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "dev": "vite",
     "build": "vite build && tsc -p tsconfig.build.json",
-    "mutate": "node scripts/mutate.mjs . scripts/mutations.json"
+    "mutate": "node scripts/mutate.mjs . scripts/mutations.json",
+    "dev:lan": "vite --host"
   },
   "dependencies": {
     "prosemirror-commands": "1.7.2",

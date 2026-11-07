@@ -1,6 +1,6 @@
 import 'prosemirror-view/style/prosemirror.css';
 import './lab.css';
-import { createEditor, toPlainText, type EditorHandle, type ProfileName, type SubmitMode } from '../src';
+import { PROFILES, createEditor, normalizeDoc, toPlainText, type EditorHandle, type Profile, type ProfileName, type SubmitMode } from '../src';
 import { FIXTURES } from '../tests/fixtures';
 
 /**
@@ -101,13 +101,42 @@ function watch(dom: HTMLElement): void {
     dom.addEventListener('paste', (e) => log('paste', (e as ClipboardEvent).clipboardData?.types.join(', ') ?? ''));
 }
 
+const OPTIONAL_NODES: [type: string, label: string][] = [
+    ['blockquote', 'quote'],
+    ['codeBlock', 'code block'],
+    ['bulletList', 'bulleted list'],
+    ['orderedList', 'numbered list'],
+    ['heading', 'headings'],
+];
+
+/** Says in words what the chosen profile allows: the profile is an allowlist, not a mode of the editor. */
+function describeProfile(name: ProfileName): string {
+    const profile: Profile = PROFILES[name];
+    const has = OPTIONAL_NODES.filter(([type]) => profile.nodes.includes(type)).map(([, label]) => label);
+    const lacks = OPTIONAL_NODES.filter(([type]) => !profile.nodes.includes(type)).map(([, label]) => label);
+    return (
+        `Profile "${name}" is the list of what a document may contain. Always: paragraphs, line breaks, ${profile.marks.join(', ')}. ` +
+        `Also: ${has.join(', ') || 'nothing'}. ` +
+        (lacks.length > 0
+            ? `Not allowed: ${lacks.join(', ')}. They are turned into plain paragraphs (the text stays), also when pasted, loaded from a fixture, or typed as a shortcut ("- ", "# "). `
+            : 'Everything is allowed. ') +
+        'Switching the profile re-checks the current document against the new list.'
+    );
+}
+
 function mount(): void {
     const keep = editor ? editor.getDoc() : undefined;
     editor?.destroy();
     const host = $('editor');
     host.replaceChildren();
+    const profileName = $<HTMLSelectElement>('profile').value as ProfileName;
+    $('profile-info').textContent = describeProfile(profileName);
+    if (keep) {
+        const { issues } = normalizeDoc(keep, PROFILES[profileName]);
+        if (issues.length > 0) log('profile changed', `${issues.length} change(s): ${issues.map((i) => i.code).join(', ')}`);
+    }
     editor = createEditor(host, {
-        profile: $<HTMLSelectElement>('profile').value as ProfileName,
+        profile: profileName,
         submit: $<HTMLSelectElement>('submit').value as SubmitMode,
         doc: keep,
         placeholder: 'Type here. Try **bold**, *italic*, `code`, > quote, - list',

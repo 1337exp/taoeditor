@@ -13,7 +13,8 @@ TypeScript 6, ESM only, Vite 8, Vitest. Runtime dependencies: eight small MIT pa
 ## Commands
 
 ```bash
-npm run dev        # the lab at http://localhost:5173/lab/ (add -- --host to try it on a phone)
+npm run dev        # the lab at http://localhost:5173/lab/
+npm run dev:lan    # the same, open to the local network: use the Network address it prints (try it on a phone)
 npm test           # core and engine tests (jsdom)
 npm run typecheck  # core without DOM, then everything with DOM
 npm run build      # library build + declarations
@@ -45,7 +46,6 @@ Decisions, what is proven and what is not: [docs/architecture.ru.md](docs/archit
 
 - Vue component, bubble toolbar on TaoUI, mentions, emoji, slash menu.
 - Markdown import/export and the "source" mode.
-- Binary form of the document (the 2pack codec has finite schemas, so a recursive tree needs a flat representation first).
 - Images, tables, embeds.
 - Checked only in Chromium by hand and in jsdom by tests: **IME on Android and iOS, Firefox, Safari are not checked yet**.
 

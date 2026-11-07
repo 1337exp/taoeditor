@@ -13,11 +13,11 @@
             Watch the event log during IME composition, Enter, paste.
         </p>
         <section class="controls">
-            <label>Profile
+            <label>Profile (what the document may contain)
                 <select id="profile">
-                    <option value="chat">chat</option>
-                    <option value="comment" selected>comment</option>
-                    <option value="article">article</option>
+                    <option value="chat">chat: quote, code</option>
+                    <option value="comment" selected>comment: + lists</option>
+                    <option value="article">article: + headings</option>
                 </select>
             </label>
             <label>Send on
@@ -30,6 +30,7 @@
             <label>Fixture <select id="fixture"><option value="">—</option></select></label>
             <label>Paste corpus <select id="corpus"><option value="">—</option></select></label>
         </section>
+        <p id="profile-info" class="hint"></p>
         <div id="toolbar" class="toolbar" role="toolbar" aria-label="Formatting"></div>
         <div id="editor" class="editor-host"></div>
         <p id="status" class="status"></p>
