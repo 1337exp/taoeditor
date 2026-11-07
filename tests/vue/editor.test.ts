@@ -109,7 +109,7 @@ describe('TaoEditor', () => {
     });
 
     it('toolbar: undo and redo are disabled until there is something to undo', async () => {
-        const m = mount();
+        const m = mount({ profile: 'article' });
         await nextTick();
         expect(button(m.host, 'Undo').disabled).toBe(true);
         type(m.engine(), 'a');

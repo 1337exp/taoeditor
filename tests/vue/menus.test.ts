@@ -80,7 +80,7 @@ describe('the toolbar shows only what the profile has', () => {
         expect(names(chat.host)).not.toContain('Increase indent');
         const bare = mount({ profile: defineProfile({ name: 'bare', nodes: [], marks: ['link'] }) });
         await nextTick();
-        expect(names(bare.host)).toEqual(['Undo', 'Redo', 'Link']);
+        expect(names(bare.host)).toEqual(['Link']);
     });
 
     it('the viewer takes the same profile object, and its spacing hint', () => {

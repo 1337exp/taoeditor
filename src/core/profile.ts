@@ -11,8 +11,12 @@
  */
 import { MARKS, NODES, PROFILES, TABLE_PARTS, type Profile, type ProfileName } from './schema';
 
-/** Features that are attributes of a block rather than a node or a mark. / Возможности-атрибуты блока. */
-export const FEATURES: readonly string[] = ['indent', 'align'];
+/**
+ * Features that are not a node or a mark: `indent` and `align` are attributes of a block; `history` is the Undo and Redo buttons of the
+ * toolbar (the keys always work).
+ * Возможности, которые не узел и не марка: `indent` и `align` атрибуты блока; `history` кнопки отмены и повтора в панели (клавиши работают всегда).
+ */
+export const FEATURES: readonly string[] = ['indent', 'align', 'history'];
 
 export const resolveProfile = (profile: ProfileName | Profile): Profile => (typeof profile === 'string' ? PROFILES[profile] : profile);
 

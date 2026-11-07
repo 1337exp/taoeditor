@@ -152,7 +152,7 @@ export interface Profile {
     /** Allowed node types (`text` and `hardBreak` included). / Разрешённые узлы. */
     nodes: readonly string[];
     marks: readonly string[];
-    /** Block attributes in use: `indent`, `align`. Missing means none. */
+    /** Block attributes in use (`indent`, `align`) and the Undo and Redo buttons (`history`). Missing means none. */
     features?: readonly string[];
     /** A gap between paragraphs by default (an article), none otherwise (a chat, a mail). */
     spaced?: boolean;
@@ -171,7 +171,7 @@ const CHAT_MARKS = COMMENT_MARKS.filter((m) => m !== 'superscript');
 export const PROFILES = {
     chat: { name: 'chat', nodes: CHAT_NODES, marks: CHAT_MARKS, features: [] },
     comment: { name: 'comment', nodes: COMMENT_NODES, marks: COMMENT_MARKS, features: [] },
-    article: { name: 'article', nodes: ARTICLE_NODES, marks: MARK_ORDER, features: ['indent', 'align'], spaced: true },
+    article: { name: 'article', nodes: ARTICLE_NODES, marks: MARK_ORDER, features: ['indent', 'align', 'history'], spaced: true },
 } as const satisfies Record<string, Profile>;
 
 export type ProfileName = keyof typeof PROFILES;

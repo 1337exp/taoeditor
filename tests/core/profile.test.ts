@@ -14,7 +14,7 @@ describe('withoutFeatures', () => {
         expect(p.marks).toContain('italic');
         expect(p.nodes).not.toContain('blockquote');
         expect(p.nodes).toContain('bulletList');
-        expect(p.features).toEqual(['indent']);
+        expect(p.features).toEqual(['indent', 'history']);
     });
 
     it('does not change the ready profile', () => {
@@ -105,7 +105,7 @@ describe('a profile that leaves a feature out leaves it out of the document', ()
     it('the ready profiles: chat and comment have no indent or alignment, the article has', () => {
         expect(PROFILES.chat.features).toEqual([]);
         expect(PROFILES.comment.features).toEqual([]);
-        expect(PROFILES.article.features).toEqual(['indent', 'align']);
+        expect(PROFILES.article.features).toEqual(['indent', 'align', 'history']);
         expect(PROFILES.article.spaced).toBe(true);
     });
 });

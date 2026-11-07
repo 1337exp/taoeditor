@@ -41,12 +41,11 @@ describe('the toolbar follows the profile, in the order of Gmail\'s bar', () => 
         const m = mount({ profile: 'comment' });
         await nextTick();
         expect(names(m.host)).toEqual([
-            'Undo', 'Redo',
             'Text size', 'Bold', 'Italic', 'Strikethrough', 'Superscript', 'Code', 'Code block', 'Spoiler', 'Link',
             'Numbered list', 'Bulleted list', 'Quote', 'Table',
             'Clear formatting',
         ]);
-        expect(m.host.querySelectorAll('.tao-editor-toolbar [role="separator"]').length).toBe(4);
+        expect(m.host.querySelectorAll('.tao-editor-toolbar [role="separator"]').length).toBe(3);
     });
 
     it('chat has no lists and no indents, but keeps the quote', async () => {

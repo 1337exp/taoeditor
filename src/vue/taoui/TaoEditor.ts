@@ -610,7 +610,7 @@ export const TaoEditor = defineComponent({
 
             const nodes = profile.nodes as readonly string[];
             // The order of Gmail's bar: undo and redo, the marks, the blocks, clear formatting.
-            const history = [
+            const history = !features.includes('history') ? [] : [
                 tool(text.undo, 'tao-undo', () => handle?.undo(), { off: !(handle?.canUndo() ?? false) }),
                 tool(text.redo, 'tao-redo', () => handle?.redo(), { off: !(handle?.canRedo() ?? false) }),
             ];
