@@ -47,7 +47,7 @@ const profile = withoutFeatures('comment', { marks: ['bold'], features: ['align'
 </script>
 
 <template>
-    <TaoEditor v-model="doc" :profile="profile" submit="mod-enter" emoji :mentions="findPeople" @send="post" />
+    <TaoEditor v-model="doc" :profile="profile" submit="mod-enter" :mentions="findPeople" @send="post" />
     <TaoEditorView :doc="saved" :profile="profile" class="tao-prose" @mention="openProfile" />
 </template>
 ```

@@ -55,7 +55,7 @@ describe('inserting a table', () => {
         type(ed, 'text');
         ed.toggleQuote();
         ed.insertTable(1, 1);
-        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['blockquote', 'table']); // the guard paragraph after it is not stored
+        expect(ed.getDoc().content.map((n) => n.type)).toEqual(['blockquote', 'table']); // nothing is added after it
     });
 
     it('is cut to the limits, and refuses a nonsense size and a place inside a table', () => {

@@ -72,7 +72,6 @@ function mentioned(id: string): void {
             v-model="draft"
             profile="chat"
             submit="enter"
-            emoji
             :mentions="searchPeople"
             :labels="labels"
             :placeholder="t('chat.placeholder')"

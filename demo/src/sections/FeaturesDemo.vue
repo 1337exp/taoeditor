@@ -37,7 +37,7 @@ const profile = computed(() =>
     }),
 );
 
-const options = reactive({ floating: false, emoji: true, mentions: true, readonly: false, disabled: false });
+const options = reactive({ floating: false, emoji: false, mentions: true, readonly: false, disabled: false });
 const spacing = ref<'auto' | 'gap' | 'none'>('auto');
 const spaced = computed(() => (spacing.value === 'auto' ? undefined : spacing.value === 'gap'));
 

@@ -42,7 +42,6 @@ function mentioned(id: string): void {
             v-model="draft.doc.value"
             profile="comment"
             submit="mod-enter"
-            emoji
             :mentions="searchPeople"
             :labels="labels"
             :placeholder="t('comments.placeholder')"

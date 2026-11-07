@@ -47,7 +47,7 @@ const profile = withoutFeatures('comment', { marks: ['bold'], features: ['align'
 </script>
 
 <template>
-    <TaoEditor v-model="doc" :profile="profile" submit="mod-enter" emoji :mentions="findPeople" @send="post" />
+    <TaoEditor v-model="doc" :profile="profile" submit="mod-enter" :mentions="findPeople" @send="post" />
     <TaoEditorView :doc="saved" :profile="profile" class="tao-prose" @mention="openProfile" />
 </template>
 ```
@@ -64,7 +64,7 @@ On a server (previews, e-mails, search) use `@1337exp/taoeditor/core`: `normaliz
 - **Nothing is converted behind your back.** What is typed or pasted stays what it was: text that looks like Markdown stays text. Formatting exists only when it was applied explicitly or came as real formatting in the pasted HTML (Google Docs, Word and Gmail runs are read, their black ink and white paper are not).
 - **Safe paste and safe output**: Ctrl+Shift+V pastes only the text (like Gmail and Docs; no button on purpose); pasted HTML is read only through the schema's rules, so scripts, handlers, images and unsafe links cannot get in; the output never takes a string as markup, and a colour can put nothing but a colour into a style.
 - **Mentions** (`@name`): one unit in the text with an `id` and the label shown at the time. The editor only notices `@query`; the list of people is the app's (`mentions` prop: a function that returns people, now or as a promise). It works with the keys and the mouse and is announced to screen readers. **The `id` is a claim, the app must check it.**
-- **Chat and comments**: Enter or Ctrl+Enter sends, Shift+Enter breaks the line, an IME composition never sends; an emoji button (plain Unicode text); no gap between paragraphs by default (Enter is a line), a gap for articles (`spaced`).
+- **Chat and comments**: Enter or Ctrl+Enter sends, Shift+Enter breaks the line, an IME composition never sends; an emoji button when you add the `emoji` prop (off by default; plain Unicode text); no gap between paragraphs by default (Enter is a line), a gap for articles (`spaced`).
 - **A viewer** (`TaoEditorView`) that never loads the editing engine: spoilers open on click, mentions are buttons when the app listens. The same render runs on a server (`toHtml`).
 - **Made for TaoUI, usable without it**: only files in `src/vue/taoui/` import TaoUI (a test guards the layers); `taoui.css` is the single file that names TaoUI tokens, and a test checks that every one of them exists in the installed TaoUI.
 
