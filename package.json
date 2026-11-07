@@ -1,6 +1,6 @@
 {
   "name": "@1337exp/taoeditor",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Embeddable rich-text editor for comments, chats, notes and articles",
   "keywords": [
     "editor",
@@ -57,7 +57,8 @@
   },
   "files": [
     "dist",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "skills"
   ],
   "publishConfig": {
     "access": "public"

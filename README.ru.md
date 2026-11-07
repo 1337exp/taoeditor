@@ -83,7 +83,7 @@ tests/         ядро (node), движок, показ и компонент (
 
 Импорт по подпутям, корневого входа нет: `@1337exp/taoeditor/core`, `/editor`, `/vue`, `/vue/taoui`, `/content.css`, `/editor.css`, `/taoui.css`. `vue` и `@1337exp/taoui` — необязательные peer-зависимости.
 
-Решения, что доказано и что нет: [docs/architecture.ru.md](docs/architecture.ru.md). История выпусков: [CHANGELOG.md](CHANGELOG.md).
+Для ассистентов: навык `skills/taoeditor` идёт в пакете (подключение, правила, API, рецепты). Решения, что доказано и что нет: [docs/architecture.ru.md](docs/architecture.ru.md). История выпусков: [CHANGELOG.md](CHANGELOG.md).
 
 ## Пока нет
 

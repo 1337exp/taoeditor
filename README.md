@@ -83,7 +83,7 @@ tests/         core (node), engine, viewer and component (jsdom), layers, the br
 
 Imports are by subpath, there is no root entry: `@1337exp/taoeditor/core`, `/editor`, `/vue`, `/vue/taoui`, `/content.css`, `/editor.css`, `/taoui.css`. `vue` and `@1337exp/taoui` are optional peer dependencies.
 
-The decisions, what is proven and what is not: [docs/architecture.ru.md](docs/architecture.ru.md) (Russian). The release notes: [CHANGELOG.md](CHANGELOG.md).
+For assistants: a skill in `skills/taoeditor` ships with the package (setup, rules, API, recipes). The decisions, what is proven and what is not: [docs/architecture.ru.md](docs/architecture.ru.md) (Russian). The release notes: [CHANGELOG.md](CHANGELOG.md).
 
 ## Not yet
 

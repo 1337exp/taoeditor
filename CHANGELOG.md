@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- **A skill for assistants.** `skills/taoeditor` (`SKILL.md` and `references/api.md`, `references/recipes.md`) ships with the package, the way TaoUI and TaoUX ship theirs: setup, the rules that keep an app right (store the document, never HTML; `normalizeDoc` at the gate; the same profile everywhere; a mention `id` is a claim), what each ready profile has, the props, events and the engine handle, and recipes for a comment box, a chat, an article, a server and your own profile. No code changes.
+
 ## 0.2.0
 
 - **Superscript and subscript.** Two new marks, `superscript` and `subscript` (Ctrl+. and Ctrl+, as in Docs, buttons in the toolbar, `<sup>` and `<sub>` in the viewer). They exclude each other (one replaces the other; if a stored document has both, superscript stays) and `code`; pasted `sup`, `sub` and `vertical-align` from Docs and Word are read. New labels `superscript` and `subscript` in `TaoEditorLabels`.
