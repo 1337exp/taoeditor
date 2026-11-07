@@ -243,6 +243,20 @@ export const TaoEditor = defineComponent({
         spaced: { type: Boolean, default: undefined },
         /** Show the formatting toolbar. / Показывать панель форматирования. */
         toolbar: { type: Boolean, default: true },
+        /**
+         * The toolbar stays at the top of the screen while the page scrolls past a long text (an article), as long as the editor is in view.
+         * `--te-sticky-top` is the distance from the top (for a page with its own fixed header). Not for `floating`.
+         * Панель остаётся наверху экрана, пока страница прокручивается мимо длинного текста (статья), пока редактор виден.
+         * `--te-sticky-top` расстояние от верха (если у страницы своя фиксированная шапка). Не для `floating`.
+         */
+        sticky: { type: Boolean, default: false },
+        /**
+         * The text area grows up to this height and then scrolls inside (a number is px, a string is any CSS length). Without it the field
+         * grows with the text and the page scrolls. The same as setting `--te-max-height` on the component.
+         * Поле растёт до этой высоты, дальше текст прокручивается внутри (число в px, строка любая CSS-длина). Без неё поле
+         * растёт вместе с текстом, а прокручивается страница. То же, что `--te-max-height` на компоненте.
+         */
+        maxHeight: { type: [Number, String] as PropType<number | string>, default: undefined },
         /** The toolbar floats over the selection instead of standing above the field. / Панель висит над выделением. */
         floating: { type: Boolean, default: false },
         /**
@@ -1159,7 +1173,9 @@ export const TaoEditor = defineComponent({
                 'div',
                 {
                     ref: root,
-                    class: ['tao-editor-root', { 'tao-editor-root--disabled': props.disabled }],
+                    class: ['tao-editor-root', { 'tao-editor-root--disabled': props.disabled, 'tao-editor-root--sticky': props.sticky && !props.floating }],
+                    // a number is px; the string is a CSS length (not checked: it only goes into a custom property)
+                    style: props.maxHeight === undefined ? undefined : { '--te-max-height': typeof props.maxHeight === 'number' ? `${props.maxHeight}px` : props.maxHeight },
                     onFocusin: () => (focused.value = true),
                     onFocusout: (event: FocusEvent) => {
                         if (!root.value?.contains(event.relatedTarget as Node | null)) {

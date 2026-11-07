@@ -42,6 +42,7 @@ function mentioned(id: string): void {
             v-model="draft.doc.value"
             profile="comment"
             submit="mod-enter"
+            :max-height="260"
             :mentions="searchPeople"
             :labels="labels"
             :placeholder="t('comments.placeholder')"

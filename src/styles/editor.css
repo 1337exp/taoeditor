@@ -6,7 +6,7 @@
  *
  * Variables / Переменные:
  *   --te-field-bg  --te-field-text  --te-field-border  --te-field-border-focus
- *   --te-field-radius  --te-field-padding  --te-min-height  --te-placeholder  --te-spoiler-open-bg
+ *   --te-field-radius  --te-field-padding  --te-min-height  --te-max-height  --te-sticky-top  --te-placeholder  --te-spoiler-open-bg
  *
  * Редактируемое поле. Подключайте вместе с `content.css` и со стилем самого движка
  * `prosemirror-view/style/prosemirror.css`. Поле — это сам редактируемый элемент (`.tao-editor`).
@@ -44,6 +44,21 @@
 }
 
 /* TaoEditor (the Vue component): toolbar, link row, the field. */
+/* A long text: the field grows up to --te-max-height (the `maxHeight` prop) and then scrolls inside. */
+.tao-editor {
+    max-height: var(--te-max-height, none);
+    overflow-y: auto;
+}
+
+/* `sticky`: the toolbar stays on the screen while the page scrolls past the text. It needs a background of its own. */
+.tao-editor-root--sticky > .tao-editor-toolbar {
+    position: sticky;
+    top: var(--te-sticky-top, 0);
+    z-index: var(--te-z-sticky, 5);
+    background: var(--te-panel-bg, light-dark(#fff, #23262d));
+    border-bottom: 1px solid var(--te-border, light-dark(#d5d9e0, #3a3f49));
+}
+
 .tao-editor-root {
     position: relative;
     display: flex;

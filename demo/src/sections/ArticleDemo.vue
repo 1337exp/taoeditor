@@ -33,7 +33,7 @@ function setView(value: string | number | boolean | undefined): void {
         <h2>{{ t('article.title') }}</h2>
         <p class="hint">{{ t('article.hint') }}</p>
 
-        <TaoEditor v-model="doc" profile="article" emoji :mentions="searchPeople" :labels="labels" :label="t('article.title')" />
+        <TaoEditor v-model="doc" profile="article" sticky emoji :mentions="searchPeople" :labels="labels" :label="t('article.title')" />
         <div class="row">
             <TaoButton variant="secondary" @click="load">{{ t('article.load') }}</TaoButton>
             <TaoButton variant="text" tone="neutral" @click="doc = null">{{ t('article.clear') }}</TaoButton>
