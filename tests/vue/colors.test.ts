@@ -142,11 +142,26 @@ describe('the colour panel', () => {
         m.host.querySelector('.tao-editor-root')!.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
         await nextTick();
         await open(m);
-        expect(m.host.querySelector('.tao-editor-floating .tao-editor-colors')).not.toBeNull();
+        expect(m.host.querySelector('.tao-editor-colors')).not.toBeNull();
+        expect(m.host.querySelector('.tao-editor-floating .tao-editor-colors')).toBeNull(); // an overlay of the component, not a part of the box
         // the selection is cleared by clicking elsewhere in the text; the open panel keeps the box (like the link form)
         e.view.dispatch(e.view.state.tr.setSelection(TextSelection.create(e.view.state.doc, 1, 1)));
         await nextTick();
-        expect(m.host.querySelector('.tao-editor-floating .tao-editor-colors')).not.toBeNull();
+        expect(m.host.querySelector('.tao-editor-colors')).not.toBeNull();
+        expect(m.host.querySelector('.tao-editor-floating')).not.toBeNull(); // the box stays while the popup is open
+    });
+
+    it('is a popup, not a block: a direct child of the component after the toolbar, placed by a left and a top, shown once measured', async () => {
+        const m = mount();
+        await nextTick();
+        await open(m);
+        await nextTick();
+        const popup = m.host.querySelector<HTMLElement>('.tao-editor-colors')!;
+        expect(popup.parentElement!.classList.contains('tao-editor-root')).toBe(true);
+        expect(popup.style.left).toMatch(/px$/);
+        expect(popup.style.top).toMatch(/px$/);
+        expect(popup.style.visibility).not.toBe('hidden');
+        expect(m.host.querySelector('.tao-editor-toolbar')!.contains(popup)).toBe(false);
     });
 
     it('the texts can be translated', async () => {

@@ -199,6 +199,7 @@ export const TaoEditor = defineComponent({
         let lookup = 0; // only the latest answer counts
         const emojiOpen = ref(false);
         const colorsOpen = ref(false);
+        const colorsPos = ref<{ left: number; top: number } | null>(null); // where the popup is, measured after it is drawn
 
         // The floating panel: where the selection is (relative to this component), and how big the panel is.
         const root = ref<HTMLElement | null>(null);
@@ -305,6 +306,22 @@ export const TaoEditor = defineComponent({
         };
 
         onMounted(() => build(props.modelValue));
+        onUpdated(() => {
+            const box = root.value;
+            if (!colorsOpen.value || !box) return;
+            const button = box.querySelector<HTMLElement>('.tao-editor-colors-button');
+            const popup = box.querySelector<HTMLElement>('.tao-editor-colors');
+            if (!button || !popup) return;
+            const area = box.getBoundingClientRect();
+            const at = button.getBoundingClientRect();
+            const roomBelow = window.innerHeight - at.bottom;
+            const above = roomBelow < popup.offsetHeight + 8 && at.top > roomBelow;
+            const left = Math.max(0, Math.min(at.left - area.left, area.width - popup.offsetWidth));
+            const top = above ? at.top - area.top - popup.offsetHeight - 4 : at.bottom - area.top + 4;
+            const now = colorsPos.value;
+            // only when it moved: setting the same place again would draw again for ever
+            if (!now || Math.abs(now.left - left) > 0.5 || Math.abs(now.top - top) > 0.5) colorsPos.value = { left, top };
+        });
         onUpdated(() => {
             const el = floatEl.value;
             if (el && (el.offsetWidth !== panelSize.value.w || el.offsetHeight !== panelSize.value.h)) {
@@ -445,6 +462,7 @@ export const TaoEditor = defineComponent({
                     ? [
                           tool(text.colors, 'te-color', () => {
                               colorsOpen.value = !colorsOpen.value;
+                              colorsPos.value = null;
                           }, { pressed: colorsOpen.value, class: 'tao-editor-colors-button' }),
                       ]
                     : []),
@@ -517,6 +535,7 @@ export const TaoEditor = defineComponent({
                     ),
                 );
             }
+            const overlays: VNode[] = [];
             if (props.toolbar && colorsOpen.value && marks.includes('color')) {
                 // Arrow keys walk the swatches of a section; only one swatch is a Tab stop, the rest is reached by arrows.
                 const swatchKeys = (event: KeyboardEvent): void => {
@@ -583,12 +602,14 @@ export const TaoEditor = defineComponent({
                         }),
                     ]);
                 };
-                panel.push(
+                overlays.push(
                     h(
                         'div',
                         {
                             key: 'colors',
                             class: 'tao-editor-colors',
+                            // not drawn until its place is measured, so it never flashes in the corner
+                            style: colorsPos.value ? { left: `${colorsPos.value.left}px`, top: `${colorsPos.value.top}px` } : { left: '0px', top: '0px', visibility: 'hidden' },
                             role: 'group',
                             'aria-label': text.colors,
                             onKeydown: (event: KeyboardEvent) => {
@@ -618,6 +639,7 @@ export const TaoEditor = defineComponent({
             }
             // The keys matter: the host holds the engine's DOM, and without them Vue would reuse it for whatever is
             // inserted before it (the link row, the floating panel).
+            children.push(...overlays);
             if (trigger.value && people.value.length > 0) {
                 const left = Math.max(0, Math.min(suggestAt.value.x, (root.value?.clientWidth ?? 0) - 220));
                 children.push(
